@@ -11,9 +11,9 @@ public class NetworkManager : Singleton<NetworkManager>
     [SerializeField] private ushort maxNumberOfClients = 16;
     [SerializeField] private bool activeNetworkLogger = true;
 
-    private INetworkService NetworkService;
+    public INetworkService NetworkService => networkService;
+    private INetworkService networkService;
 
-    [ContextMenu("Start Server")]
     public void StartServer()
     {
         if (!configParameter.Validate()) return;
@@ -21,12 +21,11 @@ public class NetworkManager : Singleton<NetworkManager>
         NetworkSettings settings = CreateNetworkSettings();
         Server server = new Server(settings);
         server.StartServer(port, maxNumberOfClients);
-        NetworkService = server;
+        networkService = server;
 
         NetworkLogger.IsDebugEnabled = activeNetworkLogger;
     }
 
-    [ContextMenu("Connect to Server")]
     public void ConnectToServer()
     {
         if (!configParameter.Validate()) return;
@@ -34,19 +33,19 @@ public class NetworkManager : Singleton<NetworkManager>
         NetworkSettings settings = CreateNetworkSettings();
         Client client = new Client(settings);
         client.ConnectToServer(ip, port);
-        NetworkService = client;
+        networkService = client;
 
         NetworkLogger.IsDebugEnabled = activeNetworkLogger;
     }
-
+    
     private void Update()
     {
-        NetworkService?.Update();
+        networkService?.Update();
     }
 
     private void OnDestroy()
     {
-        NetworkService?.Dispose();
+        networkService?.Dispose();
     }
     private NetworkSettings CreateNetworkSettings()
     {

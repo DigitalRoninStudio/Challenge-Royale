@@ -1,5 +1,9 @@
-﻿public interface INetworkService
+﻿using Unity.Networking.Transport;
+
+public interface INetworkService
 {
-    public void Update();
-    public void Dispose();
+    void Update();
+    void Dispose();
+    NetworkPipeline GetPipeline(Pipeline pipeline);
+    NetworkDriver GetDriver();
 }

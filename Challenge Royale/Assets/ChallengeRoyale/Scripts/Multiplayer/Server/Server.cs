@@ -1,14 +1,15 @@
 using Unity.Collections;
 using Unity.Networking.Transport;
-using UnityEngine;
 
 public class Server : INetworkService
 {
     public static bool IsServer { get; private set; } = false;
+    public NativeList<NetworkConnection> Connections => connections;
 
     private NetworkDriver driver;
     private NativeList<NetworkConnection> connections;
     private NetworkSettings settings;
+    private NetworkPipelineService pipelineService;
 
     public Server(NetworkSettings settings)
     {
@@ -17,6 +18,7 @@ public class Server : INetworkService
     public void StartServer(ushort port, ushort maxNumberOfClients = 16)
     {
         driver = NetworkDriver.Create(settings);
+        pipelineService = new NetworkPipelineService(driver);
 
         NetworkEndpoint endPoint = NetworkEndpoint.AnyIpv4;
         endPoint.Port = port;
@@ -68,12 +70,34 @@ public class Server : INetworkService
     {
         Shutdown();
     }
+
+    public NetworkPipeline GetPipeline(Pipeline pipeline)
+    {
+        switch (pipeline)
+        {
+            case Pipeline.Reliable:
+                return pipelineService.Reliable;
+            case Pipeline.Unreliable:
+                return pipelineService.Unreliable;
+            case Pipeline.Fragmentation:
+                return pipelineService.Fragmentation;
+        }
+        return default;
+    }
+
+    public NetworkDriver GetDriver()
+    {
+        return driver;
+    }
     private void AcceptNewConnections()
     {
         NetworkConnection connection;
         while ((connection = driver.Accept()) != default)
         {
             connections.Add(connection);
+
+            Sender.ServerSendData(connection, new NetWelcome(), Pipeline.Reliable);
+
             NetworkLogger.Log("Client connected on server");
         }
     }
@@ -99,7 +123,7 @@ public class Server : INetworkService
                 if (cmd == NetworkEvent.Type.Data)
                 {
                     // Handle data received from client
-                    //OnDataReceived(stream, connections[i]);
+                    OnDataReceived(stream, connections[i]);
                 }
                 else if (cmd == NetworkEvent.Type.Disconnect)
                 {
@@ -109,25 +133,28 @@ public class Server : INetworkService
             }
         }
     }
-}
 
-public class NetworkPipelineService
-{
-    public NetworkPipeline UDP { get; private set; }
-    public NetworkPipeline TCP { get; private set; }
-    public NetworkPipeline Fragmentation { get; private set; }
-
-    public NetworkPipelineService(NetworkDriver driver)
+    private static void OnDataReceived(DataStreamReader reader, NetworkConnection connection)
     {
-        UDP = driver.CreatePipeline(typeof(UnreliableSequencedPipelineStage));
-        TCP = driver.CreatePipeline(typeof(ReliableSequencedPipelineStage));
-        Fragmentation = driver.CreatePipeline(typeof(FragmentationPipelineStage), typeof(ReliableSequencedPipelineStage));
+        NetMessage msg = null;
+        OpCode opCode = (OpCode)reader.ReadByte();
+
+        switch (opCode)
+        {
+            case OpCode.ON_KEEP_ALIVE:
+                msg = new NetKeepAlive(reader);
+                break;
+            case OpCode.ON_WELCOME:
+                msg = new NetWelcome(reader);
+                break;
+            default:
+                break;
+        }
+
+        if (msg != null)
+            msg.ReceivedOnServer(connection);
     }
 }
 
-public interface INetworkPipelineService
-{
-    public NetworkPipeline GetUnreliablePipeline();
-    public NetworkPipeline GetReliablePipeline();
-    public NetworkPipeline GetFragmentationPipeline();
-}
+
+

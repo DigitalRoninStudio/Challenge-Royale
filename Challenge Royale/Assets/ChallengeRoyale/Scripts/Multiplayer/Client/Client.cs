@@ -3,10 +3,12 @@ using Unity.Networking.Transport;
 public class Client : INetworkService
 {
     public static bool IsClient { get; private set; } = false;
+    public NetworkConnection Connection => connection;
 
     private NetworkDriver driver;
     private NetworkConnection connection;
     private NetworkSettings settings;
+    private NetworkPipelineService pipelineService;
 
     public Client(NetworkSettings settings)
     {
@@ -15,6 +17,7 @@ public class Client : INetworkService
     public void ConnectToServer(string ip, ushort port)
     {
         driver = NetworkDriver.Create(settings);
+        pipelineService = new NetworkPipelineService(driver);
 
         NetworkEndpoint endPoint = NetworkEndpoint.Parse(ip, port);
         connection = driver.Connect(endPoint);
@@ -46,7 +49,7 @@ public class Client : INetworkService
             }
             else if (cmd == NetworkEvent.Type.Data)
             {
-                //OnRecievedMessage(reader);
+                OnDataReceived(reader);
             }
             else if (cmd == NetworkEvent.Type.Disconnect)
             {
@@ -73,5 +76,48 @@ public class Client : INetworkService
     {
         IsClient = false;
         driver.Dispose();
+    }
+
+    public void SetPipelineService(NetworkPipelineService service)
+    {
+        pipelineService = service;
+    }
+    public NetworkPipeline GetPipeline(Pipeline pipeline)
+    {
+        switch (pipeline)
+        {
+            case Pipeline.Reliable:
+                return pipelineService.Reliable;
+            case Pipeline.Unreliable:
+                return pipelineService.Unreliable;
+            case Pipeline.Fragmentation:
+                return pipelineService.Fragmentation;
+        }
+        return default;
+    }
+
+    public NetworkDriver GetDriver()
+    {
+        return driver;
+    }
+    private static void OnDataReceived(DataStreamReader reader)
+    {
+        NetMessage msg = null;
+        OpCode opCode = (OpCode)reader.ReadByte();
+
+        switch (opCode)
+        {
+            case OpCode.ON_KEEP_ALIVE:
+                msg = new NetKeepAlive(reader);
+                break;
+            case OpCode.ON_WELCOME:
+                msg = new NetWelcome(reader);
+                break;
+            default:
+                break;
+        }
+
+        if (msg != null)
+            msg.ReceivedOnClient();
     }
 }
