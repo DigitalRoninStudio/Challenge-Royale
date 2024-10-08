@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Unity.Burst.CompilerServices;
 using UnityEngine;
@@ -6,10 +7,24 @@ using UnityEngine.UIElements;
 
 public abstract class Map
 {
+    public List<Tile> Tiles => GetTiles();
     protected float offset;
     protected float tileSize;
     protected GameObject tilePrefab;
     protected Dictionary<Vector2Int, Tile> tiles;
+
+    public static readonly Dictionary<Direction, int> directionToRotation = new Dictionary<Direction, int>
+    {
+        { Direction.UP, 0 },
+        { Direction.DOWN, 180 },
+        { Direction.RIGHT, 90 },
+        { Direction.LEFT, -90 },
+        { Direction.UPPER_RIGHT_45, 45 },
+        { Direction.UPPER_LEFT_45, -45 },
+        { Direction.LOWER_RIGHT_135, 135 },
+        { Direction.LOWER_LEFT_135, -135 }
+    };
+
     public Map(int column, int row, float offset, float tileSize, GameObject tilePrefab = null)
     {
         this.offset = offset;
@@ -69,7 +84,7 @@ public abstract class Map
         return null;
     }
 
-    public List<Tile> GetTiles()
+    protected List<Tile> GetTiles()
     {
         return tiles.Values.Cast<Tile>().ToList();  
     }
@@ -105,13 +120,20 @@ public abstract class Map
                 i * directionCoordinate.y + tile.coordinate.y);
 
             if (tileInDirection != null)
-                if (includeUnwalkableTiles || tileInDirection.IsWalkable())
+                if (includeUnwalkableTiles || tileInDirection.Walkable)
                     directionTiles.Add(tileInDirection);
         }
         return directionTiles;
     }
     public abstract Vector2Int DirectionToCoordinate(Direction direction);
     public abstract Direction CoordinateToDirection(Vector2Int coordinate);
+    public int DirectionToRotation(Direction direction)
+    {
+        if (directionToRotation.TryGetValue(direction, out int rotation))
+            return rotation;
+
+        throw new ArgumentException("Invalid direction");
+    }
     public void Draw()
     {
         foreach (var tile in tiles)

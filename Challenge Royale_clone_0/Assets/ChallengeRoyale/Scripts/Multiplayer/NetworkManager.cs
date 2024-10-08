@@ -65,4 +65,9 @@ public class NetworkManager : Singleton<NetworkManager>
         );
         return settings;
     }
+
+    public NetworkConnection GetClientConnection()
+    {
+        return ((Client)networkService).Connection;
+    }
 }

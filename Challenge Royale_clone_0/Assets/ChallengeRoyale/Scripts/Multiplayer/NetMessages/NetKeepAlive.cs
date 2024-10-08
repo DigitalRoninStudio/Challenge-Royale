@@ -23,6 +23,7 @@ public class NetKeepAlive : NetMessage
     }
     public override void ReceivedOnClient()
     {
+        Client.Receiver.C_ON_KEEP_ALIVE_RESPONESS?.Invoke(this);
     }
 }
 

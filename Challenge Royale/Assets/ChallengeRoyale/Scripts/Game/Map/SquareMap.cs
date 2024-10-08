@@ -27,10 +27,11 @@ public class SquareMap : Map
         { new Vector2Int(0, -1), Direction.DOWN },
         { new Vector2Int(1, 0), Direction.RIGHT },
         { new Vector2Int(-1, 0), Direction.LEFT },
-        { new Vector2Int(1, 1), Direction.UPPER_RIGHT },
-        { new Vector2Int(-1, 1), Direction.UPPER_LEFT },
-        { new Vector2Int(1, -1), Direction.LOWER_RIGHT },
-        { new Vector2Int(-1, -1), Direction.LOWER_LEFT }
+
+        { new Vector2Int(1, 1), Direction.UPPER_RIGHT_45 },
+        { new Vector2Int(-1, 1), Direction.UPPER_LEFT_45 },
+        { new Vector2Int(1, -1), Direction.LOWER_RIGHT_135 },
+        { new Vector2Int(-1, -1), Direction.LOWER_LEFT_135 }
     };
 
     public static readonly Dictionary<Direction, Vector2Int> directionToCoordinate = new Dictionary<Direction, Vector2Int>
@@ -39,10 +40,11 @@ public class SquareMap : Map
         { Direction.DOWN, new Vector2Int(0, -1) },
         { Direction.RIGHT, new Vector2Int(1, 0) },
         { Direction.LEFT, new Vector2Int(-1, 0) },
-        { Direction.UPPER_RIGHT, new Vector2Int(1, 1) },
-        { Direction.UPPER_LEFT, new Vector2Int(-1, 1) },
-        { Direction.LOWER_RIGHT, new Vector2Int(1, -1) },
-        { Direction.LOWER_LEFT, new Vector2Int(-1, -1) }
+
+        { Direction.UPPER_RIGHT_45, new Vector2Int(1, 1) },
+        { Direction.UPPER_LEFT_45, new Vector2Int(-1, 1) },
+        { Direction.LOWER_RIGHT_135, new Vector2Int(1, -1) },
+        { Direction.LOWER_LEFT_135, new Vector2Int(-1, -1) }
     };
 
     public SquareMap(int column, int row, float offset, float tileSize, GameObject tilePrefab = null) :
@@ -122,7 +124,7 @@ public class SquareMap : Map
 
         float closestDistance = Vector2.Distance(worldPosition, closestTile.GetPosition());
 
-        foreach (var neighbor in closestTile.GetNeighbors())
+        foreach (var neighbor in closestTile.Neighbors)
         {
             float newDistance = Vector2.Distance(worldPosition, neighbor.GetPosition());
 

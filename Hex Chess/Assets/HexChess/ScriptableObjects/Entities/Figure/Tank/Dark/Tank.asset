@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55b9372f38827374a9ded3be3205afde, type: 3}
+  m_Name: Tank
+  m_EditorClassIdentifier: 
+  Id: DARK_TANK
+  Name: Tank
+  GameObject: {fileID: 4812554731794180645, guid: 6899b95d45921df4f9b752c08e4372c2, type: 3}
+  BehaviourDatas:
+  - {fileID: 11400000, guid: 5479c5f2bd9db8045b8506df212055e3, type: 2}
+  FractionType: 2
+  FigureType: 3
+  Stats:
+    MaxHealth: 4
+    Damage: 1
+    AttackRange: 1

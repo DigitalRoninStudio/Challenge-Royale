@@ -1,6 +1,7 @@
-﻿using Unity.Networking.Transport;
+﻿using System;
+using Unity.Networking.Transport;
 
-public interface INetworkService
+public interface INetworkService : IDisposable
 {
     void Update();
     void Dispose();

@@ -1,14 +1,14 @@
 using UnityEditor;
 using UnityEngine;
 
-[CustomEditor(typeof(MapCreator))]
+[CustomEditor(typeof(MapEditor))]
 public class MapCreatorEditor : Editor
 {
     public override void OnInspectorGUI()
     {
         DrawDefaultInspector();
 
-        MapCreator mapCreator = (MapCreator)target;
+        MapEditor mapCreator = (MapEditor)target;
 
         EditorGUILayout.Space();
         if (GUILayout.Button("Create"))

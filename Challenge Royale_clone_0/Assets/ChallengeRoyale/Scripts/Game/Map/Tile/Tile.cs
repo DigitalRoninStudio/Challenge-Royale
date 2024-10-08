@@ -6,9 +6,13 @@ public abstract class Tile
 {
     public readonly Vector2Int coordinate;
     protected List<Entity> entities;
+    public List<Tile> Neighbors => neighbors;
     protected List<Tile> neighbors;
     protected Vector3 position;
-    protected GameObject obj;
+    public TilePathData pathData;
+    public bool Walkable => IsWalkable();
+    public GameObject GameObject => gameObject;
+    protected GameObject gameObject;
 
     public Tile(Vector2Int coordinate, Vector3 position)
     {
@@ -16,10 +20,12 @@ public abstract class Tile
         entities = new List<Entity>();
         neighbors = new List<Tile>();
         this.position = position;
+        pathData = new TilePathData();
     }
 
     public void AddEntity(Entity entity)
     {
+        entity.GameObject.transform.position = this.position;
         entities.Add(entity);
     }
 
@@ -37,10 +43,10 @@ public abstract class Tile
         return null;
     }
 
-    public bool IsWalkable()
+    private bool IsWalkable()
     {
         foreach(var entity in entities)
-            if(entity.IsBlockingMovement)
+            if(entity.isBlockingMovement)
                 return false;
 
         return true;
@@ -66,9 +72,7 @@ public abstract class Tile
             neighbors.Add(tile);
     }
 
-    public List<Tile> GetNeighbors() { return neighbors; }
-
-    public GameObject GetObject() { return obj; }
+    public GameObject GetObject() { return gameObject; }
 
     public void Draw(float tileSize)
     {
@@ -84,12 +88,12 @@ public abstract class Tile
 
     public void SetColor(Color color)
     {
-        obj.GetComponent<SpriteRenderer>().color = color;
+        gameObject.GetComponent<SpriteRenderer>().color = color;
     }
 
     public Color GetColor()
     {
-        return obj.GetComponent<SpriteRenderer>().color;
+        return gameObject.GetComponent<SpriteRenderer>().color;
     }
     public abstract Vector3[] Corners(float tileSize);
     protected abstract Vector3 Corner(int index, float tileSize);
@@ -97,13 +101,28 @@ public abstract class Tile
 
     public void Dispose()
     {
-        if (obj != null) GameObject.Destroy(obj);
+        if (gameObject != null) GameObject.Destroy(gameObject);
 
         foreach (var neighbor in neighbors)
         {
-            if(neighbor.GetNeighbors().Contains(this))
-                neighbor.GetNeighbors().Remove(this);
+            if(neighbor.Neighbors.Contains(this))
+                neighbor.Neighbors.Remove(this);
         }             
+    }
+
+    public class TilePathData
+    {
+        public int weight = 1;
+        public int cost;
+        public Tile prevTile;
+
+        public TilePathData()
+        {
+            weight = 1;
+            cost = 0;
+            prevTile = null;
+        }
+
     }
 }
 

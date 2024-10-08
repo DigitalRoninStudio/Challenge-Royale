@@ -2,45 +2,62 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using static UnityEditor.PlayerSettings;
 
 public class HexagonMap : Map
 {
-    public static readonly List<Vector2Int> neighborsVectors = new List<Vector2Int> {
+    public static readonly List<Vector2Int> neighborsVectors = new List<Vector2Int> 
+    {
         new Vector2Int(0, 1),
-        new Vector2Int(1, -1),
-        new Vector2Int(-1, 0),
+        new Vector2Int(0, -1),
         new Vector2Int(1, 0),
         new Vector2Int(-1, 1),
-        new Vector2Int(0, -1)};
+        new Vector2Int(1, -1),
+        new Vector2Int(-1, 0),
+    };
 
     public static readonly List<Vector2Int> diagonalsNeighborsVectors = new List<Vector2Int>() {
-        new Vector2Int(2, -1),
-        new Vector2Int(1, -2),
-        new Vector2Int(-1, -1),
         new Vector2Int(-2, 1),
+        new Vector2Int(2, -1),
         new Vector2Int(-1, 2),
-        new Vector2Int(1, 1)};
+        new Vector2Int(1, 1),
+        new Vector2Int(1, -2),
+        new Vector2Int(-1, -1)};
 
     public static readonly Dictionary<Vector2Int, Direction> coordinateToDirection = new Dictionary<Vector2Int, Direction>
     {
         { new Vector2Int(0, 1), Direction.UP },
         { new Vector2Int(0, -1), Direction.DOWN },
-        { new Vector2Int(1, -1), Direction.UPPER_RIGHT },
-        { new Vector2Int(-1, 0), Direction.UPPER_LEFT },
-        { new Vector2Int(1, 0), Direction.LOWER_RIGHT },
-        { new Vector2Int(-1, 1), Direction.LOWER_LEFT }
+        { new Vector2Int(1, 0), Direction.UPPER_RIGHT_60 },
+        { new Vector2Int(-1, 1), Direction.UPPER_LEFT_60 },
+        { new Vector2Int(1, -1), Direction.LOWER_RIGHT_120 },
+        { new Vector2Int(-1, 0), Direction.LOWER_LEFT_120 },
+
+
+        { new Vector2Int(-2, 1), Direction.LEFT },
+        { new Vector2Int(2, -1), Direction.RIGHT },
+        { new Vector2Int(-1, 2), Direction.UPPER_LEFT_45 },
+        { new Vector2Int(1, 1), Direction.UPPER_RIGHT_45 },
+        { new Vector2Int(1, -2), Direction.LOWER_RIGHT_135 },
+        { new Vector2Int(-1, -1), Direction.LOWER_LEFT_135 },
     };
 
     public static readonly Dictionary<Direction, Vector2Int> directionToCoordinate = new Dictionary<Direction, Vector2Int>
     {
         { Direction.UP, new Vector2Int(0, 1) },
         { Direction.DOWN, new Vector2Int(0, -1) },
-        { Direction.UPPER_RIGHT, new Vector2Int(1, -1) },
-        { Direction.UPPER_LEFT, new Vector2Int(-1, 0) },
-        { Direction.LOWER_RIGHT, new Vector2Int(1, 0) },
-        { Direction.LOWER_LEFT, new Vector2Int(-1, 1) }
+        { Direction.UPPER_RIGHT_60, new Vector2Int(1, 0) },
+        { Direction.UPPER_LEFT_60, new Vector2Int(-1, 1) },
+        { Direction.LOWER_RIGHT_120, new Vector2Int(1, -1) },
+        { Direction.LOWER_LEFT_120, new Vector2Int(-1, 0) },
+
+        { Direction.LEFT, new Vector2Int(-2, 1) },
+        { Direction.RIGHT, new Vector2Int(2, -1) },
+        { Direction.UPPER_LEFT_45, new Vector2Int(-1, 2) },
+        { Direction.UPPER_RIGHT_45, new Vector2Int(1, 1) },
+        { Direction.LOWER_RIGHT_135, new Vector2Int(1, -2) },
+        { Direction.LOWER_LEFT_135, new Vector2Int(-1, -1) },
     };
+
 
     public HexagonMap(int column, int row, float offset, float tileSize, GameObject tilePrefab = null) :
         base(column, row, offset, tileSize, tilePrefab) { }
@@ -120,7 +137,7 @@ public class HexagonMap : Map
 
         float closestDistance = Vector2.Distance(worldPosition, closestTile.GetPosition());
 
-        foreach (var neighbor in closestTile.GetNeighbors())
+        foreach (var neighbor in closestTile.Neighbors)
         {
             float newDistance = Vector2.Distance(worldPosition, neighbor.GetPosition());
 

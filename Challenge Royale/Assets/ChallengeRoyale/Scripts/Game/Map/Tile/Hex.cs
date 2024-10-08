@@ -27,11 +27,11 @@ public class Hex : Tile
     }
     public override GameObject InstatniateTileGameObject(GameObject prefab, Color color)
     {
-        obj = GameObject.Instantiate(prefab, position, Quaternion.identity);
-        obj.name = $"Hex [{coordinate.x},{coordinate.y}]";
-        obj.GetComponentInChildren<TextMeshPro>().text = $"[{coordinate.x},{coordinate.y}]";
+        gameObject = GameObject.Instantiate(prefab, position, Quaternion.identity);
+        gameObject.name = $"Hex [{coordinate.x},{coordinate.y}]";
+        gameObject.GetComponentInChildren<TextMeshPro>().text = $"[{coordinate.x},{coordinate.y}]";
         SetColor(color);
-        return obj;
+        return gameObject;
     }
 }
 
