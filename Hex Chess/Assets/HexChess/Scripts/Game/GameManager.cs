@@ -83,21 +83,7 @@ public class GameManager : Singleton<GameManager>
     {
         if(Input.GetKeyDown(KeyCode.I))
         {
-           /* GameFactory gameFactory = new GameFactory();
-            Entity entity = gameFactory.CreateFigure(FractionType.LIGHT, FigureType.Swordsman);
-            EntityData data = entity.GetEntityData();
-            string json = GameStateConverter.Serialize(data);
-            Debug.Log(json);
-            entity.Dispose();
-            FigureData figureData = GameStateConverter.Deserialize<FigureData>(json);
-            Entity newEntity = gameFactory.CreateEntity(figureData);
-            Debug.Log("Entity name: " + newEntity.name);
-            Debug.Log("Entity guid: " + newEntity.guid);
-            Debug.Log("Entity id: " + newEntity.id);
-            Debug.Log("Behaviour name: " + newEntity.Behaviours[0].name);
-            Debug.Log("Behaviour guid: " + newEntity.Behaviours[0].guid);
-            Debug.Log("Behaviour id: " + newEntity.Behaviours[0].id);*/
-             /*   game = new Game();
+              /* game = new Game();
                game.GUID = Guid.NewGuid().ToString();
                game.map = MapEditor.Instance.Map;
 
@@ -109,30 +95,44 @@ public class GameManager : Singleton<GameManager>
                player2.id = "Player 2";
                player2.team = Team.BAD_BOYS;
 
-            GameFactory gameFactory = new GameFactory();*/
-            /*Figure figure1 = gameFactory.CreateFigure(FractionType.LIGHT, FigureType.Swordsman);
-            Figure figure2 = gameFactory.CreateFigure(FractionType.DARK, FigureType.Swordsman);
+               game.AddPlayer(player1);
+               game.AddPlayer(player2);
 
-            figure1.direction = Direction.UP;
-            figure1.visibility = Visibility.BOTH;
+            GameFactory gameFactory = new GameFactory();
+            foreach (var spawnPosition in MapEditor.Instance.Map.SpawnPositions)
+            {
 
-            figure2.direction = Direction.DOWN;
-            figure2.visibility = Visibility.BOTH;*/
+                Figure figure = gameFactory.CreateFigure(spawnPosition.Team == Team.GOOD_BOYS ? FractionType.LIGHT : FractionType.DARK , spawnPosition.FigureType);
 
-            /* DamageableBehaviour behaviour = gameFactory.CreateBehaviourByBlueprintId("DAMAGAEBLE") as DamageableBehaviour;
-             figure.AddBehaviour(behaviour);
-             Damage damage = new Damage(1, DamageType.Physical);
-             behaviour.ReceiveDamage(damage);*/
-            /*player1.AddEntity(figure1);
-            player2.AddEntity(figure2);
+                game.map.GetTile(spawnPosition.Coordinate.x, spawnPosition.Coordinate.y).AddEntity(figure);
 
-            game.AddPlayer(player1);
-            game.AddPlayer(player2);
+                if (spawnPosition.Team == Team.GOOD_BOYS)
+                    player1.AddEntity(figure);
+                else
+                    player2.AddEntity(figure);
+            }
+            GameData gameData = gameFactory.CreateGameData(game);
+            string json = GameStateConverter.Serialize(gameData);
+            Debug.Log(json);*/
+            /* GameFactory gameFactory = new GameFactory();
+             Figure figure1 = gameFactory.CreateFigure(FractionType.LIGHT, FigureType.Swordsman);
+             Figure figure2 = gameFactory.CreateFigure(FractionType.DARK, FigureType.Swordsman);
 
-            game.map.GetTile(0, 0).AddEntity(figure1);
-            game.map.GetTile(0, 2).AddEntity(figure2);
+             figure1.direction = Direction.UP;
+             figure1.visibility = Visibility.BOTH;
 
-            AttackBehaviour attack = figure1.GetBehaviour<AttackBehaviour>();
+             figure2.direction = Direction.DOWN;
+             figure2.visibility = Visibility.BOTH;
+             player1.AddEntity(figure1);
+             player2.AddEntity(figure2);
+
+             game.AddPlayer(player1);
+             game.AddPlayer(player2);
+
+             game.map.GetTile(0, 0).AddEntity(figure1);
+             game.map.GetTile(0, 2).AddEntity(figure2);*/
+
+            /*AttackBehaviour attack = figure1.GetBehaviour<AttackBehaviour>();
             if (attack.CanAttack(figure2))
             {
                 attack.SetAttack(figure2.GetBehaviour<DamageableBehaviour>());
@@ -145,22 +145,22 @@ public class GameManager : Singleton<GameManager>
            }*/
             //figure.AddBehaviourToWork(knightMovement);
 
-           /* game.random.Next();
-            game.random.Next();
-            game.random.Next();
-            game.random.Next();
-            game.random.Next();
-            game.random.Next();
-            game.random.Next();
-            GameData gameData = gameFactory.CreateGameData(game);
-             string json = GameStateConverter.Serialize(gameData);
-             Debug.Log(json);
-            Debug.Log("RANDOM: " + game.random.Next());*/
+            /* game.random.Next();
+             game.random.Next();
+             game.random.Next();
+             game.random.Next();
+             game.random.Next();
+             game.random.Next();
+             game.random.Next();
+             GameData gameData = gameFactory.CreateGameData(game);
+              string json = GameStateConverter.Serialize(gameData);
+              Debug.Log(json);
+             Debug.Log("RANDOM: " + game.random.Next());*/
 
               GameData gameData = GameStateConverter.Deserialize<GameData>(gameJson);
               GameFactory gameFactory = new GameFactory();
               game = gameFactory.CreateGame(gameData);
-              Debug.Log("RANDOM: " + game.randomGenerator.Next());
+            //  Debug.Log("RANDOM: " + game.randomGenerator.Next());*/
             /* Debug.Log(game.players[0].entities[0].Behaviours[0].name);
              Debug.Log(((DamageableBehaviour)game.players[0].entities[0].Behaviours[1]).name
                  + " " + ((DamageableBehaviour)game.players[0].entities[0].Behaviours[1]).CurrentHealth + " " + 

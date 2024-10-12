@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55b9372f38827374a9ded3be3205afde, type: 3}
+  m_Name: KnightFliped
+  m_EditorClassIdentifier: 
+  Id: DARK_KNIGHT_FLIPED
+  Name: Knight
+  GameObject: {fileID: 4812554731794180645, guid: 9e2257cbb5bd31a4281a20d8a3910617, type: 3}
+  BehaviourDatas:
+  - {fileID: 11400000, guid: b81fdee20a36bc44cb41487e803a3379, type: 2}
+  - {fileID: 11400000, guid: d947a3a7c2a0e71419890569a33f7ed8, type: 2}
+  - {fileID: 11400000, guid: 37339b1293e90214abf3fa11675b2f65, type: 2}
+  Icon: {fileID: 4498544600597911442, guid: a7e25698a2776324b938931f2d43c164, type: 3}
+  Fliped: 1
+  FractionType: 2
+  FigureType: 2

@@ -16,8 +16,9 @@ MonoBehaviour:
   Name: Swordsman
   GameObject: {fileID: 4812554731794180645, guid: 384bb462401910845aae78ab9063c0fb, type: 3}
   BehaviourDatas:
-  - {fileID: 11400000, guid: 5479c5f2bd9db8045b8506df212055e3, type: 2}
-  - {fileID: 11400000, guid: e3774f988127f7745a360730d6c162d8, type: 2}
-  - {fileID: 11400000, guid: dc8cba583fb24264f9ec06ecde3aa293, type: 2}
+  - {fileID: 11400000, guid: 8467ea45ec2f7224bacc1106bde9d42a, type: 2}
+  - {fileID: 11400000, guid: 75349853f3075d84fa231a580aff38d4, type: 2}
+  - {fileID: 11400000, guid: 90c9eabd620a5394bbf80ef17a399b0b, type: 2}
+  Icon: {fileID: 3623602122773473059, guid: 81d0da5a43009d0419e62885de324076, type: 3}
   FractionType: 2
   FigureType: 1

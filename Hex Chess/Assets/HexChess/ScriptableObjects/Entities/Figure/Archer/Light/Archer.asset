@@ -16,10 +16,9 @@ MonoBehaviour:
   Name: Archer
   GameObject: {fileID: 4812554731794180645, guid: 4be7f7e7b58c8a7458aa364621269759, type: 3}
   BehaviourDatas:
-  - {fileID: 11400000, guid: 5479c5f2bd9db8045b8506df212055e3, type: 2}
+  - {fileID: 11400000, guid: 8d4851e3c7225dd4386de26f139a898d, type: 2}
+  - {fileID: 11400000, guid: 6339200c87a3a444e8f7c2c1c88c35aa, type: 2}
+  - {fileID: 11400000, guid: 5d82cbbdc640a024f964614e7c4c201b, type: 2}
+  Icon: {fileID: 6641980020170502341, guid: 70c02322f70d3ab4794fdcb5a06c99b8, type: 3}
   FractionType: 1
   FigureType: 4
-  Stats:
-    MaxHealth: 2
-    Damage: 1
-    AttackRange: 2

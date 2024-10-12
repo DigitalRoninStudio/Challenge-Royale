@@ -16,10 +16,9 @@ MonoBehaviour:
   Name: Tank
   GameObject: {fileID: 4812554731794180645, guid: bf2a7c8cfa4d1f340be810a5fd818a74, type: 3}
   BehaviourDatas:
-  - {fileID: 11400000, guid: 5479c5f2bd9db8045b8506df212055e3, type: 2}
+  - {fileID: 11400000, guid: 24b9cd5836382df49a11efa200e8399f, type: 2}
+  - {fileID: 11400000, guid: 76a4f7c982a0f144487253c4f7a1bd8a, type: 2}
+  - {fileID: 11400000, guid: 3760f1a6f7b105f4b8960c6086ce8feb, type: 2}
+  Icon: {fileID: 5430300794033132139, guid: 4338c09be8a07344c9e6da62b9581e74, type: 3}
   FractionType: 1
   FigureType: 3
-  Stats:
-    MaxHealth: 4
-    Damage: 1
-    AttackRange: 1

@@ -132,8 +132,8 @@ public static class GameStateConverter
     {
         JsonSerializerSettings settings = new JsonSerializerSettings
         {
-            //Formatting = Formatting.Indented,
-            // PreserveReferencesHandling = PreserveReferencesHandling.All,
+            Formatting = Formatting.None,
+            StringEscapeHandling = StringEscapeHandling.Default,
             Converters = new List<JsonConverter>
         {
             new EntityDataListJsonConverter(),
@@ -148,8 +148,8 @@ public static class GameStateConverter
     {
         JsonSerializerSettings settings = new JsonSerializerSettings
         {
-            Formatting = Formatting.Indented,
-            // PreserveReferencesHandling = PreserveReferencesHandling.All,
+            Formatting = Formatting.None,
+            StringEscapeHandling = StringEscapeHandling.Default,
             Converters = new List<JsonConverter>
         {
             new EntityDataListJsonConverter(),

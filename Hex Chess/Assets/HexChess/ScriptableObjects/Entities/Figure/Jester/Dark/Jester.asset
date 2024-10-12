@@ -16,10 +16,9 @@ MonoBehaviour:
   Name: Jester
   GameObject: {fileID: 4812554731794180645, guid: cc4fd329bbd41aa4588696830445c4d9, type: 3}
   BehaviourDatas:
-  - {fileID: 11400000, guid: 5479c5f2bd9db8045b8506df212055e3, type: 2}
+  - {fileID: 11400000, guid: da470810fee7cf4478af99bc5ad5dc6c, type: 2}
+  - {fileID: 11400000, guid: 8c18f94bcfe51104aaa163601ac1579d, type: 2}
+  - {fileID: 11400000, guid: ab256a048650b4a41b0da5cf92ec25fb, type: 2}
+  Icon: {fileID: -106425764567434937, guid: d77b5958e566ac34799bebfa411a9a63, type: 3}
   FractionType: 2
   FigureType: 6
-  Stats:
-    MaxHealth: 3
-    Damage: 1
-    AttackRange: 1

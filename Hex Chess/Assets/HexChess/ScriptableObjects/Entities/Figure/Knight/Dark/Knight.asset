@@ -16,10 +16,9 @@ MonoBehaviour:
   Name: Knight
   GameObject: {fileID: 4812554731794180645, guid: 9e2257cbb5bd31a4281a20d8a3910617, type: 3}
   BehaviourDatas:
-  - {fileID: 11400000, guid: 3340d9ecca75ff7458644c22c7523495, type: 2}
+  - {fileID: 11400000, guid: b81fdee20a36bc44cb41487e803a3379, type: 2}
+  - {fileID: 11400000, guid: d947a3a7c2a0e71419890569a33f7ed8, type: 2}
+  - {fileID: 11400000, guid: 37339b1293e90214abf3fa11675b2f65, type: 2}
+  Icon: {fileID: 4498544600597911442, guid: a7e25698a2776324b938931f2d43c164, type: 3}
   FractionType: 2
   FigureType: 2
-  Stats:
-    MaxHealth: 3
-    Damage: 1
-    AttackRange: 1

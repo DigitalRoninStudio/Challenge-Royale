@@ -16,10 +16,8 @@ MonoBehaviour:
   Name: King
   GameObject: {fileID: 4812554731794180645, guid: 22be51ba35bcbee4c8f56fdd4ae2a8f4, type: 3}
   BehaviourDatas:
-  - {fileID: 11400000, guid: 5479c5f2bd9db8045b8506df212055e3, type: 2}
+  - {fileID: 11400000, guid: f9f77b5887e37bf498b5ddb84876c226, type: 2}
+  - {fileID: 11400000, guid: 2052d843e18e7c849bb3bbbaf8f7af68, type: 2}
+  Icon: {fileID: 5812936510164466748, guid: 537964f00104ca149adf2c77b25a3ae3, type: 3}
   FractionType: 2
   FigureType: 8
-  Stats:
-    MaxHealth: 1
-    Damage: 1
-    AttackRange: 1

@@ -11,6 +11,8 @@ public class Figure : Entity
     {
         FigureType = figureData.FigureType;
         FractionType = figureData.FractionType;
+
+        gameObject.GetComponent<FigureVisual>().Initialize(this, figureData);
     }
     public override EntityData GetEntityData() => new FigureData(this);
 }
