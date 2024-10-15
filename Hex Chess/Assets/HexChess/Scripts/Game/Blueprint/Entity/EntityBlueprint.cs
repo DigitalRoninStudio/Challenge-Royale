@@ -6,6 +6,7 @@ public abstract class EntityBlueprint : ScriptableObject
 {
     public string Id;
     public string Name;
+    public bool IsBlockingMovement = true;
     public GameObject GameObject;
 
     public List<BehaviourBlueprint> BehaviourDatas = new List<BehaviourBlueprint>();

@@ -102,7 +102,7 @@ public class MapEditorUI : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetMouseButtonDown(0))
+       /* if (Input.GetMouseButtonDown(0))
         {
             if (EventSystem.current.IsPointerOverGameObject()) return;
 
@@ -125,7 +125,7 @@ public class MapEditorUI : MonoBehaviour
                         mapEditor.RemoveTile(tile);
                     break;
             }
-        }
+        }*/
     }
 
     private void OnDisable()

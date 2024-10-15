@@ -103,7 +103,7 @@ public class DirectionMovementBehaviour : MovementBehaviour
 
         foreach (var neigborVectors in HexagonMap.neighborsVectors)
             if (HexagonMap.coordinateToDirection.TryGetValue(neigborVectors, out Direction direction))
-                availableMoves.AddRange(Map.GetTilesInDirection(tile, direction, range, false));
+                availableMoves.AddRange(Map.GetTilesInDirection(tile, direction, range, false, true));
 
         return availableMoves;
     }

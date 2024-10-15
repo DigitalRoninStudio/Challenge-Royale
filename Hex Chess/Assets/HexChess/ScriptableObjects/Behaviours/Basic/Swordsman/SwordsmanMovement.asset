@@ -15,4 +15,4 @@ MonoBehaviour:
   Id: SWORDSMAN_MOVEMENT
   Name: Normal
   Speed: 0.25
-  Range: 2
+  Range: 1

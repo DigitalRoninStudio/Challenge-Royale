@@ -130,7 +130,8 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      BlackJester_0: -106425764567434937
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -130,7 +130,8 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      WhiteKnight_0: 1176831696258084785
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

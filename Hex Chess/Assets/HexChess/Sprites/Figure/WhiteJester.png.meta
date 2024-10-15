@@ -130,7 +130,8 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      WhiteJester_0: 4143592555801188937
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

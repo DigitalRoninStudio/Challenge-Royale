@@ -130,7 +130,8 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      BlackArcher_0: 8082353723454058590
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

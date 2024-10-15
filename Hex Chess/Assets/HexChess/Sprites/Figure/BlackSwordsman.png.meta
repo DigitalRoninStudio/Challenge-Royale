@@ -130,7 +130,8 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      BlackSwordsman_0: 3623602122773473059
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

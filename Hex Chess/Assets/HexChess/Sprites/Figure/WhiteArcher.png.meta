@@ -130,7 +130,8 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      WhiteArcher_0: 6641980020170502341
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

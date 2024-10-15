@@ -123,7 +123,7 @@ public abstract class Map
     public abstract List<Vector2Int> GetNeighborsVectors();
     public abstract List<Vector2Int> GetDiagonalsNeighborsVectors();
     public abstract List<Tile> TilesInRange(Tile tile, int range);
-    public List<Tile> GetTilesInDirection(Tile tile, Direction direction, int range, bool includeUnwalkableTiles = true)
+    public List<Tile> GetTilesInDirection(Tile tile, Direction direction, int range, bool includeUnwalkableTiles = true, bool breakOnFirstUnwalkableTile = false)
     {
         List<Tile> directionTiles = new List<Tile>();
         Vector2Int directionCoordinate = DirectionToCoordinate(direction);
@@ -135,8 +135,12 @@ public abstract class Map
                 i * directionCoordinate.y + tile.coordinate.y);
 
             if (tileInDirection != null)
-                if (includeUnwalkableTiles || tileInDirection.Walkable)
+            {
+                if (breakOnFirstUnwalkableTile && !tileInDirection.Walkable)
+                    return directionTiles;
+                else if (includeUnwalkableTiles || tileInDirection.Walkable)
                     directionTiles.Add(tileInDirection);
+            }
         }
         return directionTiles;
     }

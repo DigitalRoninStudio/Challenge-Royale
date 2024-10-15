@@ -40,6 +40,7 @@ public abstract class Entity : IDisposable
         guid = Guid.NewGuid().ToString();
         blueprintId = blueprint.Id;
         name = blueprint.Name;
+        isBlockingMovement = blueprint.IsBlockingMovement;
         visibility = Visibility.BOTH;
         gameObject = GameObject.Instantiate(blueprint.GameObject);
 
