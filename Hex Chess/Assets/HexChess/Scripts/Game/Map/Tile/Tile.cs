@@ -85,11 +85,18 @@ public abstract class Tile
     {
         return position;
     }
+    public void SetMainColor(Color color)
+    {
+        gameObject.GetComponent<TileVisual>().Initialize(this, color);
+    }
     public void SetColor(Color color)
     {
-        gameObject.GetComponent<SpriteRenderer>().color = color;
+        gameObject.GetComponent<TileVisual>().SetColor(color);
     }
-
+    public void RefreshColor()
+    {
+        gameObject.GetComponent<TileVisual>().Refresh();
+    }
     public Color GetColor()
     {
         return gameObject.GetComponent<SpriteRenderer>().color;

@@ -14,8 +14,6 @@ public class TileVisual : MonoBehaviour
         this.tile = tile;
         this.mainColor = mainColor;
         SelectableTile.color = mainColor;
-
-        //subscribe on tile
     }
     public void OnHover(Color color)
     {
@@ -32,11 +30,9 @@ public class TileVisual : MonoBehaviour
         SelectableTile.color = color;
     }
 
-    public void SetColor(Color color, bool mainColor = false)
+    public void SetColor(Color color)
     {
         SelectableTile.color = color;
-        if(mainColor)
-            this.mainColor = color;
     }
 
     public void OnUnselect()
@@ -46,9 +42,7 @@ public class TileVisual : MonoBehaviour
 
     public void Refresh()
     {
-        Color color = Color.white;
-        color.a = 0;
-        SelectableTile.color = color;
+        SelectableTile.color = mainColor;
     }
 
 }

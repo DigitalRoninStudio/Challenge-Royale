@@ -7,9 +7,13 @@ public class NormalMovementBehaviour : MovementBehaviour
     public NormalMovementBehaviour() { }
     public NormalMovementBehaviour(NormalMovementBlueprint blueprint) : base(blueprint) { }
 
-    public override List<Tile> GetAvailableMoves(Tile tile)
+    public override List<Tile> GetAvailableMoves()
     {
         List<Tile> availableMoves = new List<Tile>();
+
+        Tile tile = Map.GetTile(owner);
+
+        if (tile == null) return availableMoves;
 
         foreach (var tileInRange in PathFinder.BFS_RangeMovement(tile, range, Map))
             availableMoves.Add(tileInRange);
@@ -17,11 +21,11 @@ public class NormalMovementBehaviour : MovementBehaviour
         return availableMoves;
     }
 
-    public override void SetPath(Tile start, Tile end)
+    public override void SetPath(Tile end)
     {
-        base.SetPath(start, end);
+        base.SetPath(end);
 
-        path = PathFinder.FindPath_AStar(start, end, Map);
+        path = PathFinder.FindPath_AStar(currentTile, end, Map);
     }
     public override BehaviourData GetBehaviourData() => new NormalMovementData(this);
 }
@@ -31,9 +35,13 @@ public class KnightMovementBehaviour : MovementBehaviour
     public KnightMovementBehaviour() { }
     public KnightMovementBehaviour(KnightMovementBlueprint blueprint) : base(blueprint) { }
 
-    public override List<Tile> GetAvailableMoves(Tile tile)
+    public override List<Tile> GetAvailableMoves()
     {
         List<Tile> availableMoves = new List<Tile>();
+
+        Tile tile = Map.GetTile(owner);
+
+        if (tile == null) return availableMoves;
 
         foreach (var diagonalVector in HexagonMap.diagonalsNeighborsVectors)
         {
@@ -48,11 +56,11 @@ public class KnightMovementBehaviour : MovementBehaviour
         return availableMoves;
     }
 
-    public override void SetPath(Tile start, Tile end)
+    public override void SetPath(Tile end)
     {
-        base.SetPath(start, end);
+        base.SetPath(end);
 
-        path.Enqueue(start);
+        path.Enqueue(currentTile);
         path.Enqueue(end);
     }
     public override BehaviourData GetBehaviourData() => new KnightMovementData(this);
@@ -72,9 +80,13 @@ public class TeleportMovementBehaviour : MovementBehaviour
             Exit();
         }
     }
-    public override List<Tile> GetAvailableMoves(Tile tile)
+    public override List<Tile> GetAvailableMoves()
     {
         List<Tile> availableMoves = new List<Tile>();
+
+        Tile tile = Map.GetTile(owner);
+
+        if (tile == null) return availableMoves;
 
         foreach (var tileInRange in PathFinder.BFS_RangeMovement(tile, range, Map))
             availableMoves.Add(tileInRange);
@@ -82,11 +94,11 @@ public class TeleportMovementBehaviour : MovementBehaviour
         return availableMoves;
     }
 
-    public override void SetPath(Tile start, Tile end)
+    public override void SetPath(Tile end)
     {
-        base.SetPath(start, end);
+        base.SetPath(end);
 
-        path.Enqueue(start);
+        path.Enqueue(currentTile);
         path.Enqueue(end);
     }
     public override BehaviourData GetBehaviourData() => new TeleportMovementData(this);
@@ -97,9 +109,13 @@ public class DirectionMovementBehaviour : MovementBehaviour
     public DirectionMovementBehaviour() { }
     public DirectionMovementBehaviour(DirectionMovementBlueprint blueprint) : base(blueprint) { }
 
-    public override List<Tile> GetAvailableMoves(Tile tile)
+    public override List<Tile> GetAvailableMoves()
     {
         List<Tile> availableMoves = new List<Tile>();
+
+        Tile tile = Map.GetTile(owner);
+
+        if (tile == null) return availableMoves;
 
         foreach (var neigborVectors in HexagonMap.neighborsVectors)
             if (HexagonMap.coordinateToDirection.TryGetValue(neigborVectors, out Direction direction))
@@ -107,10 +123,10 @@ public class DirectionMovementBehaviour : MovementBehaviour
 
         return availableMoves;
     }
-    public override void SetPath(Tile start, Tile end)
+    public override void SetPath(Tile end)
     {
-        base.SetPath(start, end);
-        path = PathFinder.FindPath_AStar(start, end, Map);
+        base.SetPath(end);
+        path = PathFinder.FindPath_AStar(currentTile, end, Map);
 
     }
     public override BehaviourData GetBehaviourData() => new DirectionMovementData(this);

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
-using static UnityEngine.EventSystems.EventTrigger;
 
 public class PlayerController : MonoBehaviour, PlayerInGameController.IBasicStateActions, PlayerInGameController.IEntitySelectedStateActions
 {
@@ -15,8 +14,8 @@ public class PlayerController : MonoBehaviour, PlayerInGameController.IBasicStat
 
     private IPlayerState currentState;
 
-    public Action OnRefreshFields;
-    public Action<MovementBehaviour, Tile> OnShowMovementFields;
+    public Action OnResetTiles;
+    public Action<Entity> OnSelectEntity;
 
     private void Awake()
     {
@@ -81,12 +80,14 @@ public class BasicState : IPlayerState
 {
     public void EnterState(PlayerController playerController)
     {
+        Debug.Log("ENTER BASIC STATE");
         playerController.inputController.BasicState.Enable();
     }
 
     public void ExitState(PlayerController playerController)
     {
-        playerController.OnRefreshFields?.Invoke();
+        Debug.Log("EXIT BASIC STATE");
+        playerController.OnResetTiles?.Invoke();
         playerController.inputController.BasicState.Disable();
     }
     public void OnScreenPosition(InputAction.CallbackContext context, PlayerController playerController)
@@ -99,26 +100,30 @@ public class BasicState : IPlayerState
 
     public void OnSelectEntity(InputAction.CallbackContext context, PlayerController playerController)
     {
-        if (context.performed)
+        if (!context.performed || EventSystem.current.IsPointerOverGameObject())
+            return;
+
+        Vector2 worldPosition = Camera.main.ScreenToWorldPoint(playerController.gameManager.mousePosition);
+        Tile tile = playerController.gameManager.game.map.OnHoverMapGetTile(worldPosition);
+
+        if (tile == null)
+            return;
+
+        List<Entity> entities = tile.GetEntities() ?? new List<Entity>();
+
+        if (entities.Count != 0)
+            TrySelectEntityOnTile(playerController, entities);
+
+    }
+    private void TrySelectEntityOnTile(PlayerController playerController, List<Entity> entities)
+    {
+        foreach (Entity entity in entities)
         {
-            if (EventSystem.current.IsPointerOverGameObject()) return;
-
-            //move to method
-            Vector2 worldPosition = Camera.main.ScreenToWorldPoint(playerController.gameManager.mousePosition);
-            Tile tile = playerController.gameManager.game.map.OnHoverMapGetTile(worldPosition);
-            List<Entity> entities = tile?.GetEntities() ?? new List<Entity>();
-
-            if (tile != null)
+            if (entity is Figure)
             {
-                foreach (Entity entity in entities)
-                {
-                    if(entity is Figure)
-                    {
-                        playerController.gameManager.selectedEntity = entity;
-                        playerController.TransitionToState(playerController.EntitySelectedState);
-                        return;
-                    }
-                }
+                playerController.gameManager.selectedEntity = entity;
+                playerController.TransitionToState(playerController.EntitySelectedState);
+                break;
             }
         }
     }
@@ -128,17 +133,14 @@ public class EntitySelectedState : IPlayerState
 {
     public void EnterState(PlayerController playerController)
     {
-        //hot fix
-        MovementBehaviour movementBehaviour = playerController.gameManager.selectedEntity.GetBehaviour<MovementBehaviour>();
-        Tile tile = playerController.gameManager.game.map.GetTile(playerController.gameManager.selectedEntity);
-        if (movementBehaviour != null && tile != null)
-            playerController.OnShowMovementFields?.Invoke(movementBehaviour, tile);
-
+        Debug.Log("ENTER ENTITY SELECTED STATE");
+        playerController.OnSelectEntity?.Invoke(playerController.gameManager.selectedEntity);
         playerController.inputController.EntitySelectedState.Enable();
     }
     public void ExitState(PlayerController playerController)
     {
-        playerController.OnRefreshFields?.Invoke();
+        Debug.Log("EXIT ENTITY SELECTED STATE");
+        playerController.OnResetTiles?.Invoke();
         playerController.inputController.EntitySelectedState.Disable();
     }
 
@@ -152,44 +154,87 @@ public class EntitySelectedState : IPlayerState
 
     public void OnSelectEntity(InputAction.CallbackContext context, PlayerController playerController)
     {
-        if (context.performed)
-        {
-            if (EventSystem.current.IsPointerOverGameObject()) return;
+        if (!context.performed || EventSystem.current.IsPointerOverGameObject())
+            return;
 
-            //move to method
-            Vector2 worldPosition = Camera.main.ScreenToWorldPoint(playerController.gameManager.mousePosition);
-            Tile tile = playerController.gameManager.game.map.OnHoverMapGetTile(worldPosition);
-            List<Entity> entities = tile?.GetEntities() ?? new List<Entity>();
+        Vector2 worldPosition = Camera.main.ScreenToWorldPoint(playerController.gameManager.mousePosition);
+        Tile tile = playerController.gameManager.game.map.OnHoverMapGetTile(worldPosition);
 
+        if (tile == null)
+            return;
 
-            if (tile != null)
-            {
-                foreach (Entity entity in entities)
-                {
-                    if(entity is Figure)
-                    {
-                        if (playerController.gameManager.selectedEntity == entity) return;
+        List<Entity> entities = tile.GetEntities() ?? new List<Entity>();
 
-                        playerController.gameManager.selectedEntity = entity;
-                        playerController.TransitionToState(playerController.EntitySelectedState);
-                        return;
-                    }
-                }
-            }
-        }
+        if (entities.Count == 0)
+            TryMoveSelectedEntityToTile(playerController, tile);
+        else
+            TrySelectEntityOnTile(playerController, entities);
     }
 
     public void OnDeselectEntity(InputAction.CallbackContext context, PlayerController playerController)
     {
-        if (context.performed)
+        if (!context.performed || EventSystem.current.IsPointerOverGameObject())
+            return;
+
+        Vector2 worldPosition = Camera.main.ScreenToWorldPoint(playerController.gameManager.mousePosition);
+        Tile tile = playerController.gameManager.game.map.OnHoverMapGetTile(worldPosition);
+
+        if (tile == null)
+            return;
+
+        List<Entity> entities = tile.GetEntities() ?? new List<Entity>();
+        if (entities.Count == 0)
         {
-            if (EventSystem.current.IsPointerOverGameObject()) return;
-
-            //hot fix
-            //if enemy unit is there attack, maybe change this to attack entity
-
             playerController.gameManager.selectedEntity = null;
             playerController.TransitionToState(playerController.BasicState);
+        }
+        else
+        {
+            TryToAttackEntity(playerController, tile);
+        }
+    }
+
+    private void TrySelectEntityOnTile(PlayerController playerController, List<Entity> entities)
+    {
+        foreach (Entity entity in entities)
+        {
+            if (entity is Figure)
+            {
+                playerController.gameManager.selectedEntity = entity;
+                playerController.TransitionToState(playerController.EntitySelectedState);
+                break;
+            }
+        }
+    }
+
+    private void TryMoveSelectedEntityToTile(PlayerController playerController, Tile targetTile)
+    {
+        Entity selectedEntity = playerController.gameManager.selectedEntity;
+        MovementBehaviour movementBehaviour = selectedEntity?.GetBehaviour<MovementBehaviour>();
+
+        if (movementBehaviour == null || !movementBehaviour.GetAvailableMoves().Contains(targetTile)) return;
+
+        movementBehaviour.SetPath(targetTile);
+        selectedEntity.AddBehaviourToWork(movementBehaviour);
+        playerController.TransitionToState(playerController.BasicState);
+    }
+
+    private void TryToAttackEntity(PlayerController playerController, Tile targetTile)
+    {
+        Entity selectedEntity = playerController.gameManager.selectedEntity;
+        AttackBehaviour attackBehaviour = selectedEntity?.GetBehaviour<AttackBehaviour>();
+
+        if (attackBehaviour == null || !attackBehaviour.GetAttackMoves().Contains(targetTile))
+            return;
+
+        foreach (var entity in targetTile.GetEntities())
+        {
+            if(attackBehaviour.CanAttack(entity))
+            {
+                attackBehaviour.SetAttack(entity.GetBehaviour<DamageableBehaviour>());
+                selectedEntity.AddBehaviourToWork(attackBehaviour);
+                playerController.TransitionToState(playerController.BasicState);
+            }
         }
     }
 }

@@ -63,11 +63,11 @@ public abstract class MovementBehaviour : Behaviour, ISerializableAction
 
     }
 
-    public abstract List<Tile> GetAvailableMoves(Tile tile);
+    public abstract List<Tile> GetAvailableMoves();
 
-    public virtual void SetPath(Tile start, Tile end)
+    public virtual void SetPath(Tile end)
     {
-        currentTile = start;
+        currentTile = Map.GetTile(owner);
     }
     public string SerializeAction()
     {
@@ -83,9 +83,9 @@ public abstract class MovementBehaviour : Behaviour, ISerializableAction
     {
         MovementBehaviourAction movementAction = JsonConvert.DeserializeObject<MovementBehaviourAction>(data);
 
-        Tile start = Map.GetTile(movementAction.StartCoord);
+        //Tile start = Map.GetTile(movementAction.StartCoord);
         Tile end = Map.GetTile(movementAction.EndCoord);
-        SetPath(start, end);
+        SetPath(end);
     }
 
     public class MovementBehaviourAction : BehaviourAction
@@ -130,9 +130,13 @@ public abstract class AttackBehaviour : Behaviour
             Exit();
         }
     }
-    public virtual List<Tile> GetAttackMoves(Tile tile)
+    public virtual List<Tile> GetAttackMoves()
     {
         List<Tile> attackMoves = new List<Tile>();
+
+        Tile tile = Map.GetTile(owner);
+
+        if (tile == null) return attackMoves;
 
         List<Tile> tiles = Map.TilesInRange(tile, attackRange);
 
@@ -217,7 +221,7 @@ public class DamageableBehaviour : Behaviour
         int finalDamage = CalculateDamage(damage);
         currentHealth = Math.Max(0, currentHealth - finalDamage);
         OnDamageReceived?.Invoke(damage);
-
+        Debug.Log("RECEIVE DAMAGE: " + finalDamage);
         if (!IsAlive)
         {
             OnDeath?.Invoke();

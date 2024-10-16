@@ -19,7 +19,11 @@ public class GameManager : Singleton<GameManager>
     public Game game = null;
     public Entity selectedEntity = null;
     public Vector2 mousePosition = Vector2.zero;
-    
+
+
+    public PlayerController playerController;
+    public MapController mapController;
+
     public void CreateMatch(string matchId)
     {
         /* Game game = new Game();
@@ -28,6 +32,7 @@ public class GameManager : Singleton<GameManager>
         GameData gameData = GameStateConverter.Deserialize<GameData>(gameJson);
         GameFactory gameFactory = new GameFactory();
         game = gameFactory.CreateGame(gameData);
+        mapController.Initialize(game.map);
     }
 
     public void AddPlayer(string matchId, string clientId, NetworkConnection connection)

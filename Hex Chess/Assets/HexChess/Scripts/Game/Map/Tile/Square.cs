@@ -29,7 +29,7 @@ public class Square : Tile
         gameObject = GameObject.Instantiate(prefab, position, Quaternion.identity);
         gameObject.name = $"Square [{coordinate.x},{coordinate.y}]";
         gameObject.GetComponentInChildren<TextMeshPro>(true).text = $"[{coordinate.x},{coordinate.y}]";
-        SetColor(color);
+        SetMainColor(color);
         return gameObject;
     }
 }
