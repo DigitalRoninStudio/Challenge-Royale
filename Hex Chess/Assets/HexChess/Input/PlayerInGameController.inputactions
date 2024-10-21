@@ -2,59 +2,11 @@
     "name": "PlayerInGameController",
     "maps": [
         {
-            "name": "BasicState",
-            "id": "10e39758-1699-4dea-89eb-c92a90cc5ab6",
-            "actions": [
-                {
-                    "name": "ScreenPosition",
-                    "type": "Value",
-                    "id": "051d5480-73c2-43e2-92fd-a3a0bcdd9f06",
-                    "expectedControlType": "Vector2",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": true
-                },
-                {
-                    "name": "OnSelectEntity",
-                    "type": "Button",
-                    "id": "51fe964b-1900-4e2f-a15b-4c8bf5197533",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                }
-            ],
-            "bindings": [
-                {
-                    "name": "",
-                    "id": "3a92a30a-c7b1-43d8-a70d-8fee28c6ea7f",
-                    "path": "<Mouse>/position",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "ScreenPosition",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "760e4f3f-565d-4e38-9ff6-0517ba972d04",
-                    "path": "<Mouse>/leftButton",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "OnSelectEntity",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                }
-            ]
-        },
-        {
-            "name": "EntitySelectedState",
+            "name": "MouseInput",
             "id": "4503aceb-6e42-46d1-816f-a35406bcdf7f",
             "actions": [
                 {
-                    "name": "ScreenPosition",
+                    "name": "MouseMove",
                     "type": "Value",
                     "id": "db4a084e-a524-4756-b9ba-53277e218ba9",
                     "expectedControlType": "Vector2",
@@ -63,7 +15,7 @@
                     "initialStateCheck": true
                 },
                 {
-                    "name": "OnSelectEntity",
+                    "name": "LeftClick",
                     "type": "Button",
                     "id": "39289e12-57c6-45a4-ad4e-835865bc404d",
                     "expectedControlType": "",
@@ -72,7 +24,7 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "OnDeselectEntity",
+                    "name": "RightClick",
                     "type": "Button",
                     "id": "e57e2186-6851-4e3e-b99b-33c8ea115dd8",
                     "expectedControlType": "",
@@ -89,7 +41,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "OnSelectEntity",
+                    "action": "LeftClick",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -100,7 +52,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "ScreenPosition",
+                    "action": "MouseMove",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -111,7 +63,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "OnDeselectEntity",
+                    "action": "RightClick",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

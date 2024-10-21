@@ -5,6 +5,7 @@ using UnityEngine;
 public class TileVisual : MonoBehaviour
 {
     [SerializeField] private SpriteRenderer SelectableTile;
+    [SerializeField] private GameObject AttackTile;
 
     private Tile tile;
     private Color mainColor = Color.white;
@@ -43,6 +44,11 @@ public class TileVisual : MonoBehaviour
     public void Refresh()
     {
         SelectableTile.color = mainColor;
+        AttackTile.SetActive(false);
     }
 
+    public void SetAttack()
+    {
+        AttackTile.SetActive(true);
+    }
 }

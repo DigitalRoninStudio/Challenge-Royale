@@ -25,59 +25,11 @@ public partial class @PlayerInGameController: IInputActionCollection2, IDisposab
     ""name"": ""PlayerInGameController"",
     ""maps"": [
         {
-            ""name"": ""BasicState"",
-            ""id"": ""10e39758-1699-4dea-89eb-c92a90cc5ab6"",
-            ""actions"": [
-                {
-                    ""name"": ""ScreenPosition"",
-                    ""type"": ""Value"",
-                    ""id"": ""051d5480-73c2-43e2-92fd-a3a0bcdd9f06"",
-                    ""expectedControlType"": ""Vector2"",
-                    ""processors"": """",
-                    ""interactions"": """",
-                    ""initialStateCheck"": true
-                },
-                {
-                    ""name"": ""OnSelectEntity"",
-                    ""type"": ""Button"",
-                    ""id"": ""51fe964b-1900-4e2f-a15b-4c8bf5197533"",
-                    ""expectedControlType"": """",
-                    ""processors"": """",
-                    ""interactions"": """",
-                    ""initialStateCheck"": false
-                }
-            ],
-            ""bindings"": [
-                {
-                    ""name"": """",
-                    ""id"": ""3a92a30a-c7b1-43d8-a70d-8fee28c6ea7f"",
-                    ""path"": ""<Mouse>/position"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""ScreenPosition"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": """",
-                    ""id"": ""760e4f3f-565d-4e38-9ff6-0517ba972d04"",
-                    ""path"": ""<Mouse>/leftButton"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""OnSelectEntity"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                }
-            ]
-        },
-        {
-            ""name"": ""EntitySelectedState"",
+            ""name"": ""MouseInput"",
             ""id"": ""4503aceb-6e42-46d1-816f-a35406bcdf7f"",
             ""actions"": [
                 {
-                    ""name"": ""ScreenPosition"",
+                    ""name"": ""MouseMove"",
                     ""type"": ""Value"",
                     ""id"": ""db4a084e-a524-4756-b9ba-53277e218ba9"",
                     ""expectedControlType"": ""Vector2"",
@@ -86,7 +38,7 @@ public partial class @PlayerInGameController: IInputActionCollection2, IDisposab
                     ""initialStateCheck"": true
                 },
                 {
-                    ""name"": ""OnSelectEntity"",
+                    ""name"": ""LeftClick"",
                     ""type"": ""Button"",
                     ""id"": ""39289e12-57c6-45a4-ad4e-835865bc404d"",
                     ""expectedControlType"": """",
@@ -95,7 +47,7 @@ public partial class @PlayerInGameController: IInputActionCollection2, IDisposab
                     ""initialStateCheck"": false
                 },
                 {
-                    ""name"": ""OnDeselectEntity"",
+                    ""name"": ""RightClick"",
                     ""type"": ""Button"",
                     ""id"": ""e57e2186-6851-4e3e-b99b-33c8ea115dd8"",
                     ""expectedControlType"": """",
@@ -112,7 +64,7 @@ public partial class @PlayerInGameController: IInputActionCollection2, IDisposab
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""OnSelectEntity"",
+                    ""action"": ""LeftClick"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
@@ -123,7 +75,7 @@ public partial class @PlayerInGameController: IInputActionCollection2, IDisposab
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""ScreenPosition"",
+                    ""action"": ""MouseMove"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
@@ -134,7 +86,7 @@ public partial class @PlayerInGameController: IInputActionCollection2, IDisposab
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""OnDeselectEntity"",
+                    ""action"": ""RightClick"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -143,21 +95,16 @@ public partial class @PlayerInGameController: IInputActionCollection2, IDisposab
     ],
     ""controlSchemes"": []
 }");
-        // BasicState
-        m_BasicState = asset.FindActionMap("BasicState", throwIfNotFound: true);
-        m_BasicState_ScreenPosition = m_BasicState.FindAction("ScreenPosition", throwIfNotFound: true);
-        m_BasicState_OnSelectEntity = m_BasicState.FindAction("OnSelectEntity", throwIfNotFound: true);
-        // EntitySelectedState
-        m_EntitySelectedState = asset.FindActionMap("EntitySelectedState", throwIfNotFound: true);
-        m_EntitySelectedState_ScreenPosition = m_EntitySelectedState.FindAction("ScreenPosition", throwIfNotFound: true);
-        m_EntitySelectedState_OnSelectEntity = m_EntitySelectedState.FindAction("OnSelectEntity", throwIfNotFound: true);
-        m_EntitySelectedState_OnDeselectEntity = m_EntitySelectedState.FindAction("OnDeselectEntity", throwIfNotFound: true);
+        // MouseInput
+        m_MouseInput = asset.FindActionMap("MouseInput", throwIfNotFound: true);
+        m_MouseInput_MouseMove = m_MouseInput.FindAction("MouseMove", throwIfNotFound: true);
+        m_MouseInput_LeftClick = m_MouseInput.FindAction("LeftClick", throwIfNotFound: true);
+        m_MouseInput_RightClick = m_MouseInput.FindAction("RightClick", throwIfNotFound: true);
     }
 
     ~@PlayerInGameController()
     {
-        Debug.Assert(!m_BasicState.enabled, "This will cause a leak and performance issues, PlayerInGameController.BasicState.Disable() has not been called.");
-        Debug.Assert(!m_EntitySelectedState.enabled, "This will cause a leak and performance issues, PlayerInGameController.EntitySelectedState.Disable() has not been called.");
+        Debug.Assert(!m_MouseInput.enabled, "This will cause a leak and performance issues, PlayerInGameController.MouseInput.Disable() has not been called.");
     }
 
     public void Dispose()
@@ -216,130 +163,71 @@ public partial class @PlayerInGameController: IInputActionCollection2, IDisposab
         return asset.FindBinding(bindingMask, out action);
     }
 
-    // BasicState
-    private readonly InputActionMap m_BasicState;
-    private List<IBasicStateActions> m_BasicStateActionsCallbackInterfaces = new List<IBasicStateActions>();
-    private readonly InputAction m_BasicState_ScreenPosition;
-    private readonly InputAction m_BasicState_OnSelectEntity;
-    public struct BasicStateActions
+    // MouseInput
+    private readonly InputActionMap m_MouseInput;
+    private List<IMouseInputActions> m_MouseInputActionsCallbackInterfaces = new List<IMouseInputActions>();
+    private readonly InputAction m_MouseInput_MouseMove;
+    private readonly InputAction m_MouseInput_LeftClick;
+    private readonly InputAction m_MouseInput_RightClick;
+    public struct MouseInputActions
     {
         private @PlayerInGameController m_Wrapper;
-        public BasicStateActions(@PlayerInGameController wrapper) { m_Wrapper = wrapper; }
-        public InputAction @ScreenPosition => m_Wrapper.m_BasicState_ScreenPosition;
-        public InputAction @OnSelectEntity => m_Wrapper.m_BasicState_OnSelectEntity;
-        public InputActionMap Get() { return m_Wrapper.m_BasicState; }
+        public MouseInputActions(@PlayerInGameController wrapper) { m_Wrapper = wrapper; }
+        public InputAction @MouseMove => m_Wrapper.m_MouseInput_MouseMove;
+        public InputAction @LeftClick => m_Wrapper.m_MouseInput_LeftClick;
+        public InputAction @RightClick => m_Wrapper.m_MouseInput_RightClick;
+        public InputActionMap Get() { return m_Wrapper.m_MouseInput; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
         public bool enabled => Get().enabled;
-        public static implicit operator InputActionMap(BasicStateActions set) { return set.Get(); }
-        public void AddCallbacks(IBasicStateActions instance)
+        public static implicit operator InputActionMap(MouseInputActions set) { return set.Get(); }
+        public void AddCallbacks(IMouseInputActions instance)
         {
-            if (instance == null || m_Wrapper.m_BasicStateActionsCallbackInterfaces.Contains(instance)) return;
-            m_Wrapper.m_BasicStateActionsCallbackInterfaces.Add(instance);
-            @ScreenPosition.started += instance.OnScreenPosition;
-            @ScreenPosition.performed += instance.OnScreenPosition;
-            @ScreenPosition.canceled += instance.OnScreenPosition;
-            @OnSelectEntity.started += instance.OnOnSelectEntity;
-            @OnSelectEntity.performed += instance.OnOnSelectEntity;
-            @OnSelectEntity.canceled += instance.OnOnSelectEntity;
+            if (instance == null || m_Wrapper.m_MouseInputActionsCallbackInterfaces.Contains(instance)) return;
+            m_Wrapper.m_MouseInputActionsCallbackInterfaces.Add(instance);
+            @MouseMove.started += instance.OnMouseMove;
+            @MouseMove.performed += instance.OnMouseMove;
+            @MouseMove.canceled += instance.OnMouseMove;
+            @LeftClick.started += instance.OnLeftClick;
+            @LeftClick.performed += instance.OnLeftClick;
+            @LeftClick.canceled += instance.OnLeftClick;
+            @RightClick.started += instance.OnRightClick;
+            @RightClick.performed += instance.OnRightClick;
+            @RightClick.canceled += instance.OnRightClick;
         }
 
-        private void UnregisterCallbacks(IBasicStateActions instance)
+        private void UnregisterCallbacks(IMouseInputActions instance)
         {
-            @ScreenPosition.started -= instance.OnScreenPosition;
-            @ScreenPosition.performed -= instance.OnScreenPosition;
-            @ScreenPosition.canceled -= instance.OnScreenPosition;
-            @OnSelectEntity.started -= instance.OnOnSelectEntity;
-            @OnSelectEntity.performed -= instance.OnOnSelectEntity;
-            @OnSelectEntity.canceled -= instance.OnOnSelectEntity;
+            @MouseMove.started -= instance.OnMouseMove;
+            @MouseMove.performed -= instance.OnMouseMove;
+            @MouseMove.canceled -= instance.OnMouseMove;
+            @LeftClick.started -= instance.OnLeftClick;
+            @LeftClick.performed -= instance.OnLeftClick;
+            @LeftClick.canceled -= instance.OnLeftClick;
+            @RightClick.started -= instance.OnRightClick;
+            @RightClick.performed -= instance.OnRightClick;
+            @RightClick.canceled -= instance.OnRightClick;
         }
 
-        public void RemoveCallbacks(IBasicStateActions instance)
+        public void RemoveCallbacks(IMouseInputActions instance)
         {
-            if (m_Wrapper.m_BasicStateActionsCallbackInterfaces.Remove(instance))
+            if (m_Wrapper.m_MouseInputActionsCallbackInterfaces.Remove(instance))
                 UnregisterCallbacks(instance);
         }
 
-        public void SetCallbacks(IBasicStateActions instance)
+        public void SetCallbacks(IMouseInputActions instance)
         {
-            foreach (var item in m_Wrapper.m_BasicStateActionsCallbackInterfaces)
+            foreach (var item in m_Wrapper.m_MouseInputActionsCallbackInterfaces)
                 UnregisterCallbacks(item);
-            m_Wrapper.m_BasicStateActionsCallbackInterfaces.Clear();
+            m_Wrapper.m_MouseInputActionsCallbackInterfaces.Clear();
             AddCallbacks(instance);
         }
     }
-    public BasicStateActions @BasicState => new BasicStateActions(this);
-
-    // EntitySelectedState
-    private readonly InputActionMap m_EntitySelectedState;
-    private List<IEntitySelectedStateActions> m_EntitySelectedStateActionsCallbackInterfaces = new List<IEntitySelectedStateActions>();
-    private readonly InputAction m_EntitySelectedState_ScreenPosition;
-    private readonly InputAction m_EntitySelectedState_OnSelectEntity;
-    private readonly InputAction m_EntitySelectedState_OnDeselectEntity;
-    public struct EntitySelectedStateActions
+    public MouseInputActions @MouseInput => new MouseInputActions(this);
+    public interface IMouseInputActions
     {
-        private @PlayerInGameController m_Wrapper;
-        public EntitySelectedStateActions(@PlayerInGameController wrapper) { m_Wrapper = wrapper; }
-        public InputAction @ScreenPosition => m_Wrapper.m_EntitySelectedState_ScreenPosition;
-        public InputAction @OnSelectEntity => m_Wrapper.m_EntitySelectedState_OnSelectEntity;
-        public InputAction @OnDeselectEntity => m_Wrapper.m_EntitySelectedState_OnDeselectEntity;
-        public InputActionMap Get() { return m_Wrapper.m_EntitySelectedState; }
-        public void Enable() { Get().Enable(); }
-        public void Disable() { Get().Disable(); }
-        public bool enabled => Get().enabled;
-        public static implicit operator InputActionMap(EntitySelectedStateActions set) { return set.Get(); }
-        public void AddCallbacks(IEntitySelectedStateActions instance)
-        {
-            if (instance == null || m_Wrapper.m_EntitySelectedStateActionsCallbackInterfaces.Contains(instance)) return;
-            m_Wrapper.m_EntitySelectedStateActionsCallbackInterfaces.Add(instance);
-            @ScreenPosition.started += instance.OnScreenPosition;
-            @ScreenPosition.performed += instance.OnScreenPosition;
-            @ScreenPosition.canceled += instance.OnScreenPosition;
-            @OnSelectEntity.started += instance.OnOnSelectEntity;
-            @OnSelectEntity.performed += instance.OnOnSelectEntity;
-            @OnSelectEntity.canceled += instance.OnOnSelectEntity;
-            @OnDeselectEntity.started += instance.OnOnDeselectEntity;
-            @OnDeselectEntity.performed += instance.OnOnDeselectEntity;
-            @OnDeselectEntity.canceled += instance.OnOnDeselectEntity;
-        }
-
-        private void UnregisterCallbacks(IEntitySelectedStateActions instance)
-        {
-            @ScreenPosition.started -= instance.OnScreenPosition;
-            @ScreenPosition.performed -= instance.OnScreenPosition;
-            @ScreenPosition.canceled -= instance.OnScreenPosition;
-            @OnSelectEntity.started -= instance.OnOnSelectEntity;
-            @OnSelectEntity.performed -= instance.OnOnSelectEntity;
-            @OnSelectEntity.canceled -= instance.OnOnSelectEntity;
-            @OnDeselectEntity.started -= instance.OnOnDeselectEntity;
-            @OnDeselectEntity.performed -= instance.OnOnDeselectEntity;
-            @OnDeselectEntity.canceled -= instance.OnOnDeselectEntity;
-        }
-
-        public void RemoveCallbacks(IEntitySelectedStateActions instance)
-        {
-            if (m_Wrapper.m_EntitySelectedStateActionsCallbackInterfaces.Remove(instance))
-                UnregisterCallbacks(instance);
-        }
-
-        public void SetCallbacks(IEntitySelectedStateActions instance)
-        {
-            foreach (var item in m_Wrapper.m_EntitySelectedStateActionsCallbackInterfaces)
-                UnregisterCallbacks(item);
-            m_Wrapper.m_EntitySelectedStateActionsCallbackInterfaces.Clear();
-            AddCallbacks(instance);
-        }
-    }
-    public EntitySelectedStateActions @EntitySelectedState => new EntitySelectedStateActions(this);
-    public interface IBasicStateActions
-    {
-        void OnScreenPosition(InputAction.CallbackContext context);
-        void OnOnSelectEntity(InputAction.CallbackContext context);
-    }
-    public interface IEntitySelectedStateActions
-    {
-        void OnScreenPosition(InputAction.CallbackContext context);
-        void OnOnSelectEntity(InputAction.CallbackContext context);
-        void OnOnDeselectEntity(InputAction.CallbackContext context);
+        void OnMouseMove(InputAction.CallbackContext context);
+        void OnLeftClick(InputAction.CallbackContext context);
+        void OnRightClick(InputAction.CallbackContext context);
     }
 }

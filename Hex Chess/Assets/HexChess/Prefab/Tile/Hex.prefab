@@ -272,12 +272,12 @@ GameObject:
   - component: {fileID: 3890763687305561091}
   - component: {fileID: 2137594186523868595}
   m_Layer: 0
-  m_Name: Background
+  m_Name: AttackTile
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &3890763687305561091
 Transform:
   m_ObjectHideFlags: 0
@@ -288,7 +288,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.1, y: 1.1, z: 1.1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 598163353992257890}
@@ -335,9 +335,9 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: -2
+  m_SortingOrder: 2
   m_Sprite: {fileID: -712631045867808456, guid: b670ab75dde984907b8570040daa08c5, type: 3}
-  m_Color: {r: 0, g: 0, b: 0, a: 1}
+  m_Color: {r: 1, g: 0.48584908, b: 0.48584908, a: 0.36078432}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -378,8 +378,8 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 960629663742837206}
-  - {fileID: 3890763687305561091}
   - {fileID: 606330188406116922}
+  - {fileID: 3890763687305561091}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2011328234097478863
@@ -395,3 +395,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   SelectableTile: {fileID: 421089953023344951}
+  AttackTile: {fileID: 6190974652467917691}

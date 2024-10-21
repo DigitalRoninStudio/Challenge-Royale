@@ -97,6 +97,10 @@ public abstract class Tile
     {
         gameObject.GetComponent<TileVisual>().Refresh();
     }
+    public void SetAttack()
+    {
+        gameObject.GetComponent<TileVisual>().SetAttack();
+    }
     public Color GetColor()
     {
         return gameObject.GetComponent<SpriteRenderer>().color;
