@@ -10,4 +10,7 @@ public abstract class MovementBehaviourBlueprint : BehaviourBlueprint
 {
     public float Speed;
     public int Range;
+
+    [Header("VFX")]
+    public GameObject Trail;
 }

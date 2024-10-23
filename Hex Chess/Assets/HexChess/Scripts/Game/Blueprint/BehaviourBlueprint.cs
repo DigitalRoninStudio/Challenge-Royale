@@ -7,6 +7,6 @@ public abstract class BehaviourBlueprint : ScriptableObject
     public string Id;
     public string Name;
 
-    //public abstract Behaviour CreateBehaviour(BehaviourData behaviourData);
+    public BehaviourVisual Visual;
     public abstract Behaviour CreateBehaviour();
 }

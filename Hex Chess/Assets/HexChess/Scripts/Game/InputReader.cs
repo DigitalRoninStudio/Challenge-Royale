@@ -48,7 +48,7 @@ public class InputReader : MonoBehaviour, PlayerInGameController.IMouseInputActi
         if (!context.performed || EventSystem.current.IsPointerOverGameObject())
             return;
 
-        OnLeftClick?.Invoke();
+        OnRightClick?.Invoke();
     }
 }
 
@@ -117,9 +117,9 @@ public class IdleState : IPlayerState
     public void EnterState(PlayerController playerController)
     {
         Debug.Log("ENTER IDLE STATE");
+        this.playerController = playerController;
         playerController.inputReader.OnLeftClick += OnLeftClick;
         playerController.inputReader.OnMousePosition += OnMousePosition;
-        this.playerController = playerController;
     }
 
     private void OnMousePosition(Vector2 mousePosition)
@@ -162,10 +162,10 @@ public class EntitySelectedState : IPlayerState
     public void EnterState(PlayerController playerController)
     {
         Debug.Log("ENTER ENTITY SELECTED STATE");
+        this.playerController = playerController;
         playerController.inputReader.OnLeftClick += OnLeftClick;
         playerController.inputReader.OnRightClick += OnRightClick;
         playerController.inputReader.OnMousePosition += OnMousePosition;
-        this.playerController = playerController;
         playerController.DrawTiles();
     }
 

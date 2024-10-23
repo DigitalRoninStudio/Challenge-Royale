@@ -12,4 +12,7 @@ public abstract class AttackBehaviourBlueprint : BehaviourBlueprint
     public int AttackRange;
     public DamageType DamageType;
     public float TimeToPerformAttack;
+
+    [Header("VFX")]
+    public GameObject HitImpact;
 }

@@ -14,7 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Id: SWORDSMAN_ATTACK
   Name: Melee
+  Visual: {fileID: 3011632534882510310, guid: 3dff9ca3a63d38e4aa69609ee84fbb1a, type: 3}
   BaseDamage: 1
   AttackRange: 1
   DamageType: 0
   TimeToPerformAttack: 0.25
+  HitImpact: {fileID: 2133010041417862964, guid: 950e73fdc42815f4fbc3e16c5fd7c4ea, type: 3}

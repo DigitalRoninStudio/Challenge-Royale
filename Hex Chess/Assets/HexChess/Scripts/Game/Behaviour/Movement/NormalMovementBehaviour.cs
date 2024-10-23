@@ -11,7 +11,7 @@ public class NormalMovementBehaviour : MovementBehaviour
     {
         List<Tile> availableMoves = new List<Tile>();
 
-        Tile tile = Map.GetTile(owner);
+        Tile tile = Map.GetTile(Owner);
 
         if (tile == null) return availableMoves;
 
@@ -39,7 +39,7 @@ public class KnightMovementBehaviour : MovementBehaviour
     {
         List<Tile> availableMoves = new List<Tile>();
 
-        Tile tile = Map.GetTile(owner);
+        Tile tile = Map.GetTile(Owner);
 
         if (tile == null) return availableMoves;
 
@@ -75,8 +75,8 @@ public class TeleportMovementBehaviour : MovementBehaviour
     {
         if (Time.time >= time + speed)
         {
-            path.Dequeue().RemoveEntity(owner);
-            path.Dequeue().AddEntity(owner);
+            path.Dequeue().RemoveEntity(Owner);
+            path.Dequeue().AddEntity(Owner);
             Exit();
         }
     }
@@ -84,7 +84,7 @@ public class TeleportMovementBehaviour : MovementBehaviour
     {
         List<Tile> availableMoves = new List<Tile>();
 
-        Tile tile = Map.GetTile(owner);
+        Tile tile = Map.GetTile(Owner);
 
         if (tile == null) return availableMoves;
 
@@ -113,7 +113,7 @@ public class DirectionMovementBehaviour : MovementBehaviour
     {
         List<Tile> availableMoves = new List<Tile>();
 
-        Tile tile = Map.GetTile(owner);
+        Tile tile = Map.GetTile(Owner);
 
         if (tile == null) return availableMoves;
 

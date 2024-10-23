@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public abstract class MovementBehaviour : Behaviour, ISerializableAction
@@ -16,6 +17,8 @@ public abstract class MovementBehaviour : Behaviour, ISerializableAction
     private Tile nextTile;
     private Vector3 direction;
     private Queue<float> steps;
+
+    private GameObject trail;
     public MovementBehaviour() : base()
     {
         path = new Queue<Tile>();
@@ -27,8 +30,21 @@ public abstract class MovementBehaviour : Behaviour, ISerializableAction
         steps = new Queue<float>();
         speed = blueprint.Speed;
         range = blueprint.Range;
+
+        trail = GameObject.Instantiate(blueprint.Trail);
+        trail.SetActive(false);
     }
 
+    public override void SetOwner(Entity entity)
+    {
+        base.SetOwner(entity);
+        trail.transform.SetParent(entity.gameObject.transform);
+    }
+    public override void Enter()
+    {
+        base.Enter();
+        trail.SetActive(true);
+    }
     public override void Execute()
     {
         if (nextTile == null && path.Count == 0)
@@ -42,24 +58,29 @@ public abstract class MovementBehaviour : Behaviour, ISerializableAction
         {
             nextTile = path.Dequeue();
 
-            direction = (nextTile.GetPosition() - owner.GameObject.transform.position).normalized;
+            direction = (nextTile.GetPosition() - Owner.GameObject.transform.position).normalized;
             float movePerFrame = speed * Time.fixedDeltaTime;
-            float distance = Vector3.Distance(nextTile.GetPosition(), owner.GameObject.transform.position);
+            float distance = Vector3.Distance(nextTile.GetPosition(), Owner.GameObject.transform.position);
             int numberOfSteps = Mathf.FloorToInt(distance / movePerFrame);
 
             for (int i = 0; i < numberOfSteps; i++)
                 steps.Enqueue(movePerFrame);
+
+            trail.transform.rotation = Quaternion.LookRotation(Vector3.forward, direction);
+            ParticleSystem[] particleSystems = trail.GetComponentsInChildren<ParticleSystem>();
+            foreach (ParticleSystem ps in particleSystems)
+                ps.Play();
         }
 
         if (steps.Count == 0)
         {
-            currentTile.RemoveEntity(owner);
+            currentTile.RemoveEntity(Owner);
             currentTile = nextTile;
-            currentTile.AddEntity(owner);
+            currentTile.AddEntity(Owner);
             nextTile = null; 
         }
         else
-            owner.GameObject.transform.position += direction * steps.Dequeue();
+            Owner.GameObject.transform.position += direction * steps.Dequeue();
 
     }
 
@@ -67,7 +88,7 @@ public abstract class MovementBehaviour : Behaviour, ISerializableAction
 
     public virtual void SetPath(Tile end)
     {
-        currentTile = Map.GetTile(owner);
+        currentTile = Map.GetTile(Owner);
     }
     public string SerializeAction()
     {
@@ -107,7 +128,9 @@ public abstract class AttackBehaviour : Behaviour
 
     protected DamageableBehaviour target;
 
-    public Action<DamageableBehaviour> OnAttackPerformed;
+    public Action<DamageableBehaviour, Damage> OnAttackPerformed;
+
+    public GameObject hitImpact;
 
     public AttackBehaviour() : base() { }
     public AttackBehaviour(AttackBehaviourBlueprint blueprint) : base(blueprint)
@@ -116,6 +139,7 @@ public abstract class AttackBehaviour : Behaviour
         attackRange = blueprint.AttackRange;
         damageType = blueprint.DamageType;
         timeToPerformAttack = blueprint.TimeToPerformAttack;
+        hitImpact = blueprint.HitImpact;
     }
     public virtual void SetAttack(DamageableBehaviour target)
     {
@@ -125,8 +149,9 @@ public abstract class AttackBehaviour : Behaviour
     {
         if (Time.time >= time + TimeToPerformAttack)
         {
-            target.ReceiveDamage(CreateDamage());
-            OnAttackPerformed?.Invoke(target);
+            Damage damage = CreateDamage();
+            target.ReceiveDamage(damage);
+            OnAttackPerformed?.Invoke(target, damage);
             Exit();
         }
     }
@@ -134,7 +159,7 @@ public abstract class AttackBehaviour : Behaviour
     {
         List<Tile> attackMoves = new List<Tile>();
 
-        Tile tile = Map.GetTile(owner);
+        Tile tile = Map.GetTile(Owner);
 
         if (tile == null) return attackMoves;
 
@@ -157,7 +182,7 @@ public abstract class AttackBehaviour : Behaviour
 
     public bool CanAttack(Entity enemy)
     {
-        Tile entityTile = Map.GetTile(owner);
+        Tile entityTile = Map.GetTile(Owner);
         Tile targetTile = Map.GetTile(enemy);
 
         if (entityTile == null || targetTile == null) return false;
@@ -177,7 +202,7 @@ public abstract class AttackBehaviour : Behaviour
     }
     protected bool IsValidEnemyTarget(Entity enemy)
     {
-        return enemy.Owner.team != owner.Owner.team &&
+        return enemy.Owner.team != Owner.Owner.team &&
           enemy.GetBehaviour<DamageableBehaviour>() != null;
     }
 }
@@ -199,8 +224,8 @@ public class DamageableBehaviour : Behaviour
     public virtual bool IsAlive => currentHealth > 0;
     public virtual bool CanReceiveDamage => IsAlive;
 
-    public event Action<Damage> OnDamageReceived;
-    public event Action OnDeath;
+    public Action<int,int> OnDamageReceived;
+    public Action OnDeath;
 
     public override void Execute()
     {
@@ -220,11 +245,14 @@ public class DamageableBehaviour : Behaviour
 
         int finalDamage = CalculateDamage(damage);
         currentHealth = Math.Max(0, currentHealth - finalDamage);
-        OnDamageReceived?.Invoke(damage);
-        Debug.Log("RECEIVE DAMAGE: " + finalDamage);
+
+        OnDamageReceived?.Invoke(currentHealth, finalDamage);
+
         if (!IsAlive)
         {
             OnDeath?.Invoke();
+            Map.GetTile(Owner).RemoveEntity(Owner);
+            Owner.gameObject.SetActive(false); // ?
         }
     }
 
@@ -253,8 +281,8 @@ public class RangedAttackBehaviour : AttackBehaviour
 
 public class Damage
 {
-    public int Amount { get; }
-    public DamageType Type { get; }
+    public int Amount { get; private set; }
+    public DamageType Type { get; private set; }
 
     public Damage(int amount, DamageType type)
     {

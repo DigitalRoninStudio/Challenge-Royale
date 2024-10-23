@@ -1,18 +1,24 @@
 
+using System;
 using TMPro;
 using UnityEngine;
 
 public class FigureVisual : Visual<Figure, FigureBlueprint>
 {
-    [SerializeField] private TextMeshPro Damage;
-    [SerializeField] private TextMeshPro Health;
+   /* [SerializeField] private TextMeshPro Damage;
+    [SerializeField] private TextMeshPro Health;*/
+   // private DamageableBehaviour damageableBehaviour;
     public override void Initialize(Figure figure, FigureBlueprint blueprint)
     {
         base.Initialize(figure, blueprint);
 
-        DamageableBehaviour damageableBehaviour = figure.GetBehaviour<DamageableBehaviour>();
+       /* damageableBehaviour = figure.GetBehaviour<DamageableBehaviour>();
         if (damageableBehaviour != null)
+        {
             Health.text = damageableBehaviour.CurrentHealth.ToString();
+            damageableBehaviour.OnDamageReceived += OnDamageReceiverd;
+            damageableBehaviour.OnDeath += OnDeath;
+        }
         else
             Health.transform.parent.gameObject.SetActive(false);
 
@@ -20,7 +26,20 @@ public class FigureVisual : Visual<Figure, FigureBlueprint>
         if (attackBehaviour != null)
             Damage.text = attackBehaviour.AttackDamage.ToString();
         else
-            Damage.transform.parent.gameObject.SetActive(false);
+            Damage.transform.parent.gameObject.SetActive(false);*/
 
     }
+
+  /*  private void OnDeath()
+    {
+        damageableBehaviour.OnDamageReceived -= OnDamageReceiverd;
+        damageableBehaviour.OnDeath -= OnDeath;
+    }
+
+    private void OnDamageReceiverd(int currentHealth, int finalDamage)
+    {
+        Health.text = currentHealth.ToString();
+    }*/
+
+
 }

@@ -16,3 +16,4 @@ MonoBehaviour:
   Name: Directional
   Speed: 0.25
   Range: 3
+  Trail: {fileID: 4861049009189397696, guid: 375be11fb79886640bc7197f76238adf, type: 3}

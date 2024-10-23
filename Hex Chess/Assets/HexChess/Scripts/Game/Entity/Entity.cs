@@ -89,7 +89,7 @@ public abstract class Entity : IDisposable
     public void AddBehaviour(Behaviour behaviour)
     {
         behaviours.Add(behaviour);
-        behaviour.owner = this;
+        behaviour.SetOwner(this);
     }
     public T GetBehaviour<T>() where T : Behaviour
     {

@@ -16,3 +16,4 @@ MonoBehaviour:
   Name: Normal
   Speed: 0.25
   Range: 1
+  Trail: {fileID: 3384996627686816914, guid: 907fd9290212607489dc75152887d6fe, type: 3}
