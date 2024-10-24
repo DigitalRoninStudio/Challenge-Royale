@@ -2,5 +2,5 @@
 
 public abstract class BehaviourVisual : MonoBehaviour
 {
-    public abstract void Initialize(Behaviour behaviour, BehaviourBlueprint blueprint);
+    public abstract void Initialize(Behaviour behaviour);
 }

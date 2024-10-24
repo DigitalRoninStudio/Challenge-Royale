@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Id: TELEPORT_MOVEMENT
   Name: Teleport
+  Visual: {fileID: 3832235051052953613, guid: 24d6c2f93f880b24b97502350f54357c, type: 3}
   Speed: 0.5
   Range: 2
-  Trail: {fileID: 3384996627686816914, guid: 907fd9290212607489dc75152887d6fe, type: 3}

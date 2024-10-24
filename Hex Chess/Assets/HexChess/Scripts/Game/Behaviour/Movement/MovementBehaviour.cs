@@ -1,9 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public abstract class MovementBehaviour : Behaviour, ISerializableAction
@@ -11,14 +9,15 @@ public abstract class MovementBehaviour : Behaviour, ISerializableAction
     public float speed;
     public int range;
 
+    public Action<Tile, Tile> OnTileExit;
+    public Action<Tile> OnTileEntered;
+
     protected Queue<Tile> path;
     protected Tile currentTile;
 
     private Tile nextTile;
     private Vector3 direction;
     private Queue<float> steps;
-
-    private GameObject trail;
     public MovementBehaviour() : base()
     {
         path = new Queue<Tile>();
@@ -30,20 +29,11 @@ public abstract class MovementBehaviour : Behaviour, ISerializableAction
         steps = new Queue<float>();
         speed = blueprint.Speed;
         range = blueprint.Range;
-
-        trail = GameObject.Instantiate(blueprint.Trail);
-        trail.SetActive(false);
     }
 
     public override void SetOwner(Entity entity)
     {
         base.SetOwner(entity);
-        trail.transform.SetParent(entity.gameObject.transform);
-    }
-    public override void Enter()
-    {
-        base.Enter();
-        trail.SetActive(true);
     }
     public override void Execute()
     {
@@ -66,10 +56,7 @@ public abstract class MovementBehaviour : Behaviour, ISerializableAction
             for (int i = 0; i < numberOfSteps; i++)
                 steps.Enqueue(movePerFrame);
 
-            trail.transform.rotation = Quaternion.LookRotation(Vector3.forward, direction);
-            ParticleSystem[] particleSystems = trail.GetComponentsInChildren<ParticleSystem>();
-            foreach (ParticleSystem ps in particleSystems)
-                ps.Play();
+            OnTileExit?.Invoke(currentTile, nextTile);
         }
 
         if (steps.Count == 0)
@@ -77,7 +64,9 @@ public abstract class MovementBehaviour : Behaviour, ISerializableAction
             currentTile.RemoveEntity(Owner);
             currentTile = nextTile;
             currentTile.AddEntity(Owner);
-            nextTile = null; 
+            nextTile = null;
+
+            OnTileEntered?.Invoke(currentTile);
         }
         else
             Owner.GameObject.transform.position += direction * steps.Dequeue();
@@ -130,8 +119,6 @@ public abstract class AttackBehaviour : Behaviour
 
     public Action<DamageableBehaviour, Damage> OnAttackPerformed;
 
-    public GameObject hitImpact;
-
     public AttackBehaviour() : base() { }
     public AttackBehaviour(AttackBehaviourBlueprint blueprint) : base(blueprint)
     {
@@ -139,7 +126,6 @@ public abstract class AttackBehaviour : Behaviour
         attackRange = blueprint.AttackRange;
         damageType = blueprint.DamageType;
         timeToPerformAttack = blueprint.TimeToPerformAttack;
-        hitImpact = blueprint.HitImpact;
     }
     public virtual void SetAttack(DamageableBehaviour target)
     {

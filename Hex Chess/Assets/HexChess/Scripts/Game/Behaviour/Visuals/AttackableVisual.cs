@@ -1,23 +1,39 @@
 ﻿using TMPro;
 using UnityEngine;
 
-public class AttackableVisual : GenericBehaviourVisual<AttackBehaviour, AttackBehaviourBlueprint>
+public class AttackableVisual : GenericBehaviourVisual<AttackBehaviour>
 {
     [SerializeField] private TextMeshPro Damage;
-    private GameObject HitImpact;
+
+    [SerializeField] private GameObject HitImpact; 
+    private ParticleSystem[] hitPartycleSystem;
 
     protected override void InitializeVisual()
     {
         Damage.text = behaviour.AttackDamage.ToString();
-        HitImpact = blueprint.HitImpact;
+        hitPartycleSystem = HitImpact.GetComponentsInChildren<ParticleSystem>();
 
-        behaviour.OnAttackPerformed += OnAttackPerformed;
+        if (hitPartycleSystem != null)
+        {
+            StopHitParticle();
+            behaviour.OnAttackPerformed += OnAttackPerformed;
+        }
     }
     private void OnAttackPerformed(DamageableBehaviour damageable, Damage damage)
     {
-        if (HitImpact == null) return;
+        HitImpact.transform.position = damageable.Owner.gameObject.transform.position;
+        PlayHitParticle();
+    }
 
-        Vector3 direction = (damageable.Owner.gameObject.transform.position - behaviour.Owner.gameObject.transform.position).normalized;
-        GameObject.Destroy(GameObject.Instantiate(HitImpact, damageable.Owner.gameObject.transform.position, /*Quaternion.LookRotation(direction)*/ Quaternion.identity), 3f);
+    private void PlayHitParticle()
+    {
+        foreach (ParticleSystem particle in hitPartycleSystem)
+            particle.Play();
+    }
+
+    private void StopHitParticle()
+    {
+        foreach (ParticleSystem particle in hitPartycleSystem)
+            particle.Stop();
     }
 }

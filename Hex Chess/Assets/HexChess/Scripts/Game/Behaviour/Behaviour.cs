@@ -48,7 +48,7 @@ public abstract class Behaviour
         if (blueprint.Visual != null)
         {
             BehaviourVisual visual = GameObject.Instantiate(blueprint.Visual, Owner.gameObject.transform);
-            visual.Initialize(this, blueprint);
+            visual.Initialize(this);
         }
     }
 }

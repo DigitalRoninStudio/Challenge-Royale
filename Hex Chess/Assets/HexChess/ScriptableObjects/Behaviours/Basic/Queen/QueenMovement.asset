@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Id: QUEEN_MOVEMENT
   Name: Directional
+  Visual: {fileID: 3832235051052953613, guid: c23599c92e26e7643b1dccb3bfb1c38f, type: 3}
   Speed: 0.25
   Range: 3
-  Trail: {fileID: 4861049009189397696, guid: 375be11fb79886640bc7197f76238adf, type: 3}
