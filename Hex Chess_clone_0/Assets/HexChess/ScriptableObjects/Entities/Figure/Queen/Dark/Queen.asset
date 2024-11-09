@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55b9372f38827374a9ded3be3205afde, type: 3}
+  m_Name: Queen
+  m_EditorClassIdentifier: 
+  Id: DARK_QUEEN
+  Name: Queen
+  GameObject: {fileID: 4812554731794180645, guid: a23e702c1c5963c48b6faa6aa397a4f7, type: 3}
+  BehaviourDatas:
+  - {fileID: 11400000, guid: 45820521c507a764c8fb1d4e0317046b, type: 2}
+  - {fileID: 11400000, guid: 88de6707a587d1e4fb34fb3c6c1cf8a8, type: 2}
+  - {fileID: 11400000, guid: ca546c62a5eef6a459cb45bd3dbab42e, type: 2}
+  Icon: {fileID: 771400589766827803, guid: 806db5b5fd11bf84ba3f21a755050dc4, type: 3}
+  FractionType: 2
+  FigureType: 7

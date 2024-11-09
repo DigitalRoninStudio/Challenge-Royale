@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55b9372f38827374a9ded3be3205afde, type: 3}
+  m_Name: King
+  m_EditorClassIdentifier: 
+  Id: DARK_KING
+  Name: King
+  GameObject: {fileID: 4812554731794180645, guid: 22be51ba35bcbee4c8f56fdd4ae2a8f4, type: 3}
+  BehaviourDatas:
+  - {fileID: 11400000, guid: f9f77b5887e37bf498b5ddb84876c226, type: 2}
+  - {fileID: 11400000, guid: 2052d843e18e7c849bb3bbbaf8f7af68, type: 2}
+  Icon: {fileID: 5812936510164466748, guid: 537964f00104ca149adf2c77b25a3ae3, type: 3}
+  FractionType: 2
+  FigureType: 8

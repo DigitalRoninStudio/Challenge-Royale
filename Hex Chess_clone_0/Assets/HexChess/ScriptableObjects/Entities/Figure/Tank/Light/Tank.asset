@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55b9372f38827374a9ded3be3205afde, type: 3}
+  m_Name: Tank
+  m_EditorClassIdentifier: 
+  Id: LIGHT_TANK
+  Name: Tank
+  GameObject: {fileID: 4812554731794180645, guid: bf2a7c8cfa4d1f340be810a5fd818a74, type: 3}
+  BehaviourDatas:
+  - {fileID: 11400000, guid: 24b9cd5836382df49a11efa200e8399f, type: 2}
+  - {fileID: 11400000, guid: 76a4f7c982a0f144487253c4f7a1bd8a, type: 2}
+  - {fileID: 11400000, guid: 3760f1a6f7b105f4b8960c6086ce8feb, type: 2}
+  Icon: {fileID: 5430300794033132139, guid: 4338c09be8a07344c9e6da62b9581e74, type: 3}
+  FractionType: 1
+  FigureType: 3
