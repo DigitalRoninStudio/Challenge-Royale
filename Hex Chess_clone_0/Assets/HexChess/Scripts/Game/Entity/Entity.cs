@@ -1,9 +1,6 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.Networking.Transport;
 using UnityEngine;
 
 public abstract class Entity : IDisposable
@@ -24,18 +21,23 @@ public abstract class Entity : IDisposable
     protected List<Behaviour> behaviours;
     protected Queue<Behaviour> pendingBehaviours;
 
+    public List<StatusEffect> StatusEffects => statusEffects;
+    protected List<StatusEffect> statusEffects;
+
      public Player Owner { get; private set; }
 
     public Entity()
     {
         behaviours = new List<Behaviour>();
         pendingBehaviours = new Queue<Behaviour>();
+        statusEffects = new List<StatusEffect>();
     }
 
     public Entity(EntityBlueprint blueprint)
     {
         behaviours = new List<Behaviour>();
         pendingBehaviours = new Queue<Behaviour>();
+        statusEffects = new List<StatusEffect>();
 
         guid = Guid.NewGuid().ToString();
         blueprintId = blueprint.Id;
@@ -57,7 +59,7 @@ public abstract class Entity : IDisposable
         if (pendingBehaviours.Count > 0)
             pendingBehaviours.Peek().Execute();
     }
-    public void SetOwner(Player player) { Owner = player; }
+    public void SetOwner(Player player) => Owner = player; 
     public void ResetDirection()
     {
         if (Team == Team.GOOD_BOYS) direction = Direction.UP;
