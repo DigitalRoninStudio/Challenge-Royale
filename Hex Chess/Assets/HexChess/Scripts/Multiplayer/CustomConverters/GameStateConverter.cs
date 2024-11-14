@@ -2,6 +2,7 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 
@@ -81,6 +82,42 @@ public static class GameStateConverter
         }
     }
 
+    public class StatusEffectListJsonConverter : JsonConverter<List<StatusEffectData>>
+    {
+        public override List<StatusEffectData> ReadJson(JsonReader reader, Type objectType, List<StatusEffectData> existingValue, bool hasExistingValue, JsonSerializer serializer)
+        {
+            var list = new List<StatusEffectData>();
+
+            JArray jsonArray = JArray.Load(reader);
+
+            foreach (JObject jObject in jsonArray.Children<JObject>())
+            {
+                var type = jObject.GetValue("Type").ToString();
+                var value = jObject.GetValue("Value").CreateReader();
+                var obj = serializer.Deserialize(value, Type.GetType(type)) as StatusEffectData;
+                list.Add(obj);
+            }
+
+            return list;
+        }
+
+        public override void WriteJson(JsonWriter writer, List<StatusEffectData> value, JsonSerializer serializer)
+        {
+            writer.WriteStartArray();
+
+            foreach (StatusEffectData obj in value)
+            {
+                JObject jo = new JObject();
+                jo.Add("Type", obj.GetType().Name);
+                jo.Add("Value", JToken.FromObject(obj, serializer));
+
+                jo.WriteTo(writer);
+            }
+
+            writer.WriteEndArray();
+        }
+    }
+
     public class EntityCoordinateConvertor : JsonConverter<Dictionary<Vector2Int, List<string>>>
     {
         public override Dictionary<Vector2Int, List<string>> ReadJson(JsonReader reader, Type objectType, Dictionary<Vector2Int, List<string>> existingValue, bool hasExistingValue, JsonSerializer serializer)
@@ -138,6 +175,7 @@ public static class GameStateConverter
         {
             new EntityDataListJsonConverter(),
             new BehaviourListJsonConverter(),
+            new StatusEffectListJsonConverter(),
             new EntityCoordinateConvertor()
         }
         };
@@ -154,6 +192,7 @@ public static class GameStateConverter
         {
             new EntityDataListJsonConverter(),
             new BehaviourListJsonConverter(),
+            new StatusEffectListJsonConverter(),
             new EntityCoordinateConvertor()
         }
 
@@ -206,16 +245,18 @@ public abstract class EntityData
     public bool IsBlockingMovemenet;
 
     public List<BehaviourData> BehaviourDatas;
+    public List<StatusEffectData> StatusEffectDatas;
 
     public EntityData()
     {
         BehaviourDatas = new List<BehaviourData>();
+        StatusEffectDatas = new List<StatusEffectData>();
     }
 
     public EntityData(Entity entity)
     {
         GUID = entity.guid;
-        Id = entity.blueprintId;
+        Id = entity.EntityBlueprint.Id;
         Visibility = entity.visibility;
         Direction = entity.direction;
         IsBlockingMovemenet = entity.isBlockingMovement;
@@ -223,6 +264,10 @@ public abstract class EntityData
         BehaviourDatas = new List<BehaviourData>();
         foreach (var behaviour in entity.Behaviours) 
             BehaviourDatas.Add(behaviour.GetBehaviourData());
+
+        StatusEffectDatas = new List<StatusEffectData>();
+        foreach (var statusEffect in entity.statusEffectController.StatusEffects)
+            StatusEffectDatas.Add(statusEffect.GetStatusEffectData());
     }
 }
 
@@ -244,7 +289,7 @@ public class BehaviourData
     public BehaviourData(Behaviour behaviour)
     {
         GUID = behaviour.guid;
-        Id = behaviour.blueprintId;
+        Id = behaviour.BehaviourBlueprint.Id;
     }
 }
 #region MovementBehaviourData
@@ -309,6 +354,26 @@ public class DamageableBehaviourData : BehaviourData
 }
 #endregion
 #endregion
+
+public abstract class StatusEffectData
+{
+    public string Id;
+    public int Duration;
+
+    public StatusEffectData() { }
+
+    public StatusEffectData(StatusEffect statusEffect)
+    {
+        Id = statusEffect.StatusEffectBlueprint.Id;
+        Duration = statusEffect.Duration;
+    }
+}
+
+public class StunData : StatusEffectData
+{
+    public StunData() : base() { }
+    public StunData(Stun stun) : base(stun) { }
+}
 
 
 

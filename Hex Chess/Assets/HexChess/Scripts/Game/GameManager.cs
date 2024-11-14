@@ -104,6 +104,11 @@ public class GameManager : Singleton<GameManager>
         {
             game.Value.Update();
         }
+
+        if(Input.GetKeyDown(KeyCode.Space))
+        {
+            Debug.Log(GameManager.Instance.GetMatchJson(GetFirstMatch()));
+        }
     }
 
     private void OnDestroy()

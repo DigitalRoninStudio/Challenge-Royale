@@ -17,3 +17,4 @@ MonoBehaviour:
   Visual: {fileID: 3832235051052953613, guid: 24d6c2f93f880b24b97502350f54357c, type: 3}
   Speed: 0.5
   Range: 2
+  StunBlueprint: {fileID: 11400000, guid: 6428ded00715ffb49847a04a09bbff2b, type: 2}

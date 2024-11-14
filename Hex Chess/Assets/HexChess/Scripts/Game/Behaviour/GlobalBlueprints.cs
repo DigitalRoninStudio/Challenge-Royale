@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "GlobalBlueprints", menuName = "GlobalBlueprints")]
@@ -8,6 +9,7 @@ public class GlobalBlueprints : ScriptableObject
     public List<MapBlueprint> MapBlueprints = new List<MapBlueprint>();
     public List<FractionBlueprint> FractionBlueprints = new List<FractionBlueprint>();
     public BehaviourBlueprintsContainer BehaviourDatasContainer = new BehaviourBlueprintsContainer();
+    public StatusEffectBlueprintsContainer StatusEffectBlueprintsContainer = new StatusEffectBlueprintsContainer();
 }
 [Serializable]
 public class FractionBlueprint
@@ -23,8 +25,38 @@ public class BehaviourBlueprintsContainer
     public List<BehaviourBlueprint> MovementBehaviourBlueprints = new List<BehaviourBlueprint>();
     public List<BehaviourBlueprint> AttackBehaviourBlueprints = new List<BehaviourBlueprint>();
     public List<BehaviourBlueprint> DamageableBehaviourBlueprints = new List<BehaviourBlueprint>();
-    public List<BehaviourBlueprint> AbilityBehaviourBlueprints = new List<BehaviourBlueprint>();
+
+    public Behaviour GetBehaviour(BehaviourData behaviourData)
+    {
+        Behaviour behaviour = null;
+
+        if(behaviourData is MovementBehaviourData)
+            behaviour = MovementBehaviourBlueprints.FirstOrDefault(b => b.Id == behaviourData.Id)?.CreateBehaviour();
+        else if(behaviourData is AttackBehaviourData)
+            behaviour = AttackBehaviourBlueprints.FirstOrDefault(b => b.Id == behaviourData.Id)?.CreateBehaviour();
+        else if(behaviourData is DamageableBehaviourData)
+            behaviour = DamageableBehaviourBlueprints.FirstOrDefault(b => b.Id == behaviourData.Id)?.CreateBehaviour();
+
+        return behaviour;
+    }
 
 }
+
+[Serializable]
+public class StatusEffectBlueprintsContainer
+{
+    public List<StatusEffectBlueprint> StunBlueprints = new List<StatusEffectBlueprint>();
+
+    public StatusEffect GetStatusEffect(StatusEffectData statusEffectData)
+    {
+        StatusEffect statusEffect = null;
+
+        if(statusEffectData is StunData)
+            statusEffect = StunBlueprints.FirstOrDefault(s => s.Id == statusEffectData.Id)?.CreateStatusEffect();
+
+        return statusEffect;
+    }
+}
+
 
 

@@ -6,8 +6,6 @@ using UnityEngine;
 public abstract class Entity : IDisposable
 {
     public string guid;
-    public string blueprintId;
-    public string name;
     public GameObject GameObject => gameObject;
     public GameObject gameObject;
     public Visibility visibility;
@@ -21,27 +19,26 @@ public abstract class Entity : IDisposable
     protected List<Behaviour> behaviours;
     protected Queue<Behaviour> pendingBehaviours;
 
-    public List<StatusEffect> StatusEffects => statusEffects;
-    protected List<StatusEffect> statusEffects;
+    public StatusEffectController statusEffectController;
 
-     public Player Owner { get; private set; }
+    public EntityBlueprint EntityBlueprint { get; private set; }
+    public Player Owner { get; private set; }
 
     public Entity()
     {
         behaviours = new List<Behaviour>();
         pendingBehaviours = new Queue<Behaviour>();
-        statusEffects = new List<StatusEffect>();
+        statusEffectController = new StatusEffectController();
     }
 
     public Entity(EntityBlueprint blueprint)
     {
         behaviours = new List<Behaviour>();
         pendingBehaviours = new Queue<Behaviour>();
-        statusEffects = new List<StatusEffect>();
+        statusEffectController = new StatusEffectController();
 
         guid = Guid.NewGuid().ToString();
-        blueprintId = blueprint.Id;
-        name = blueprint.Name;
+        EntityBlueprint = blueprint;
         isBlockingMovement = blueprint.IsBlockingMovement;
         visibility = Visibility.BOTH;
         gameObject = GameObject.Instantiate(blueprint.GameObject);
@@ -113,17 +110,18 @@ public abstract class Entity : IDisposable
         direction = entityData.Direction;
         SetRotation();
         SetUpBehaviours(entityData);
+        SetUpStatusEffect(entityData.StatusEffectDatas);
     }
 
     public virtual void Dispose()
     {
         GameObject.Destroy(gameObject);
     }
-
+    // HOT FIX
     private void SetUpBehaviours(EntityData entityData)
     {
         HashSet<string> behaviourDataIds = entityData.BehaviourDatas.Select(bd => bd.Id).ToHashSet();
-        List<Behaviour> behavioursToDispose = behaviours.Where(b => !behaviourDataIds.Contains(b.blueprintId)).ToList();
+        List<Behaviour> behavioursToDispose = behaviours.Where(b => !behaviourDataIds.Contains(b.BehaviourBlueprint.Id)).ToList();
         foreach (Behaviour behaviour in behavioursToDispose)
         {
             if(behaviour is IDisposable disposable)
@@ -132,7 +130,7 @@ public abstract class Entity : IDisposable
             behaviours.Remove(behaviour);
         }
 
-        Dictionary<string, Behaviour> behaviourDict = behaviours.ToDictionary(b => b.blueprintId);
+        Dictionary<string, Behaviour> behaviourDict = behaviours.ToDictionary(b => b.BehaviourBlueprint.Id);
 
         GameFactory gameFactory = new GameFactory();
         foreach (BehaviourData behaviourData in entityData.BehaviourDatas)
@@ -145,6 +143,17 @@ public abstract class Entity : IDisposable
                 behaviour.FillWithData(behaviourData);
                 AddBehaviour(behaviour);
             }
+        }
+    }
+
+    private void SetUpStatusEffect(List<StatusEffectData> statusEffectDatas)
+    {
+        GameFactory gameFactory = new GameFactory();
+        foreach (var statusEffectData in statusEffectDatas)
+        {
+           StatusEffect statusEffect = gameFactory.CreateStatusEffect(statusEffectData);
+           statusEffect.FillWithData(statusEffectData);
+           statusEffectController.AddStatusEffect(statusEffect); 
         }
     }
 }

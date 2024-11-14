@@ -5,7 +5,6 @@ using UnityEngine;
 public abstract class Behaviour
 {
     public string guid;
-    public string blueprintId;
     public string name;
     public Entity Owner { get; private set; }
     protected float time;
@@ -15,14 +14,13 @@ public abstract class Behaviour
     //public Action<Behaviour> OnBehaviourExecute; ?
     public Action<Behaviour> OnBehaviourEnd;
 
-    protected BehaviourBlueprint blueprint;
+    public BehaviourBlueprint BehaviourBlueprint { get; private set; }
     public Behaviour() { }
     public Behaviour(BehaviourBlueprint blueprint)
     {
         guid = Guid.NewGuid().ToString();
 
-        this.blueprint = blueprint;
-        blueprintId = blueprint.Id;
+        BehaviourBlueprint = blueprint;
         name = blueprint.Name;
     }
     public virtual void Enter() 
@@ -47,9 +45,9 @@ public abstract class Behaviour
     {
         Owner = entity;
 
-        if (blueprint.Visual != null)
+        if (BehaviourBlueprint.Visual != null)
         {
-            BehaviourVisual visual = GameObject.Instantiate(blueprint.Visual, Owner.gameObject.transform);
+            BehaviourVisual visual = GameObject.Instantiate(BehaviourBlueprint.Visual, Owner.gameObject.transform);
             visual.Initialize(this);
         }
     }

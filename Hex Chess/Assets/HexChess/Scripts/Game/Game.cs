@@ -158,7 +158,7 @@ public class GameFactory
 
         return player;
     }
-
+    //HOT FIX finding by fraction what if this is just basic entity and not Figure, do like its done for behaviour and status
     public Entity CreateEntity(EntityData entityData)
     {
         Entity entity = GameManager.Instance.GlobalData.FractionBlueprints
@@ -171,9 +171,16 @@ public class GameFactory
 
     public Behaviour CreateBehaviour(BehaviourData behaviourData)
     {
-        Behaviour behaviour = CreateBehaviourByBlueprintId(behaviourData.Id);
+        Behaviour behaviour = GameManager.Instance.GlobalData.BehaviourDatasContainer.GetBehaviour(behaviourData);
         behaviour.FillWithData(behaviourData);
         return behaviour;
+    }
+
+    public StatusEffect CreateStatusEffect(StatusEffectData statusEffectData)
+    {
+        StatusEffect statusEffect = GameManager.Instance.GlobalData.StatusEffectBlueprintsContainer.GetStatusEffect(statusEffectData);
+        statusEffect.FillWithData(statusEffectData);
+        return statusEffect;
     }
 
     public Map CreateMap(MapData mapData)
@@ -239,36 +246,6 @@ public class GameFactory
                     if (pair.Value.Contains(entity.guid))
                         game.map.GetTile(pair.Key).AddEntity(entity);
         }
-    }
-
-    // Create Entities from Entity Scriptable Objects (THIS WILL WORK UNLESS WE DOSENT HAVE ONLY ONE FIGURE TYPE PER FRACTION)
-
-    public Figure CreateFigure(FractionType fractionType, FigureType figureType)
-    {
-        var fractionData = GameManager.Instance.GlobalData.FractionBlueprints
-       .FirstOrDefault(f => f.FractionType == fractionType);
-
-        if (fractionData == null) return null;
-
-        var figureData =  fractionData.EntityBlueprints.Cast<FigureBlueprint>()
-       .FirstOrDefault(e => e.FigureType == figureType);
-
-        if (figureData == null) return null;
-
-        return figureData.CreateEntity() as Figure;
-    }
-
-    public Behaviour CreateBehaviourByBlueprintId(string blueprintId)
-    {
-        BehaviourBlueprintsContainer behaviourContainer = GameManager.Instance.GlobalData.BehaviourDatasContainer;
-        Behaviour behaviour = behaviourContainer
-            .MovementBehaviourBlueprints
-            .Concat(behaviourContainer.AttackBehaviourBlueprints)
-            .Concat(behaviourContainer.DamageableBehaviourBlueprints)
-            .Concat(behaviourContainer.AbilityBehaviourBlueprints)
-            .FirstOrDefault(b => b.Id == blueprintId)
-            ?.CreateBehaviour();
-        return behaviour;
     }
 }
 
