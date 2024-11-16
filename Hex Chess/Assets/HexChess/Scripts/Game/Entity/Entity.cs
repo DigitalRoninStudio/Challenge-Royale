@@ -19,7 +19,8 @@ public abstract class Entity : IDisposable
     protected List<Behaviour> behaviours;
     protected Queue<Behaviour> pendingBehaviours;
 
-    public StatusEffectController statusEffectController;
+    public StatusEffectController StatusEffectController => statusEffectController;
+    private StatusEffectController statusEffectController;
 
     public EntityBlueprint EntityBlueprint { get; private set; }
     public Player Owner { get; private set; }

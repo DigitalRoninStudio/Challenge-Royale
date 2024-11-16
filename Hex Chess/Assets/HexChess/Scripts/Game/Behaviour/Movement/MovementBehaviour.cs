@@ -76,6 +76,26 @@ public abstract class MovementBehaviour : Behaviour, ISerializableAction
 
     public abstract List<Tile> GetAvailableMoves();
 
+    public bool CanMove(Tile tile)
+    {
+        if (Owner.StatusEffectController.HasStatusEffect<Stun>())
+        {
+            Debug.Log("CANNOT PERFORM ATTACK, ENTITY IS STUNED");
+            return false;
+        }
+        else if (Owner.StatusEffectController.HasStatusEffect<Root>())
+        {
+            Debug.Log("CANNOT PERFORM ATTACK, ENTITY IS ROOTED");
+            return false;
+        }
+
+        if (tile == null) return false;
+
+        if(GetAvailableMoves().Contains(tile)) return false;
+               
+        return true;
+    }
+
     public virtual void SetPath(Tile end)
     {
         currentTile = Map.GetTile(Owner);
@@ -161,23 +181,23 @@ public abstract class AttackBehaviour : Behaviour, ISerializableAction
 
     public bool CanAttack(Entity enemy)
     {
-        Tile entityTile = Map.GetTile(Owner);
+        if(Owner.StatusEffectController.HasStatusEffect<Stun>())
+        {
+            Debug.Log("CANNOT PERFORM ATTACK, ENTITY IS STUNED");
+            return false;
+        }else if(Owner.StatusEffectController.HasStatusEffect<Disarm>())
+        {
+            Debug.Log("CANNOT PERFORM ATTACK, ENTITY IS DISARMED");
+            return false;
+        }
+
         Tile targetTile = Map.GetTile(enemy);
 
-        if (entityTile == null || targetTile == null) return false;
+        if (targetTile == null) return false;
 
-        List<Tile> tiles = Map.TilesInRange(entityTile, attackRange);
-
-        if(tiles.Contains(targetTile))
-        {
-            List<Entity> entities = targetTile.GetEntities();
-            foreach (Entity e in entities) 
-            {
-                if(IsValidEnemyTarget(e))
-                    return true;
-            }
-        }
-        return false;
+        if(!GetAttackMoves().Contains(targetTile)) return false;       
+        
+        return true;
     }
     protected bool IsValidEnemyTarget(Entity enemy)
     {
@@ -257,6 +277,41 @@ public class DamageableBehaviour : Behaviour
 
     protected virtual int CalculateDamage(Damage damage)
     {
+        if(Owner.StatusEffectController.HasStatusEffect<DamageImmune>())
+        {
+            List<DamageImmune> damageImmunes = Owner.StatusEffectController.GetStatusEffectsOfType<DamageImmune>();
+            foreach (var damageImmune in damageImmunes)
+            {
+                if ((damageImmune.DamageType & damage.Type) != 0)
+                {
+                    damage.SetAmount(0);
+                    return damage.Amount;
+                }
+            }
+        }
+
+        if(Owner.StatusEffectController.HasStatusEffect<Shield>())
+        {
+            List<Shield> shields = Owner.StatusEffectController.GetStatusEffectsOfType<Shield>();
+            for (int i = shields.Count - 1; i >= 0; i--)
+            {
+                var shield = shields[i];
+                if ((shield.DamageType & damage.Type) != 0)
+                {
+                    shield.ReceiveDamage(damage);
+
+                    if (!shield.IsShieldActive())
+                    {
+                        Owner.StatusEffectController.RemoveStatusEffect(shield);
+                        shields.RemoveAt(i); 
+                    }
+
+                    if (damage.Amount == 0)
+                        break;
+                }
+            }
+        }
+
         return damage.Amount;
     }
     public override BehaviourData GetBehaviourData() => new DamageableBehaviourData(this);
@@ -288,11 +343,17 @@ public class Damage
         Amount = amount;
         Type = type;
     }
+
+    public void SetAmount(int amount)
+    {
+        Amount = amount;
+    }
 }
 
+[Flags]
 public enum DamageType
 {
-    Physical,
-    Magic,
-    Pure,
+    Physical = 0,
+    Magic = 1 << 0,
+    True = 1 << 1
 }

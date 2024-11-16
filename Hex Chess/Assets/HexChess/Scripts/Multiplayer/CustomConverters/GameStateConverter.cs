@@ -266,7 +266,7 @@ public abstract class EntityData
             BehaviourDatas.Add(behaviour.GetBehaviourData());
 
         StatusEffectDatas = new List<StatusEffectData>();
-        foreach (var statusEffect in entity.statusEffectController.StatusEffects)
+        foreach (var statusEffect in entity.StatusEffectController.StatusEffects)
             StatusEffectDatas.Add(statusEffect.GetStatusEffectData());
     }
 }
@@ -373,6 +373,32 @@ public class StunData : StatusEffectData
 {
     public StunData() : base() { }
     public StunData(Stun stun) : base(stun) { }
+}
+public class DisarmData : StatusEffectData
+{
+    public DisarmData() : base() { }
+    public DisarmData(Disarm disarm) : base(disarm) { }
+}
+public class RootData : StatusEffectData
+{
+    public RootData() : base() { }
+    public RootData(Root root) : base(root) { }
+}
+
+public class DamageImmuneData : StatusEffectData
+{
+    public DamageImmuneData() : base() { }
+    public DamageImmuneData(DamageImmune damageImmune) : base(damageImmune) { }
+}
+
+public class ShieldData : StatusEffectData
+{
+    public int CurrentHealth;
+    public ShieldData() : base() { }
+    public ShieldData(Shield shield) : base(shield) 
+    {
+        CurrentHealth = shield.CurrentHealth;
+    }
 }
 
 

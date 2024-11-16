@@ -222,7 +222,7 @@ public class EntitySelectedState : IPlayerState
         Entity selectedEntity = playerController.selectedEntity;
         MovementBehaviour movementBehaviour = selectedEntity?.GetBehaviour<MovementBehaviour>();
 
-        if (movementBehaviour == null || !movementBehaviour.GetAvailableMoves().Contains(targetTile)) return;
+        if (movementBehaviour == null || !movementBehaviour.CanMove(targetTile)) return;
 
         NetMovement request = new NetMovement()
         {
@@ -255,7 +255,7 @@ public class EntitySelectedState : IPlayerState
         Entity selectedEntity = playerController.selectedEntity;
         AttackBehaviour attackBehaviour = selectedEntity?.GetBehaviour<AttackBehaviour>();
 
-        if (attackBehaviour == null || !attackBehaviour.GetAttackMoves().Contains(targetTile))
+        if (attackBehaviour == null)
             return;
 
         foreach (var entity in targetTile.GetEntities())

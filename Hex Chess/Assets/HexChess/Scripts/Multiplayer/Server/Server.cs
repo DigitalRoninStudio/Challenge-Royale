@@ -299,7 +299,7 @@ public class Server : INetworkService
                 NetworkLogger.Log("Entity tried to move but TILE is null");
                 return;
             }
-            if (movementBehaviour.GetAvailableMoves().Contains(tile))
+            if (movementBehaviour.CanMove(tile))
             {
                 movementBehaviour.SetPath(tile);
                 entity.AddBehaviourToWork(movementBehaviour);

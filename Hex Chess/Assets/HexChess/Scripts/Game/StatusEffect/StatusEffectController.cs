@@ -83,7 +83,7 @@ public class StatusEffectController
         return statusEffects.OfType<T>().FirstOrDefault();
     }
 
-    public List<T> GetBuffsOfType<T>() where T : StatusEffect
+    public List<T> GetStatusEffectsOfType<T>() where T : StatusEffect
     {
         return statusEffects.OfType<T>().ToList();
     }
