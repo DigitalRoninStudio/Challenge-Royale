@@ -91,7 +91,7 @@ public abstract class MovementBehaviour : Behaviour, ISerializableAction
 
         if (tile == null) return false;
 
-        if(GetAvailableMoves().Contains(tile)) return false;
+        if(!GetAvailableMoves().Contains(tile)) return false;
                
         return true;
     }

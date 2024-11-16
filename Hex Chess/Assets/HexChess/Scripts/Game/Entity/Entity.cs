@@ -141,7 +141,6 @@ public abstract class Entity : IDisposable
             else
             {
                 behaviour = gameFactory.CreateBehaviour(behaviourData);
-                behaviour.FillWithData(behaviourData);
                 AddBehaviour(behaviour);
             }
         }
@@ -153,7 +152,6 @@ public abstract class Entity : IDisposable
         foreach (var statusEffectData in statusEffectDatas)
         {
            StatusEffect statusEffect = gameFactory.CreateStatusEffect(statusEffectData);
-           statusEffect.FillWithData(statusEffectData);
            statusEffectController.AddStatusEffect(statusEffect); 
         }
     }
