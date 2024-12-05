@@ -133,14 +133,13 @@ public abstract class Entity : IDisposable
 
         Dictionary<string, Behaviour> behaviourDict = behaviours.ToDictionary(b => b.BehaviourBlueprint.Id);
 
-        GameFactory gameFactory = new GameFactory();
         foreach (BehaviourData behaviourData in entityData.BehaviourDatas)
         {
             if (behaviourDict.TryGetValue(behaviourData.Id, out Behaviour behaviour))
                 behaviour.FillWithData(behaviourData);
             else
             {
-                behaviour = gameFactory.CreateBehaviour(behaviourData);
+                behaviour = GameFactory.CreateBehaviour(behaviourData);
                 AddBehaviour(behaviour);
             }
         }
@@ -148,10 +147,9 @@ public abstract class Entity : IDisposable
 
     private void SetUpStatusEffect(List<StatusEffectData> statusEffectDatas)
     {
-        GameFactory gameFactory = new GameFactory();
         foreach (var statusEffectData in statusEffectDatas)
         {
-           StatusEffect statusEffect = gameFactory.CreateStatusEffect(statusEffectData);
+           StatusEffect statusEffect = GameFactory.CreateStatusEffect(statusEffectData);
            statusEffectController.AddStatusEffect(statusEffect); 
         }
     }

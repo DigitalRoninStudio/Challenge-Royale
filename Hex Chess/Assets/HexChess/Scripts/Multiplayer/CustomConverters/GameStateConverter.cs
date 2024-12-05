@@ -2,7 +2,6 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
 
 
@@ -205,13 +204,37 @@ public class GameData
     public string GUID;
     public MapData MapData;
     public List<PlayerData> PlayersData;
-    public RandomGeneratorState randomState;
+    public RandomGeneratorState RandomState;
+    public RoundData RoundData;
 
     public GameData()
     {
         PlayersData = new List<PlayerData>();
-        randomState = new RandomGeneratorState();
+        RandomState = new RandomGeneratorState();
+        RoundData = new RoundData();
     }
+
+    public GameData(Game game)
+    {
+        GUID = game.GUID;
+        RandomState = game.randomGenerator.GetState();
+        RoundData = game.roundController.GetRoundData();
+        MapData = GameFactory.CreateMapData(game);
+
+        foreach (var player in game.players)
+            PlayersData.Add(player.GetPlayerData());
+    }
+}
+public class RandomGeneratorState
+{
+    public uint InitialSeed { get; set; }
+    public long CurrentPosition { get; set; }
+}
+public class RoundData
+{
+    public int round;
+    public Team startRoundTeam;
+    public Team teamWithInitiation;
 }
 public class MapData
 {
@@ -222,18 +245,35 @@ public class MapData
     {
         entityPositions = new Dictionary<Vector2Int, List<string>>();
     }
-
 }
 public class PlayerData
 {
     public string Id;
     public Team Team;
+    public EnergyData EnergyData;
     public List<EntityData> EntityData;
 
     public PlayerData()
     {
+        EnergyData = new EnergyData();
         EntityData = new List<EntityData>();
     }
+
+    public PlayerData(Player player)
+    {
+        Id = player.clientId;
+        Team = player.team;
+        EnergyData = player.energyController.GetEnergyData();
+
+        foreach (var entity in player.entities)
+            EntityData.Add(entity.GetEntityData());        
+    }
+}
+
+public class EnergyData
+{
+    public int energy;
+    public int stash;
 }
 
 public abstract class EntityData
@@ -390,7 +430,11 @@ public class DamageImmuneData : StatusEffectData
     public DamageImmuneData() : base() { }
     public DamageImmuneData(DamageImmune damageImmune) : base(damageImmune) { }
 }
-
+public class DamageReturnData : StatusEffectData
+{
+    public DamageReturnData() : base() { }
+    public DamageReturnData(DamageReturn damageReturn) : base(damageReturn) { }
+}
 public class ShieldData : StatusEffectData
 {
     public int CurrentHealth;

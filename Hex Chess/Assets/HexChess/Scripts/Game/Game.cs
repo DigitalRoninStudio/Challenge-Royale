@@ -9,11 +9,29 @@ public class Game
     public Map map;
     public List<Player> players;
     public RandomGenerator randomGenerator;
+    public RoundController roundController;
 
     public Game()
     {
         players = new List<Player>();
         randomGenerator = new RandomGenerator();
+        roundController = new RoundController();
+    }
+
+    public Game(GameData gameData)
+    {
+        GUID = gameData.GUID;
+
+        players = new List<Player>();
+        randomGenerator = new RandomGenerator(gameData.RandomState);
+        roundController = new RoundController(gameData.RoundData);
+
+        foreach (var playerData in gameData.PlayersData)
+            AddPlayer(new Player(playerData));
+
+        map = GameFactory.CreateMap(gameData.MapData);
+
+        GameFactory.PlaceEntitiesOnTiles(gameData.MapData.entityPositions, this);
     }
 
     public void AddPlayer(Player player)
@@ -40,11 +58,13 @@ public class Game
     {
 
     }
-
+    
     public List<Entity> GetAllEntities()
     {
         return players.SelectMany(player => player.entities).ToList();
     }
+
+    public GameData GetGameData() => new GameData(this);
 
 }
 
@@ -53,9 +73,6 @@ public class RandomGenerator
     private uint seed;
     private uint initialSeed;
     private long sequencePosition;
-
-    const int Max = 100;
-    const int Min = 1;
 
     public RandomGenerator()
     {
@@ -103,10 +120,10 @@ public class RandomGenerator
         return seed / (double)uint.MaxValue;
     }
 
-    public int NextInt()
+    public int NextInt(int min = 0, int max = 100)
     {
         double value = Next();
-        return (int)(value * (Max - Min + 1)) + Min;
+        return (int)(value * (max - min + 1)) + min;
     }
     public float NextFloat()
     {
@@ -116,50 +133,10 @@ public class RandomGenerator
     public uint GetSeed() => initialSeed;
 }
 
-public class RandomGeneratorState
+
+public static class GameFactory
 {
-    public uint InitialSeed { get; set; }
-    public long CurrentPosition { get; set; }
-}
-
-
-public class GameFactory
-{
-    // Create Game from Game State Date
-    public Game CreateGame(GameData gameData)
-    {
-        Game game = new Game();
-        game.GUID = gameData.GUID;
-        game.randomGenerator = new RandomGenerator(gameData.randomState);
-
-        foreach (var playerData in gameData.PlayersData)
-        {
-            Player player = CreatePlayer(playerData);
-            game.AddPlayer(player);
-        }
-
-        game.map = CreateMap(gameData.MapData);
-
-        PlaceEntitiesOnTiles(gameData.MapData.entityPositions, game);
-
-        return game;
-    }
-    public Player CreatePlayer(PlayerData playerData)
-    {
-        Player player = new Player();
-        player.clientId = playerData.Id;
-        player.team = playerData.Team;
-
-        foreach (var entityData in playerData.EntityData)
-        {
-            Entity entity = CreateEntity(entityData);
-            player.AddEntity(entity);
-        }
-
-        return player;
-    }
-    //HOT FIX finding by fraction what if this is just basic entity and not Figure, do like its done for behaviour and status
-    public Entity CreateEntity(EntityData entityData)
+    public static Entity CreateEntity(EntityData entityData)
     {
         Entity entity = GameManager.Instance.GlobalData.FractionBlueprints
             .SelectMany(f => f.EntityBlueprints)
@@ -169,43 +146,28 @@ public class GameFactory
         return entity;
     }
 
-    public Behaviour CreateBehaviour(BehaviourData behaviourData)
+    public static Behaviour CreateBehaviour(BehaviourData behaviourData)
     {
         Behaviour behaviour = GameManager.Instance.GlobalData.BehaviourDatasContainer.GetBehaviour(behaviourData);
         behaviour.FillWithData(behaviourData);
         return behaviour;
     }
 
-    public StatusEffect CreateStatusEffect(StatusEffectData statusEffectData)
+    public static StatusEffect CreateStatusEffect(StatusEffectData statusEffectData)
     {
         StatusEffect statusEffect = GameManager.Instance.GlobalData.StatusEffectBlueprintsContainer.GetStatusEffect(statusEffectData);
         statusEffect.FillWithData(statusEffectData);
         return statusEffect;
     }
 
-    public Map CreateMap(MapData mapData)
+    public static Map CreateMap(MapData mapData)
     {
         return GameManager.Instance.GlobalData.MapBlueprints
                .FirstOrDefault(data => data.Id == mapData.Id)
                ?.CreateMap();
     }
 
-    // Create Game State Datu from Game
-    public GameData CreateGameData(Game game)
-    {
-        GameData gameData = new();
-        gameData.GUID = game.GUID;
-        gameData.randomState = game.randomGenerator.GetState();
-
-        gameData.MapData = CreateMapData(game);
-
-        foreach (var player in game.players)
-            gameData.PlayersData.Add(CreatePlayerData(player));
-
-        return gameData;
-    }
-
-    public MapData CreateMapData(Game game)
+    public static MapData CreateMapData(Game game)
     {
         MapData mapData = new();
         mapData.Id = game.map.MapId;
@@ -222,22 +184,7 @@ public class GameFactory
 
         return mapData;
     }
-
-    public PlayerData CreatePlayerData(Player player)
-    {
-        PlayerData playerData = new()
-        {
-            Id = player.clientId,
-            Team = player.team,
-        };
-
-        foreach (var entity in player.entities)
-            playerData.EntityData.Add(entity.GetEntityData());
-
-        return playerData;
-    }
-
-    private void PlaceEntitiesOnTiles(Dictionary<Vector2Int, List<string>> entityPositions, Game game)
+    public static void PlaceEntitiesOnTiles(Dictionary<Vector2Int, List<string>> entityPositions, Game game)
     {
         foreach (var pair in entityPositions)
         {
@@ -248,8 +195,3 @@ public class GameFactory
         }
     }
 }
-
-
-
-
-

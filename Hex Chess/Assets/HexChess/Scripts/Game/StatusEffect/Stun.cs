@@ -36,6 +36,20 @@ public class DamageImmune : StatusEffect
     public override StatusEffectData GetStatusEffectData() => new DamageImmuneData(this);
 }
 
+public class DamageReturn : StatusEffect
+{
+    public float ReturnPercentage { get; private set; }
+
+    public DamageReturn() : base() { }
+    public DamageReturn(DamageReturnBlueprint blueprint) : base(blueprint) 
+    {
+        ReturnPercentage = blueprint.ReturnPercentage;
+    }
+
+    public override StatusEffectData GetStatusEffectData() => new DamageReturnData(this);
+}
+
+
 public class Shield : StatusEffect
 {
     public DamageType DamageType { get; private set; }

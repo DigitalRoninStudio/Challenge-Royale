@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.Burst.CompilerServices;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 public abstract class Map
 {

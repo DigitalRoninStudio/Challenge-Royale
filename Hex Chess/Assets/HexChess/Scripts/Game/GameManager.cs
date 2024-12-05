@@ -83,8 +83,8 @@ public class GameManager : Singleton<GameManager>
     public void CreateMatch(string json, bool isClient = false)
     {
         GameData gameData = GameStateConverter.Deserialize<GameData>(json);
-        GameFactory gameFactory = new GameFactory();
-        Game game = gameFactory.CreateGame(gameData);
+
+        Game game = new Game(gameData);
 
         matches.Add(game.GUID, game);
 
@@ -94,9 +94,7 @@ public class GameManager : Singleton<GameManager>
 
     public string GetMatchJson(Game game)
     {
-        GameFactory factory = new GameFactory();
-        GameData gameData = factory.CreateGameData(game);
-        return GameStateConverter.Serialize(gameData);
+        return GameStateConverter.Serialize(game.GetGameData());
     }
     private void Update()
     {

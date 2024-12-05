@@ -113,10 +113,31 @@ public abstract class MovementBehaviour : Behaviour, ISerializableAction
     {
         MovementBehaviourAction movementAction = JsonConvert.DeserializeObject<MovementBehaviourAction>(data);
 
-        Tile end = Map.GetTile(movementAction.EndCoord);
+        Tile end = Map.GetTile(movementAction.EndCoord );
         SetPath(end);
     }
 }
+
+public abstract class AbilityBehaviour : Behaviour
+{
+    
+}
+
+public abstract class PassiveAbility : AbilityBehaviour
+{
+    
+}
+
+public abstract class Activebility : AbilityBehaviour
+{
+
+}
+
+public enum CastType 
+{
+    VALID, INVALID
+}
+
 public abstract class AttackBehaviour : Behaviour, ISerializableAction
 {
     protected int baseDamage;
@@ -258,7 +279,7 @@ public class DamageableBehaviour : Behaviour
             currentHealth = damageableData.CurrentHealth;
         }
     }
-    public virtual void ReceiveDamage(Damage damage)
+    public virtual void ReceiveDamage(Damage damage, bool damageReturn = false)
     {
         if (!CanReceiveDamage) return;
 
@@ -266,6 +287,8 @@ public class DamageableBehaviour : Behaviour
         currentHealth = Math.Max(0, currentHealth - finalDamage);
 
         OnDamageReceived?.Invoke(currentHealth, finalDamage);
+
+        TryToReturnDamage(damage, damageReturn, finalDamage);
 
         if (!IsAlive)
         {
@@ -314,6 +337,21 @@ public class DamageableBehaviour : Behaviour
 
         return damage.Amount;
     }
+
+    private void TryToReturnDamage(Damage damage, bool damageReturn, int finalDamage)
+    {
+        if (!damageReturn && finalDamage > 0 && damage.Source != null)
+        {
+            DamageableBehaviour damageableBehaviour = damage.Source.GetBehaviour<DamageableBehaviour>();
+            if (Owner.StatusEffectController.HasStatusEffect<DamageReturn>() && damageableBehaviour != null && damageableBehaviour.CanReceiveDamage)
+            {
+                DamageReturn damageReturnEffect = Owner.StatusEffectController.GetStatusEffect<DamageReturn>();
+                int reflectedDamage = Mathf.CeilToInt(finalDamage * damageReturnEffect.ReturnPercentage);
+
+                damageableBehaviour.ReceiveDamage(new Damage(reflectedDamage, damage.Type, Owner), damageReturn: true);
+            }
+        }
+    }
     public override BehaviourData GetBehaviourData() => new DamageableBehaviourData(this);
 }
 
@@ -322,7 +360,7 @@ public class MeleeAttackBehaviour : AttackBehaviour
     public MeleeAttackBehaviour() : base() { }
     public MeleeAttackBehaviour(MeleeAttackBlueprint blueprint) : base(blueprint) { }
     public override BehaviourData GetBehaviourData() => new MeleeAttackData(this);
-    protected override Damage CreateDamage() => new Damage(AttackDamage, DamageType.Physical);
+    protected override Damage CreateDamage() => new Damage(AttackDamage, DamageType.Physical, Owner);
 }
 
 public class RangedAttackBehaviour : AttackBehaviour
@@ -330,18 +368,20 @@ public class RangedAttackBehaviour : AttackBehaviour
     public RangedAttackBehaviour() : base() { }
     public RangedAttackBehaviour(RangedAttackBlueprint blueprint) : base(blueprint) { }
     public override BehaviourData GetBehaviourData() => new RangedAttackData(this);
-    protected override Damage CreateDamage() => new Damage(AttackDamage, DamageType.Physical);
+    protected override Damage CreateDamage() => new Damage(AttackDamage, DamageType.Physical, Owner);
 }
 
 public class Damage
 {
     public int Amount { get; private set; }
     public DamageType Type { get; private set; }
+    public Entity Source { get; private set; }
 
-    public Damage(int amount, DamageType type)
+    public Damage(int amount, DamageType type, Entity source)
     {
         Amount = amount;
         Type = type;
+        Source = source;
     }
 
     public void SetAmount(int amount)
