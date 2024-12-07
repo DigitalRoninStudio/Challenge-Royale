@@ -19,7 +19,7 @@ public class GameManager : Singleton<GameManager>
     public InputReader inputReader;
     private PlayerController playerController;
     public bool isServer = false;
- 
+    public string LocalClientID;
 
     private void Start()
     {
@@ -126,5 +126,10 @@ public class GameManager : Singleton<GameManager>
     public Game GetFirstMatch()
     {
         return matches.First().Value;
+    }
+
+    public bool IsLocalClientOwner(Entity entity)
+    {
+        return entity.Owner.clientId == LocalClientID;
     }
 }

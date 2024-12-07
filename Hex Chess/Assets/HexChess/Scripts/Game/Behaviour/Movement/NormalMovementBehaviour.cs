@@ -7,7 +7,15 @@ public class NormalMovementBehaviour : MovementBehaviour
     public NormalMovementBehaviour() { }
     public NormalMovementBehaviour(NormalMovementBlueprint blueprint) : base(blueprint) { }
 
-    public override List<Tile> GetAvailableMoves()
+    public override void SetPath(Tile end)
+    {
+        base.SetPath(end);
+
+        path = PathFinder.FindPath_AStar(currentTile, end, Map);
+    }
+    public override BehaviourData GetBehaviourData() => new NormalMovementData(this);
+
+    public override List<Tile> GetAvailableTiles()
     {
         List<Tile> availableMoves = new List<Tile>();
 
@@ -21,13 +29,14 @@ public class NormalMovementBehaviour : MovementBehaviour
         return availableMoves;
     }
 
-    public override void SetPath(Tile end)
+    public override List<Tile> GetTiles()
     {
-        base.SetPath(end);
+        Tile tile = Map.GetTile(Owner);
 
-        path = PathFinder.FindPath_AStar(currentTile, end, Map);
+        if (tile == null) return new List<Tile>();
+
+        return Map.TilesInRange(tile, range);
     }
-    public override BehaviourData GetBehaviourData() => new NormalMovementData(this);
 }
 
 public class KnightMovementBehaviour : MovementBehaviour
@@ -35,25 +44,46 @@ public class KnightMovementBehaviour : MovementBehaviour
     public KnightMovementBehaviour() { }
     public KnightMovementBehaviour(KnightMovementBlueprint blueprint) : base(blueprint) { }
 
-    public override List<Tile> GetAvailableMoves()
+    public override List<Tile> GetAvailableTiles()
     {
         List<Tile> availableMoves = new List<Tile>();
 
         Tile tile = Map.GetTile(Owner);
 
         if (tile == null) return availableMoves;
+        //move inside map methods
+        foreach (var diagonalVector in HexagonMap.diagonalsNeighborsVectors)
+        {
+            for (int i = 1; i <= range; i++)
+            {
+                Tile diagonalTile = Map.GetTile(tile.coordinate.x + diagonalVector.x * i, tile.coordinate.y + diagonalVector.y * i);
+                if (diagonalTile != null && diagonalTile.Walkable)
+                    availableMoves.Add(diagonalTile);
+            }
+        }
 
+        return availableMoves;
+    }
+
+    public override List<Tile> GetTiles()
+    {
+        List<Tile> tiles = new List<Tile>();
+
+        Tile tile = Map.GetTile(Owner);
+
+        if (tile == null) return tiles;
+        //move inside map methods
         foreach (var diagonalVector in HexagonMap.diagonalsNeighborsVectors)
         {
             for (int i = 1; i <= range; i++)
             {
                 Tile diagonalTile = Map.GetTile(tile.coordinate.x + diagonalVector.x * i, tile.coordinate.y + diagonalVector.y * i);
                 if (diagonalTile != null)
-                    availableMoves.Add(diagonalTile);
+                    tiles.Add(diagonalTile);
             }
         }
 
-        return availableMoves;
+        return tiles;
     }
 
     public override void SetPath(Tile end)
@@ -80,7 +110,7 @@ public class TeleportMovementBehaviour : MovementBehaviour
             Exit();
         }
     }
-    public override List<Tile> GetAvailableMoves()
+    public override List<Tile> GetAvailableTiles()
     {
         List<Tile> availableMoves = new List<Tile>();
 
@@ -102,6 +132,15 @@ public class TeleportMovementBehaviour : MovementBehaviour
         path.Enqueue(end);
     }
     public override BehaviourData GetBehaviourData() => new TeleportMovementData(this);
+
+    public override List<Tile> GetTiles()
+    {
+        Tile tile = Map.GetTile(Owner);
+
+        if (tile == null) return new List<Tile>();
+
+        return Map.TilesInRange(tile, range);
+    }
 }
 
 public class DirectionMovementBehaviour : MovementBehaviour
@@ -109,17 +148,31 @@ public class DirectionMovementBehaviour : MovementBehaviour
     public DirectionMovementBehaviour() { }
     public DirectionMovementBehaviour(DirectionMovementBlueprint blueprint) : base(blueprint) { }
 
-    public override List<Tile> GetAvailableMoves()
+    public override List<Tile> GetAvailableTiles()
     {
         List<Tile> availableMoves = new List<Tile>();
 
         Tile tile = Map.GetTile(Owner);
 
         if (tile == null) return availableMoves;
-
+        //move method inside map
         foreach (var neigborVectors in HexagonMap.neighborsVectors)
             if (HexagonMap.coordinateToDirection.TryGetValue(neigborVectors, out Direction direction))
                 availableMoves.AddRange(Map.GetTilesInDirection(tile, direction, range, false, true));
+
+        return availableMoves;
+    }
+    public override List<Tile> GetTiles()
+    {
+        List<Tile> availableMoves = new List<Tile>();
+
+        Tile tile = Map.GetTile(Owner);
+
+        if (tile == null) return availableMoves;
+        //move method inside map
+        foreach (var neigborVectors in HexagonMap.neighborsVectors)
+            if (HexagonMap.coordinateToDirection.TryGetValue(neigborVectors, out Direction direction))
+                availableMoves.AddRange(Map.GetTilesInDirection(tile, direction, range));
 
         return availableMoves;
     }

@@ -90,13 +90,22 @@ public class PlayerController
 
         if (tile == null) return;
 
-        if (movementBehaviour != null)
-            foreach (var availableTile in movementBehaviour.GetAvailableMoves())
-                availableTile.SetColor(Color.cyan);
+       // if(GameManager.Instance.IsLocalClientOwner(selectedEntity))
+        {
+            //create map visuals or tile visuals
+            if (movementBehaviour != null && movementBehaviour is ITilesInRange movementTiles)
+                foreach (var availableTile in movementTiles.GetAvailableTiles())
+                    availableTile.SetColor(Color.cyan);
 
-        if (attackBehaviour != null)
-            foreach (var availableTile in attackBehaviour.GetAttackMoves())
-                availableTile.SetAttack();
+            if (attackBehaviour != null && attackBehaviour is ITilesInRange attackTiles)
+                foreach (var availableTile in attackTiles.GetAvailableTiles())
+                    availableTile.SetAttack();
+
+        }
+        //else
+        {
+
+        }
     }
 
     public void ResetTiles()

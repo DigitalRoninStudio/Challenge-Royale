@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Unity.Networking.Transport;
 using UnityEngine;
 
@@ -35,6 +37,7 @@ public abstract class Behaviour
         OnBehaviourEnd?.Invoke(this);
         Owner.ChangeBehaviour();// move to entity and subscribe to on behaviour end ? 
     }
+
     public abstract BehaviourData GetBehaviourData();
     public virtual void FillWithData(BehaviourData behaviourData)
     {
@@ -73,6 +76,15 @@ public abstract class Behaviour
         }
     }
 }
+
+public interface ITilesInRange
+{
+    List<Tile> GetAvailableTiles();
+    List<Tile> GetTiles();
+    List<Tile> GetUnAvailableTilesInRange() => GetTiles().Except(GetAvailableTiles()).ToList();
+
+}
+
 
 public interface ISerializableAction
 {

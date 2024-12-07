@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using UnityEngine;
 
-public abstract class MovementBehaviour : Behaviour, ISerializableAction
+public abstract class MovementBehaviour : Behaviour, ISerializableAction, ITilesInRange
 {
     public float speed;
     public int range;
@@ -74,8 +74,6 @@ public abstract class MovementBehaviour : Behaviour, ISerializableAction
 
     }
 
-    public abstract List<Tile> GetAvailableMoves();
-
     public bool CanMove(Tile tile)
     {
         if (Owner.StatusEffectController.HasStatusEffect<Stun>())
@@ -91,7 +89,7 @@ public abstract class MovementBehaviour : Behaviour, ISerializableAction
 
         if (tile == null) return false;
 
-        if(!GetAvailableMoves().Contains(tile)) return false;
+        if(!GetAvailableTiles().Contains(tile)) return false;
                
         return true;
     }
@@ -116,6 +114,9 @@ public abstract class MovementBehaviour : Behaviour, ISerializableAction
         Tile end = Map.GetTile(movementAction.EndCoord );
         SetPath(end);
     }
+
+    public abstract List<Tile> GetAvailableTiles();
+    public abstract List<Tile> GetTiles();
 }
 
 public abstract class AbilityBehaviour : Behaviour
@@ -133,12 +134,7 @@ public abstract class Activebility : AbilityBehaviour
 
 }
 
-public enum CastType 
-{
-    VALID, INVALID
-}
-
-public abstract class AttackBehaviour : Behaviour, ISerializableAction
+public abstract class AttackBehaviour : Behaviour, ISerializableAction, ITilesInRange
 {
     protected int baseDamage;
     protected int attackRange;
@@ -175,7 +171,7 @@ public abstract class AttackBehaviour : Behaviour, ISerializableAction
             Exit();
         }
     }
-    public virtual List<Tile> GetAttackMoves()
+    public virtual List<Tile> GetAvailableTiles()
     {
         List<Tile> attackMoves = new List<Tile>();
 
@@ -198,6 +194,15 @@ public abstract class AttackBehaviour : Behaviour, ISerializableAction
 
         return attackMoves;
     }
+    public virtual List<Tile> GetTiles()
+    {
+
+        Tile tile = Map.GetTile(Owner);
+
+        if (tile == null) return new List<Tile>();
+
+        return Map.TilesInRange(tile, attackRange);
+    }
     protected abstract Damage CreateDamage();
 
     public bool CanAttack(Entity enemy)
@@ -216,7 +221,7 @@ public abstract class AttackBehaviour : Behaviour, ISerializableAction
 
         if (targetTile == null) return false;
 
-        if(!GetAttackMoves().Contains(targetTile)) return false;       
+        if(!GetAvailableTiles().Contains(targetTile)) return false;       
         
         return true;
     }
