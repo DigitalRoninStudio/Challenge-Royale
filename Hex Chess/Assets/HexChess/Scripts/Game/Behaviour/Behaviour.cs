@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Networking.Transport;
+using UnityEditor;
 using UnityEngine;
 
 public abstract class Behaviour
@@ -11,11 +12,6 @@ public abstract class Behaviour
     public Entity Owner { get; private set; }
     protected float time;
     protected Map Map => Owner.Owner.match.map;
-
-    public Action<Behaviour> OnBehaviourStart;
-    //public Action<Behaviour> OnBehaviourExecute; ?
-    public Action<Behaviour> OnBehaviourEnd;
-
     public BehaviourBlueprint BehaviourBlueprint { get; private set; }
     public Behaviour() { }
     public Behaviour(BehaviourBlueprint blueprint)
@@ -24,18 +20,6 @@ public abstract class Behaviour
 
         BehaviourBlueprint = blueprint;
         name = blueprint.Name;
-    }
-    public virtual void Enter() 
-    { 
-        time = Time.time;
-        OnBehaviourStart?.Invoke(this);
-        BroadcastActionToClients();
-    }
-    public abstract void Execute();
-    public virtual void Exit()
-    {
-        OnBehaviourEnd?.Invoke(this);
-        Owner.ChangeBehaviour();// move to entity and subscribe to on behaviour end ? 
     }
 
     public abstract BehaviourData GetBehaviourData();
@@ -49,42 +33,55 @@ public abstract class Behaviour
         Owner = entity;
 
         if (BehaviourBlueprint.Visual != null)
-        {
+        {//?
             BehaviourVisual visual = GameObject.Instantiate(BehaviourBlueprint.Visual, Owner.gameObject.transform);
             visual.Initialize(this);
         }
     }
+}
 
-    private void BroadcastActionToClients()
+public static class BehaviourUtility
+{
+    public static void BroadcastActionToClients(Behaviour behaviour)
     {
-        if (!Server.IsServer || this is not ISerializableAction action)
+        if (!Server.IsServer || behaviour is not ISerializableAction action)
             return;
 
         string serializedAction = action.SerializeAction();
-        NetGameAction response = new NetGameAction()
+        NetGameAction responess = new NetGameAction()
         {
-            entityGUID = Owner.guid,
-            behaviourGUID = guid,
+            entityGUID = behaviour.Owner.guid,
+            behaviourGUID = behaviour.guid,
             serializedBehaviour = serializedAction,
         };
 
-        foreach (var player in Owner.Owner.match.players)
+        foreach (var player in behaviour.Owner.Owner.match.players)
         {
             NetworkConnection connection = GameManager.Instance.GetNetworkConnection(player.clientId);
             if (connection != null)
-                Sender.ServerSendData(connection, response, Pipeline.Reliable);
+                Sender.ServerSendData(connection, responess, Pipeline.Reliable);
         }
     }
 }
 
-public interface ITilesInRange
+
+public interface IActionTileSelection
 {
     List<Tile> GetAvailableTiles();
     List<Tile> GetTiles();
     List<Tile> GetUnAvailableTilesInRange() => GetTiles().Except(GetAvailableTiles()).ToList();
-
 }
 
+public interface IActionLifecycle
+{
+    void Enter();
+    void Execute();
+    void Exit();
+
+    Action OnActionStart { get; set; }
+    Action OnActionExecuted { get; set; }
+    Action OnActionEnd { get; set; }
+}
 
 public interface ISerializableAction
 {

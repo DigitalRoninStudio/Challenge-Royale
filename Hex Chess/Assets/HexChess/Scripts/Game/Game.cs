@@ -1,8 +1,68 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.Networking.Transport;
+using UnityEditor;
+using UnityEditor.PackageManager;
 using UnityEngine;
 
+public class ActionController
+{
+    public Action OnActionQueueEmpty;
+    protected Queue<IActionLifecycle> pendingActions;
+
+    public ActionController()
+    {
+        pendingActions = new Queue<IActionLifecycle>();
+    }
+
+    public void Update()
+    {
+        if (pendingActions.Count > 0)
+            pendingActions.Peek().Execute();
+    }
+
+    public void AddActionToWork(IActionLifecycle action)
+    {
+        if (action != null)
+        {
+            if (pendingActions.Count == 0)
+            {
+                pendingActions.Enqueue(action);
+                StartAction(action);
+            }
+            else
+                pendingActions.Enqueue(action);
+
+        }
+    }
+
+    private void ChangeAction()
+    {
+        if(pendingActions.Count == 0)
+            OnActionQueueEmpty?.Invoke();
+
+        if (pendingActions.Count > 0)
+            pendingActions.Dequeue();
+
+        if (pendingActions.Count > 0)
+            StartAction(pendingActions.Peek());
+    }
+
+    private void StartAction(IActionLifecycle action)
+    {
+        void OnActionEndHandler()
+        {
+            action.OnActionEnd -= OnActionEndHandler;
+            ChangeAction();
+        }
+
+        action.OnActionEnd += OnActionEndHandler;
+        action.Enter();
+    }
+
+    public bool IsActionQueueEmpty() => pendingActions.Count == 0;
+}
 public class Game
 {
     public string GUID;
@@ -10,12 +70,15 @@ public class Game
     public List<Player> players;
     public RandomGenerator randomGenerator;
     public RoundController roundController;
+    public ActionController actionController;
 
     public Game()
     {
+        GUID = Guid.NewGuid().ToString();
         players = new List<Player>();
         randomGenerator = new RandomGenerator();
-        roundController = new RoundController();
+        roundController = new RoundController(this);
+        actionController = new ActionController();
     }
 
     public Game(GameData gameData)
@@ -24,7 +87,8 @@ public class Game
 
         players = new List<Player>();
         randomGenerator = new RandomGenerator(gameData.RandomState);
-        roundController = new RoundController(gameData.RoundData);
+        roundController = new RoundController(this, gameData.RoundData);
+        actionController = new ActionController();//TODO serialize and deserialize
 
         foreach (var playerData in gameData.PlayersData)
             AddPlayer(new Player(playerData));
@@ -45,13 +109,7 @@ public class Game
 
     public void Update()
     {
-        foreach (Player player in players)
-        {
-            foreach (var entity in player.entities)
-            {
-                entity.Update();
-            }
-        }
+        actionController.Update();
     }
 
     public void End()
@@ -65,6 +123,35 @@ public class Game
     }
 
     public GameData GetGameData() => new GameData(this);
+
+    public void SendMessageToPlayers(NetMessage responess)
+    {
+        foreach (var player in players)
+        {
+            NetworkConnection connection = GameManager.Instance.GetNetworkConnection(player.clientId);
+            if (connection != null)
+                Sender.ServerSendData(connection, responess, Pipeline.Reliable);
+        }
+    }
+
+    public Player GetPlayer(string clientId)
+    {
+        foreach (var player in players)
+            if (player.clientId == clientId)
+                return player;
+
+        return null;
+    }
+
+    public bool IsPlayerHasInitiation(Player player)
+    {
+        foreach (var p in players)
+            if (p == player)
+                if (player.team == roundController.teamWithInitiation)
+                    return true;
+
+        return false;
+    }
 
 }
 

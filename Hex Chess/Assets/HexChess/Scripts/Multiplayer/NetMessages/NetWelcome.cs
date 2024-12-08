@@ -196,4 +196,104 @@ public class NetAttack : NetMessage
     }
 }
 
+public class NetEndRound : NetMessage
+{
+    public string MatchId;
+    public NetEndRound()
+    {
+        Code = OpCode.ON_END_ROUND;
+    }
+    public NetEndRound(DataStreamReader reader)
+    {
+        Code = OpCode.ON_END_ROUND;
+        Deserialize(reader);
+    }
+    public override void Serialize(ref DataStreamWriter writer)
+    {
+        if(Client.IsClient)
+            WriteString(ref writer, MatchId);
+    }
+    public override void Deserialize(DataStreamReader reader)
+    {
+        if (Server.IsServer)
+            MatchId = ReadString(ref reader);
+    }
+    public override void ReceivedOnServer(NetworkConnection connection)
+    {
+        Server.Receiver.S_ON_END_ROUND_REQUEST?.Invoke(this, connection);
+    }
+    public override void ReceivedOnClient()
+    {
+        Client.Receiver.C_ON_END_ROUND_RESPONESS?.Invoke(this);
+    }
+}
+
+public class NetHandOverTheInitiative : NetMessage
+{
+    public string MatchId;
+    public bool EndTurn;
+    public NetHandOverTheInitiative()
+    {
+        Code = OpCode.ON_HAND_OVER_THE_INITIATIVE;
+    }
+    public NetHandOverTheInitiative(DataStreamReader reader)
+    {
+        Code = OpCode.ON_HAND_OVER_THE_INITIATIVE;
+        Deserialize(reader);
+    }
+    public override void Serialize(ref DataStreamWriter writer)
+    {
+        if (Client.IsClient)
+            WriteString(ref writer, MatchId);
+        if (Server.IsServer)
+            writer.WriteByte(EndTurn ? (byte)1 : (byte)0);
+    }
+    public override void Deserialize(DataStreamReader reader)
+    {
+        if (Server.IsServer)
+            MatchId = ReadString(ref reader);
+        if (Client.IsClient)
+            EndTurn = reader.ReadByte() == 1;
+    }
+    public override void ReceivedOnServer(NetworkConnection connection)
+    {
+        Server.Receiver.S_ON_HAND_OVER_THE_INITIATIVE_REQUEST?.Invoke(this, connection);
+    }
+    public override void ReceivedOnClient()
+    {
+        Client.Receiver.C_ON_HAND_OVER_THE_INITIATIVE_RESPONESS?.Invoke(this);
+    }
+}
+
+public class NetChangePlayerState : NetMessage
+{
+    public string ClientId;
+    public PlayerState PlayerState;
+    public NetChangePlayerState()
+    {
+        Code = OpCode.ON_CHANGE_PLAYER_STATE;
+    }
+    public NetChangePlayerState(DataStreamReader reader)
+    {
+        Code = OpCode.ON_CHANGE_PLAYER_STATE;
+        Deserialize(reader);
+    }
+    public override void Serialize(ref DataStreamWriter writer)
+    {
+        WriteString(ref writer, ClientId);
+        writer.WriteByte((byte)PlayerState);
+    }
+    public override void Deserialize(DataStreamReader reader)
+    {
+        ClientId = ReadString(ref reader);
+        PlayerState = (PlayerState)reader.ReadByte();
+    }
+    public override void ReceivedOnClient()
+    {
+        Client.Receiver.C_ON_CHANGE_PLAYER_STATE_RESPONESS?.Invoke(this);
+    }
+}
+
+
+
 

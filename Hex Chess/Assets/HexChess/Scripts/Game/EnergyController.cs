@@ -32,12 +32,12 @@
     public void MoveEnergyToStash()
     {
         stash += energy;
-        ClearEnergy();
+        energy = 0;
     }
 
-    public void ClearEnergy()
+    public void ResetEnergy()
     {
-        energy = 0;
+        energy = MAX_ENERGY;
     }
 
     public void GetEnergyFromStash(int amount)

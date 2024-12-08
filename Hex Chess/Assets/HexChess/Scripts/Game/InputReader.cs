@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using static UnityEngine.EventSystems.EventTrigger;
 
 public class InputReader : MonoBehaviour, PlayerInGameController.IMouseInputActions
 {
@@ -81,37 +82,6 @@ public class PlayerController
         currentState = newState;
         currentState.EnterState(this);
     }
-    public void DrawTiles()
-    {
-
-        MovementBehaviour movementBehaviour = selectedEntity.GetBehaviour<MovementBehaviour>();
-        AttackBehaviour attackBehaviour = selectedEntity.GetBehaviour<AttackBehaviour>();
-        Tile tile = game.map.GetTile(selectedEntity);
-
-        if (tile == null) return;
-
-       // if(GameManager.Instance.IsLocalClientOwner(selectedEntity))
-        {
-            //create map visuals or tile visuals
-            if (movementBehaviour != null && movementBehaviour is ITilesInRange movementTiles)
-                foreach (var availableTile in movementTiles.GetAvailableTiles())
-                    availableTile.SetColor(Color.cyan);
-
-            if (attackBehaviour != null && attackBehaviour is ITilesInRange attackTiles)
-                foreach (var availableTile in attackTiles.GetAvailableTiles())
-                    availableTile.SetAttack();
-
-        }
-        //else
-        {
-
-        }
-    }
-
-    public void ResetTiles()
-    {
-        foreach (var tile in game.map.Tiles) { tile.RefreshColor(); }
-    }
 }
 
 public interface IPlayerState
@@ -160,7 +130,7 @@ public class IdleState : IPlayerState
         //Debug.Log("EXIT IDLE STATE");
         playerController.inputReader.OnLeftClick -= OnLeftClick;
         playerController.inputReader.OnMousePosition -= OnMousePosition;
-        playerController.ResetTiles();
+        LocalPlayer.Instance.ClearTiles();
     }
 }
 
@@ -175,7 +145,7 @@ public class EntitySelectedState : IPlayerState
         playerController.inputReader.OnLeftClick += OnLeftClick;
         playerController.inputReader.OnRightClick += OnRightClick;
         playerController.inputReader.OnMousePosition += OnMousePosition;
-        playerController.DrawTiles();
+        LocalPlayer.Instance.PaintTilesOnSelectEntity(playerController.selectedEntity);
     }
 
     private void OnMousePosition(Vector2 mousePosition)
@@ -223,20 +193,21 @@ public class EntitySelectedState : IPlayerState
         playerController.inputReader.OnLeftClick -= OnLeftClick;
         playerController.inputReader.OnRightClick -= OnRightClick;
         playerController.inputReader.OnMousePosition -= OnMousePosition;
-        playerController.ResetTiles();
+        LocalPlayer.Instance.ClearTiles();
     }
 
     private void TryMoveSelectedEntityToTile(Tile targetTile)
     {
-        Entity selectedEntity = playerController.selectedEntity;
-        MovementBehaviour movementBehaviour = selectedEntity?.GetBehaviour<MovementBehaviour>();
+        if (!LocalPlayer.Instance.IsLocalClientOwner(playerController.selectedEntity) || !LocalPlayer.Instance.CanLocalPlayerDoAction()) return;
+
+        MovementBehaviour movementBehaviour = playerController.selectedEntity?.GetBehaviour<MovementBehaviour>();
 
         if (movementBehaviour == null || !movementBehaviour.CanMove(targetTile)) return;
 
         NetMovement request = new NetMovement()
         {
             MatchId = GameManager.Instance.GetFirstMatch().GUID,
-            EntityId = selectedEntity.guid,
+            EntityId = playerController.selectedEntity.guid,
             MovementBehaviourId = movementBehaviour.guid,
             TileCoordinate = targetTile.coordinate
         };
@@ -252,8 +223,8 @@ public class EntitySelectedState : IPlayerState
             if (entity is Figure)
             {
                 playerController.selectedEntity = entity;
-                playerController.ResetTiles();
-                playerController.DrawTiles();
+                LocalPlayer.Instance.ClearTiles();
+                LocalPlayer.Instance.PaintTilesOnSelectEntity(entity);
                 break;
             }
         }
@@ -261,8 +232,9 @@ public class EntitySelectedState : IPlayerState
 
     private void TryToAttackEntity(Tile targetTile)
     {
-        Entity selectedEntity = playerController.selectedEntity;
-        AttackBehaviour attackBehaviour = selectedEntity?.GetBehaviour<AttackBehaviour>();
+        if (!LocalPlayer.Instance.IsLocalClientOwner(playerController.selectedEntity) || !LocalPlayer.Instance.CanLocalPlayerDoAction()) return;
+
+        AttackBehaviour attackBehaviour = playerController.selectedEntity?.GetBehaviour<AttackBehaviour>();
 
         if (attackBehaviour == null)
             return;
@@ -274,7 +246,7 @@ public class EntitySelectedState : IPlayerState
                 NetAttack request = new NetAttack()
                 {
                     MatchId = GameManager.Instance.GetFirstMatch().GUID,
-                    AttackerEntityId = selectedEntity.guid,
+                    AttackerEntityId = playerController.selectedEntity.guid,
                     AttackBehaviourId = attackBehaviour.guid,
                     DamagableEntityId = entity.guid,
                     DamagableBehaviourId = entity.GetBehaviour<DamageableBehaviour>().guid

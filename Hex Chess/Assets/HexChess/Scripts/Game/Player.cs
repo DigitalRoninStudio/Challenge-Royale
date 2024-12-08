@@ -1,10 +1,12 @@
 ﻿using Newtonsoft.Json;
 using System.Collections.Generic;
+using UnityEngine.Playables;
 
 public class Player
 {
     public string clientId;
     public Team team;
+    public PlayerState playerState;
     public Game match;
     public List<Entity> entities;
     public EnergyController energyController;
@@ -18,6 +20,7 @@ public class Player
     {
         clientId = playerData.Id;
         team = playerData.Team;
+        playerState = playerData.PlayerState;
         energyController = new EnergyController(playerData.EnergyData);
 
         entities = new List<Entity>();
@@ -34,7 +37,23 @@ public class Player
     }
 
     public PlayerData GetPlayerData() => new PlayerData(this);
+
+    public void SetPlayerStateDependOnInitiation(Team teamWithInitiation)
+    {
+        if (teamWithInitiation == team)
+            playerState = PlayerState.PLAYING;
+        else
+            playerState = PlayerState.IDLE;
+
+    }
+  
 }
+
+public enum PlayerState
+{
+    IDLE, PLAYING
+}
+
 
 
 

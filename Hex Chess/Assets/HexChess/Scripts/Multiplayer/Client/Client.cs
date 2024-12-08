@@ -2,6 +2,8 @@ using System;
 using System.Linq;
 using Unity.Collections;
 using Unity.Networking.Transport;
+using UnityEngine;
+
 public class Client : INetworkService
 {
     public static bool IsClient { get; private set; } = false;
@@ -126,6 +128,15 @@ public class Client : INetworkService
             case OpCode.ON_SYNC_GAME:
                 msg = new NetSyncGame(reader);
                 break;
+            case OpCode.ON_END_ROUND:
+                msg = new NetEndRound(reader);
+                break;
+            case OpCode.ON_HAND_OVER_THE_INITIATIVE:
+                msg = new NetHandOverTheInitiative(reader);
+                break;
+            case OpCode.ON_CHANGE_PLAYER_STATE:
+                msg = new NetChangePlayerState(reader);
+                break;
             default:
                 break;
         }
@@ -142,6 +153,9 @@ public class Client : INetworkService
             C_ON_WELCOME_RESPONESS += OnWelcomeResponess;
             C_ON_GAME_ACTION_RESPONESS += OnGameActionResponess;
             C_ON_SYNC_GAME_RESPONESS += OnGameSyncResponess;
+            C_ON_END_ROUND_RESPONESS += OnEndRoundResponess;
+            C_ON_HAND_OVER_THE_INITIATIVE_RESPONESS += OnHandOverTheInitiativeRequest;
+            C_ON_CHANGE_PLAYER_STATE_RESPONESS += OnChangePlayerState;
 
         }
 
@@ -151,6 +165,41 @@ public class Client : INetworkService
             C_ON_WELCOME_RESPONESS -= OnWelcomeResponess;
             C_ON_GAME_ACTION_RESPONESS -= OnGameActionResponess;
             C_ON_SYNC_GAME_RESPONESS -= OnGameSyncResponess;
+            C_ON_END_ROUND_RESPONESS -= OnEndRoundResponess;
+            C_ON_HAND_OVER_THE_INITIATIVE_RESPONESS -= OnHandOverTheInitiativeRequest;
+            C_ON_CHANGE_PLAYER_STATE_RESPONESS -= OnChangePlayerState;
+
+        }
+
+        private void OnChangePlayerState(NetMessage message)
+        {
+            NetChangePlayerState responess = message as NetChangePlayerState;
+
+            foreach (var player in GameManager.Instance.GetFirstMatch().players)
+            {
+                if(player.clientId == responess.ClientId)
+                {
+                    player.playerState = responess.PlayerState;
+                    break;
+                }
+            }
+        }
+
+        private void OnHandOverTheInitiativeRequest(NetMessage message)
+        {
+            NetHandOverTheInitiative responess = message as NetHandOverTheInitiative;
+            Game game = GameManager.Instance.GetFirstMatch();
+
+            if (responess.EndTurn)
+                game.roundController.EndRoundAndSwitchInitiation();
+            else
+                game.roundController.SwitchInitiation();
+        }
+
+        private void OnEndRoundResponess(NetMessage message)
+        {
+            Game game = GameManager.Instance.GetFirstMatch();
+            game.roundController.EndRound();
 
         }
 
@@ -158,6 +207,7 @@ public class Client : INetworkService
         {
             NetSyncGame responess = message as NetSyncGame;
             GameManager.Instance.CreateMatch(responess.gameData, true);
+            Debug.Log(GameManager.Instance.GetGameJson(GameManager.Instance.GetFirstMatch()));
             NetworkLogger.Log("CLIENT RECEIVER GAME");
         }
 
@@ -165,8 +215,8 @@ public class Client : INetworkService
         {
             NetSyncGame request = new NetSyncGame()
             {
-                playerId = "Player 1",
-                matchId = "GAME"
+                playerId = LocalPlayer.Instance.LocalClientID,
+                matchId = GameManager.Instance.GameID
             };
             Sender.ClientSendData(request, Pipeline.Reliable);
         }
@@ -195,7 +245,7 @@ public class Client : INetworkService
                 if (behaviour != null && behaviour is ISerializableAction action)
                 {
                     action.DeserializeAction(responess.serializedBehaviour);
-                    entity.AddBehaviourToWork(behaviour);
+                    match.actionController.AddActionToWork(behaviour as IActionLifecycle);//HOTFIX
                 }
                 else
                 {
@@ -210,6 +260,9 @@ public class Client : INetworkService
         public static Action<NetMessage> C_ON_WELCOME_RESPONESS;
         public static Action<NetMessage> C_ON_GAME_ACTION_RESPONESS;
         public static Action<NetMessage> C_ON_SYNC_GAME_RESPONESS;
+        public static Action<NetMessage> C_ON_END_ROUND_RESPONESS;
+        public static Action<NetMessage> C_ON_HAND_OVER_THE_INITIATIVE_RESPONESS;
+        public static Action<NetMessage> C_ON_CHANGE_PLAYER_STATE_RESPONESS;
         #endregion
     }
 

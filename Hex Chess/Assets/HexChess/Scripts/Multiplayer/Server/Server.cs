@@ -178,6 +178,12 @@ public class Server : INetworkService
             case OpCode.ON_ATTACK:
                 msg = new NetAttack(reader);
                 break;
+            case OpCode.ON_END_ROUND:
+                msg = new NetEndRound(reader);
+                break;
+            case OpCode.ON_HAND_OVER_THE_INITIATIVE:
+                msg = new NetHandOverTheInitiative(reader);
+                break;
             default:
                 break;
         }
@@ -193,6 +199,8 @@ public class Server : INetworkService
             S_ON_SYNC_GAME_REQUEST += OnGameStateRequest;
             S_ON_MOVE_REQUEST += OnMoveRequest;
             S_ON_ATTACK_REQUEST += OnAttackRequest;
+            S_ON_END_ROUND_REQUEST += OnEndRoundRequest;
+            S_ON_HAND_OVER_THE_INITIATIVE_REQUEST += OnHandOverTheInitiativeRequest;
         }
 
         public void Unsubscribe()
@@ -200,6 +208,97 @@ public class Server : INetworkService
             S_ON_SYNC_GAME_REQUEST -= OnGameStateRequest;
             S_ON_MOVE_REQUEST -= OnMoveRequest;
             S_ON_ATTACK_REQUEST -= OnAttackRequest;
+            S_ON_END_ROUND_REQUEST -= OnEndRoundRequest;
+            S_ON_HAND_OVER_THE_INITIATIVE_REQUEST -= OnHandOverTheInitiativeRequest;
+        }
+
+        private void OnHandOverTheInitiativeRequest(NetMessage message, NetworkConnection connection)
+        {
+            NetHandOverTheInitiative request = message as NetHandOverTheInitiative;
+            Game game = GameManager.Instance.GetMatch(request.MatchId);
+
+            if (game == null)
+            {
+                NetworkLogger.Log("Client tried to end turn but GAME is null");
+                return;
+            }
+
+            var clientId = GameManager.Instance.GetPlayerId(connection);
+            if (string.IsNullOrEmpty(clientId))
+            {
+                NetworkLogger.Log("Client tried to end turn but CLIENTID is empty");
+                return;
+            }
+
+            Player player = game.GetPlayer(clientId);
+
+            if (player == null) return;
+
+            if (!game.IsPlayerHasInitiation(player)) return;
+
+            if (game.actionController.IsActionQueueEmpty())
+                HandOverInitiationHandler();
+            else
+            {
+                game.SendMessageToPlayers(new NetChangePlayerState() { ClientId = player.clientId, PlayerState = PlayerState.IDLE });
+                game.actionController.OnActionQueueEmpty += HandOverInitiationHandler;
+            }
+
+            void HandOverInitiationHandler()
+            {
+                game.actionController.OnActionQueueEmpty -= HandOverInitiationHandler;
+                game.roundController.SwitchInitiation();
+                game.SendMessageToPlayers(new NetHandOverTheInitiative() { EndTurn = false });
+            }
+        }
+
+        private void OnEndRoundRequest(NetMessage message, NetworkConnection connection)
+        {
+            NetEndRound request = message as NetEndRound;
+            Game game = GameManager.Instance.GetMatch(request.MatchId);
+
+            if (game == null)
+            {
+                NetworkLogger.Log("Client tried to end turn but GAME is null");
+                return;
+            }
+
+            var clientId = GameManager.Instance.GetPlayerId(connection);
+            if (string.IsNullOrEmpty(clientId))
+            {
+                NetworkLogger.Log("Client tried to end turn but CLIENTID is empty");
+                return;
+            }
+
+            Player player = game.GetPlayer(clientId); 
+
+            if (player == null) return;
+
+            if (!game.IsPlayerHasInitiation(player)) return;
+
+            if (game.actionController.IsActionQueueEmpty())
+                EndRoundHandler();
+            else
+            {
+                game.SendMessageToPlayers(new NetChangePlayerState() { ClientId = player.clientId, PlayerState = PlayerState.IDLE });
+                game.actionController.OnActionQueueEmpty += EndRoundHandler;
+            }
+
+            void EndRoundHandler()
+            {
+                game.actionController.OnActionQueueEmpty -= EndRoundHandler;
+                if (game.roundController.endTurnCalled)
+                {
+                    game.roundController.EndRound();
+                    game.SendMessageToPlayers(new NetEndRound());
+                }
+                else
+                {
+                    game.roundController.EndRoundAndSwitchInitiation();
+                    game.SendMessageToPlayers(new NetHandOverTheInitiative() { EndTurn = true });
+
+                }
+            }
         }
 
         private void OnAttackRequest(NetMessage message, NetworkConnection connection)
@@ -213,10 +312,10 @@ public class Server : INetworkService
                 return;
             }
 
-            var playerId = GameManager.Instance.GetPlayerId(connection);
-            if (string.IsNullOrEmpty(playerId))
+            var clientId = GameManager.Instance.GetPlayerId(connection);
+            if (string.IsNullOrEmpty(clientId))
             {
-                NetworkLogger.Log("Client tried to attack but PLAYERID is empty");
+                NetworkLogger.Log("Client tried to attack but CLIENTID is empty");
                 return;
             }
 
@@ -255,10 +354,9 @@ public class Server : INetworkService
             if (attackBehaviour.CanAttack(damagableEntity))
             {
                 attackBehaviour.SetAttack(damagableBehaviour);
-                attackEntity.AddBehaviourToWork(attackBehaviour);
+                game.actionController.AddActionToWork(attackBehaviour);
             }
         }
-
         private void OnMoveRequest(NetMessage message, NetworkConnection connection)
         {
             NetMovement request = message as NetMovement;
@@ -270,10 +368,10 @@ public class Server : INetworkService
                 return;
             }
 
-            var playerId = GameManager.Instance.GetPlayerId(connection);
-            if (string.IsNullOrEmpty(playerId))
+            var clientId = GameManager.Instance.GetPlayerId(connection);
+            if (string.IsNullOrEmpty(clientId))
             {
-                NetworkLogger.Log("Client tried to move entity but PLAYERID is empty");
+                NetworkLogger.Log("Client tried to move entity but CLIENTID is empty");
                 return;
             }
 
@@ -302,7 +400,7 @@ public class Server : INetworkService
             if (movementBehaviour.CanMove(tile))
             {
                 movementBehaviour.SetPath(tile);
-                entity.AddBehaviourToWork(movementBehaviour);
+                game.actionController.AddActionToWork(movementBehaviour);
             }
         }
         private void OnGameStateRequest(NetMessage message, NetworkConnection connection)
@@ -324,11 +422,12 @@ public class Server : INetworkService
                         break;
                     }
                 }
-
+                
                 GameManager.Instance.AddPlayer(request.playerId, connection);
+
                 NetSyncGame responess = new NetSyncGame()
                 {
-                    gameData = GameManager.Instance.GetMatchJson(game)
+                    gameData = GameManager.Instance.GetGameJson(game)
                 };
 
                 Sender.ServerSendData(connection, responess, Pipeline.Fragmentation);
@@ -346,6 +445,8 @@ public class Server : INetworkService
         public static Action<NetMessage, NetworkConnection> S_ON_SYNC_GAME_REQUEST;
         public static Action<NetMessage, NetworkConnection> S_ON_MOVE_REQUEST;
         public static Action<NetMessage, NetworkConnection> S_ON_ATTACK_REQUEST;
+        public static Action<NetMessage, NetworkConnection> S_ON_END_ROUND_REQUEST;
+        public static Action<NetMessage, NetworkConnection> S_ON_HAND_OVER_THE_INITIATIVE_REQUEST;
         #endregion
     }
 }

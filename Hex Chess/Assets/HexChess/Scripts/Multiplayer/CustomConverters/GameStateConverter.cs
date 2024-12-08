@@ -220,6 +220,7 @@ public class GameData
         RandomState = game.randomGenerator.GetState();
         RoundData = game.roundController.GetRoundData();
         MapData = GameFactory.CreateMapData(game);
+        PlayersData = new List<PlayerData>();
 
         foreach (var player in game.players)
             PlayersData.Add(player.GetPlayerData());
@@ -232,9 +233,9 @@ public class RandomGeneratorState
 }
 public class RoundData
 {
-    public int round;
-    public Team startRoundTeam;
-    public Team teamWithInitiation;
+    public int Round;
+    public Team StartRoundTeam;
+    public Team TeamWithInitiation;
 }
 public class MapData
 {
@@ -250,6 +251,7 @@ public class PlayerData
 {
     public string Id;
     public Team Team;
+    public PlayerState PlayerState;
     public EnergyData EnergyData;
     public List<EntityData> EntityData;
 
@@ -263,7 +265,9 @@ public class PlayerData
     {
         Id = player.clientId;
         Team = player.team;
+        PlayerState = player.playerState;
         EnergyData = player.energyController.GetEnergyData();
+        EntityData = new List<EntityData>();
 
         foreach (var entity in player.entities)
             EntityData.Add(entity.GetEntityData());        

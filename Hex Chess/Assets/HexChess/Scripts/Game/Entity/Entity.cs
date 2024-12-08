@@ -17,7 +17,6 @@ public abstract class Entity : IDisposable
 
     public List<Behaviour> Behaviours => behaviours;
     protected List<Behaviour> behaviours;
-    protected Queue<Behaviour> pendingBehaviours;
 
     public StatusEffectController StatusEffectController => statusEffectController;
     private StatusEffectController statusEffectController;
@@ -28,14 +27,12 @@ public abstract class Entity : IDisposable
     public Entity()
     {
         behaviours = new List<Behaviour>();
-        pendingBehaviours = new Queue<Behaviour>();
         statusEffectController = new StatusEffectController();
     }
 
     public Entity(EntityBlueprint blueprint)
     {
         behaviours = new List<Behaviour>();
-        pendingBehaviours = new Queue<Behaviour>();
         statusEffectController = new StatusEffectController();
 
         guid = Guid.NewGuid().ToString();
@@ -50,12 +47,6 @@ public abstract class Entity : IDisposable
             AddBehaviour(behaviour);
         }
 
-    }
-
-    public void Update()
-    {
-        if (pendingBehaviours.Count > 0)
-            pendingBehaviours.Peek().Execute();
     }
     public void SetOwner(Player player) => Owner = player; 
     public void ResetDirection()
@@ -74,27 +65,6 @@ public abstract class Entity : IDisposable
             if (behaviour is T b)
                 return b;
         return null;
-    }
-    public void AddBehaviourToWork(Behaviour behaviour)
-    {
-        if (behaviour != null)
-        {
-            if (pendingBehaviours.Count == 0)
-            {
-                pendingBehaviours.Enqueue(behaviour);
-                behaviour.Enter();
-            }
-            else
-                pendingBehaviours.Enqueue(behaviour);
-        }
-    }
-    public void ChangeBehaviour()
-    {
-        if (pendingBehaviours.Count > 0)
-            pendingBehaviours.Dequeue();
-
-        if (pendingBehaviours.Count > 0)
-            pendingBehaviours.Peek().Enter();
     }
     public abstract EntityData GetEntityData();
 

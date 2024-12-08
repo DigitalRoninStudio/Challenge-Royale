@@ -1,14 +1,102 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using Unity.Networking.Transport;
-using UnityEditor.PackageManager;
 using UnityEngine;
+
+public class LocalPlayer : Singleton<LocalPlayer>
+{
+    public string LocalClientID;
+
+    public void PaintTilesOnSelectEntity(Entity selectedEntity)
+    {
+        Game game = GameManager.Instance.GetFirstMatch();
+        MovementBehaviour movementBehaviour = selectedEntity.GetBehaviour<MovementBehaviour>();
+        AttackBehaviour attackBehaviour = selectedEntity.GetBehaviour<AttackBehaviour>();
+        Tile tile = game.map.GetTile(selectedEntity);
+
+        if (tile == null) return;
+
+        if(IsLocalClientOwner(selectedEntity) && CanLocalPlayerDoAction())
+        {
+            if (movementBehaviour != null && movementBehaviour is IActionTileSelection movementTiles)
+            {
+                foreach (var availableTile in movementTiles.GetAvailableTiles())
+                    availableTile.SetColor(Color.green);
+
+                Color DarkGreen = new Color(0, 0.5f, 0f);
+                foreach (var unAvailableTile in movementTiles.GetUnAvailableTilesInRange())
+                    unAvailableTile.SetColor(DarkGreen);
+            }
+
+            if (attackBehaviour != null && attackBehaviour is IActionTileSelection attackTiles)
+                foreach (var availableTile in attackTiles.GetAvailableTiles())
+                    availableTile.SetColor(Color.red);
+        }
+        else
+        {
+
+            Color DarkGreen = new Color(0, 0.5f, 0f);
+            if (movementBehaviour != null && movementBehaviour is IActionTileSelection movementTiles)
+                foreach (var tiles in movementTiles.GetTiles())
+                    tiles.SetColor(DarkGreen);
+
+            Color DarkRed = new Color(0.5f, 0f, 0f);
+            if (attackBehaviour != null && attackBehaviour is IActionTileSelection attackTiles)
+                foreach (var availableTile in attackTiles.GetAvailableTiles())
+                    availableTile.SetColor(DarkRed);
+        }
+    }
+
+    public void EndRound()
+    {
+        Game game = GameManager.Instance.GetFirstMatch();
+        Player player = game.GetPlayer(LocalClientID);
+        if (player == null) return;
+
+        if (game.IsPlayerHasInitiation(player))
+        {
+            Sender.ClientSendData(new NetEndRound() { MatchId = game.GUID }, Pipeline.Reliable);
+            Debug.Log("END ROUND");
+        }
+    }
+
+    public void HandOverTheInitiative()
+    {
+        Game game = GameManager.Instance.GetFirstMatch();
+        Player player = game.GetPlayer(LocalClientID);
+        if (player == null) return;
+
+        if (game.IsPlayerHasInitiation(player))
+        {
+            Sender.ClientSendData(new NetHandOverTheInitiative() { MatchId = game.GUID }, Pipeline.Reliable);
+            Debug.Log("END INITIATION");
+        }
+    }
+
+    public void ClearTiles()
+    {
+        foreach (var tile in GameManager.Instance.GetFirstMatch().map.Tiles) { tile.RefreshColor(); }
+    }
+
+    public bool IsLocalClientOwner(Entity entity)
+    {
+        return entity.Owner.clientId == LocalClientID;
+    }
+
+    public bool CanLocalPlayerDoAction()
+    {
+        Game game = GameManager.Instance.GetFirstMatch();
+        Player player = game.GetPlayer(LocalClientID);
+        if(player == null) return false;
+
+        return player.team == game.roundController.teamWithInitiation && player.playerState == PlayerState.PLAYING;
+    }
+}
+
 
 public class GameManager : Singleton<GameManager>
 {
-    public string gameJson;
     public GlobalBlueprints GlobalData;
 
     private Dictionary<string, Game> matches = new Dictionary<string, Game>();
@@ -18,8 +106,12 @@ public class GameManager : Singleton<GameManager>
 
     public InputReader inputReader;
     private PlayerController playerController;
+
+    [Space(50)]
+    public string gameJson;
+    public string LocalClient = "PLAYER_1";
+    public string GameID = "GAME";
     public bool isServer = false;
-    public string LocalClientID;
 
     private void Start()
     {
@@ -34,8 +126,8 @@ public class GameManager : Singleton<GameManager>
         else
         {
             NetworkManager.Instance.ConnectToServer();
-           /* Client.OnClientConnected += OnConnected;
-            Client.OnClientDisconnected += OnDisconnected;*/
+            Client.OnClientConnected += OnConnected;
+            Client.OnClientDisconnected += OnDisconnected;
         }
     }
 
@@ -72,12 +164,12 @@ public class GameManager : Singleton<GameManager>
     //CLIENT
     private void OnDisconnected(NetworkConnection connection)
     {
-        throw new NotImplementedException();
+        // Destroy(gameObject.GetComponent<LocalPlayer>());
     }
 
     private void OnConnected(NetworkConnection connection)
     {
-        throw new NotImplementedException();
+        gameObject.AddComponent<LocalPlayer>().LocalClientID = LocalClient;
     }
 
     public void CreateMatch(string json, bool isClient = false)
@@ -92,7 +184,7 @@ public class GameManager : Singleton<GameManager>
             playerController = new PlayerController(inputReader, game);
     }
 
-    public string GetMatchJson(Game game)
+    public string GetGameJson(Game game)
     {
         return GameStateConverter.Serialize(game.GetGameData());
     }
@@ -102,10 +194,64 @@ public class GameManager : Singleton<GameManager>
         {
             game.Value.Update();
         }
-
-        if(Input.GetKeyDown(KeyCode.Space))
+      /*  if(Input.GetKeyDown(KeyCode.Space))
         {
-            Debug.Log(GameManager.Instance.GetMatchJson(GetFirstMatch()));
+            Game g = new Game();
+            Player player1 = new Player()
+            {
+                clientId = "PLAYER_1",
+                team = Team.GOOD_BOYS,
+                playerState = PlayerState.IDLE
+            };
+            Player player2 = new Player()
+            {
+                clientId = "PLAYER_2",
+                team = Team.BAD_BOYS,
+                playerState = PlayerState.IDLE
+            };
+            g.AddPlayer(player1);
+            g.AddPlayer(player2);
+
+            g.roundController.SetFirstRound();
+
+            MapEditor.Instance.LoadMap();
+            g.map = MapEditor.Instance.Map;
+
+            foreach(var spawnPosition in g.map.SpawnPositions)
+            {                
+                Entity entity = GameManager.Instance.GlobalData.FractionBlueprints
+                   .SelectMany(f => f.EntityBlueprints)
+                   .FirstOrDefault(e => e is FigureBlueprint figure && figure.FigureType == spawnPosition.FigureType && 
+                   ((figure.FractionType == FractionType.LIGHT && spawnPosition.Team == Team.GOOD_BOYS) || 
+                   (figure.FractionType == FractionType.DARK && spawnPosition.Team == Team.BAD_BOYS)))
+                   ?.CreateEntity();
+
+                if(spawnPosition.Team == Team.GOOD_BOYS)
+                    player1.AddEntity(entity);
+                else
+                    player2.AddEntity(entity);
+
+                g.map.GetTile(spawnPosition.Coordinate).AddEntity(entity);
+            }
+
+            string json = GameManager.Instance.GetGameJson(g);
+            Debug.Log(json);
+            GameData gameData = GameStateConverter.Deserialize<GameData>(json);
+            //GameData gameData = GameStateConverter.Deserialize<GameData>(json);
+        }*/
+
+        if (Input.GetKeyDown(KeyCode.R) && LocalPlayer.Instance.CanLocalPlayerDoAction())
+        {
+            LocalPlayer.Instance.EndRound();
+        }
+        if (Input.GetKeyDown(KeyCode.S) && LocalPlayer.Instance.CanLocalPlayerDoAction())
+        {
+            LocalPlayer.Instance.HandOverTheInitiative();
+        }
+        if (Input.GetKeyDown(KeyCode.J))
+        {
+            string json = GameManager.Instance.GetGameJson(GetFirstMatch());
+            Debug.Log(json);
         }
     }
 
@@ -126,10 +272,5 @@ public class GameManager : Singleton<GameManager>
     public Game GetFirstMatch()
     {
         return matches.First().Value;
-    }
-
-    public bool IsLocalClientOwner(Entity entity)
-    {
-        return entity.Owner.clientId == LocalClientID;
     }
 }

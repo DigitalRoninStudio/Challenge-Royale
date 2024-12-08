@@ -1,11 +1,10 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using UnityEngine;
 
-public abstract class MovementBehaviour : Behaviour, ISerializableAction, ITilesInRange
+public abstract class MovementBehaviour : Behaviour, IActionLifecycle ,ISerializableAction, IActionTileSelection
 {
     public float speed;
     public int range;
@@ -19,6 +18,11 @@ public abstract class MovementBehaviour : Behaviour, ISerializableAction, ITiles
     private Tile nextTile;
     private Vector3 direction;
     private Queue<float> steps;
+
+    public Action OnActionStart { get; set; } = () => { };
+    public Action OnActionExecuted { get; set; } = () => { };
+    public Action OnActionEnd { get; set; } = () => { };
+
     public MovementBehaviour() : base()
     {
         path = new Queue<Tile>();
@@ -36,11 +40,20 @@ public abstract class MovementBehaviour : Behaviour, ISerializableAction, ITiles
     {
         base.SetOwner(entity);
     }
-    public override void Execute()
+
+    public virtual void Enter()
+    {
+        time = Time.time;
+        OnActionStart?.Invoke();
+        BehaviourUtility.BroadcastActionToClients(this);
+    }
+
+    public virtual void Execute()
     {
         if (nextTile == null && path.Count == 0)
         {
             currentTile = null;
+            OnActionExecuted?.Invoke();
             Exit();
             return;
         }
@@ -72,6 +85,11 @@ public abstract class MovementBehaviour : Behaviour, ISerializableAction, ITiles
         else
             Owner.GameObject.transform.position += direction * steps.Dequeue();
 
+    }
+
+    public virtual void Exit()
+    {
+        OnActionEnd?.Invoke();
     }
 
     public bool CanMove(Tile tile)
@@ -134,7 +152,7 @@ public abstract class Activebility : AbilityBehaviour
 
 }
 
-public abstract class AttackBehaviour : Behaviour, ISerializableAction, ITilesInRange
+public abstract class AttackBehaviour : Behaviour, ISerializableAction, IActionTileSelection, IActionLifecycle
 {
     protected int baseDamage;
     protected int attackRange;
@@ -144,6 +162,11 @@ public abstract class AttackBehaviour : Behaviour, ISerializableAction, ITilesIn
     public virtual int AttackDamage => baseDamage;
     public virtual int AttackRange => attackRange;
     public virtual float TimeToPerformAttack => timeToPerformAttack;
+
+    public Action OnActionStart { get; set; } = () => { };
+    public Action OnActionExecuted { get; set; } = () => { };
+    public Action OnActionEnd { get; set; } = () => { };
+
 
     protected DamageableBehaviour target;
 
@@ -161,15 +184,29 @@ public abstract class AttackBehaviour : Behaviour, ISerializableAction, ITilesIn
     {
         this.target = target;
     }
-    public override void Execute()
+
+
+    public virtual void Enter()
+    {
+        time = Time.time;
+        OnActionStart?.Invoke();
+        BehaviourUtility.BroadcastActionToClients(this);
+    }
+
+    public virtual void Execute()
     {
         if (Time.time >= time + TimeToPerformAttack)
         {
             Damage damage = CreateDamage();
             target.ReceiveDamage(damage);
             OnAttackPerformed?.Invoke(target, damage);
+            OnActionExecuted?.Invoke();
             Exit();
         }
+    }
+    public virtual void Exit()
+    {
+        OnActionEnd?.Invoke();
     }
     public virtual List<Tile> GetAvailableTiles()
     {
@@ -275,7 +312,6 @@ public class DamageableBehaviour : Behaviour
     public Action<int,int> OnDamageReceived;
     public Action OnDeath;
 
-    public override void Execute() => Exit();
     public override void FillWithData(BehaviourData behaviourData)
     {
         base.FillWithData(behaviourData);
