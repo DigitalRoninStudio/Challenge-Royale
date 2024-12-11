@@ -2,10 +2,7 @@ using System;
 using System.Linq;
 using Unity.Collections;
 using Unity.Networking.Transport;
-using UnityEditor.PackageManager.Requests;
 using UnityEngine;
-using static UnityEngine.EventSystems.EventTrigger;
-using static UnityEngine.InputSystem.OnScreen.OnScreenStick;
 
 public class Server : INetworkService
 {
@@ -232,24 +229,25 @@ public class Server : INetworkService
 
             Player player = game.GetPlayer(clientId);
 
-            if (player == null) return;
-
-            if (!game.IsPlayerHasInitiation(player)) return;
-
-            if (game.actionController.IsActionQueueEmpty())
-                HandOverInitiationHandler();
-            else
+            if (player == null)
             {
-                game.SendMessageToPlayers(new NetChangePlayerState() { ClientId = player.clientId, PlayerState = PlayerState.IDLE });
-                game.actionController.OnActionQueueEmpty += HandOverInitiationHandler;
+                NetworkLogger.Log("Client tried to switch initiation but Player is null");
+                return;
             }
 
-            void HandOverInitiationHandler()
+            if (!game.IsPlayerHasInitiation(player))
             {
-                game.actionController.OnActionQueueEmpty -= HandOverInitiationHandler;
-                game.roundController.SwitchInitiation();
-                game.SendMessageToPlayers(new NetHandOverTheInitiative() { EndTurn = false });
+                NetworkLogger.Log("Client tried to switch initiation but Player hasnt initiation");
+                return;
             }
+
+            RoundAction roundAction = new RoundAction()
+            {
+                EndRound = false,
+                SwitchInitiation = true,
+            };
+
+            game.actionController.AddActionToWork(roundAction);
         }
 
         private void OnEndRoundRequest(NetMessage message, NetworkConnection connection)
@@ -272,33 +270,25 @@ public class Server : INetworkService
 
             Player player = game.GetPlayer(clientId); 
 
-            if (player == null) return;
-
-            if (!game.IsPlayerHasInitiation(player)) return;
-
-            if (game.actionController.IsActionQueueEmpty())
-                EndRoundHandler();
-            else
+            if (player == null)
             {
-                game.SendMessageToPlayers(new NetChangePlayerState() { ClientId = player.clientId, PlayerState = PlayerState.IDLE });
-                game.actionController.OnActionQueueEmpty += EndRoundHandler;
+                NetworkLogger.Log("Client tried to end round but Player is null");
+                return;
             }
 
-            void EndRoundHandler()
+            if (!game.IsPlayerHasInitiation(player))
             {
-                game.actionController.OnActionQueueEmpty -= EndRoundHandler;
-                if (game.roundController.endTurnCalled)
-                {
-                    game.roundController.EndRound();
-                    game.SendMessageToPlayers(new NetEndRound());
-                }
-                else
-                {
-                    game.roundController.EndRoundAndSwitchInitiation();
-                    game.SendMessageToPlayers(new NetHandOverTheInitiative() { EndTurn = true });
-
-                }
+                NetworkLogger.Log("Client tried to end round but Player hasnt initiation");
+                return;
             }
+
+            RoundAction roundAction = new RoundAction() 
+            {
+                EndRound = true,
+                SwitchInitiation = game.roundController.endTurnCalled ? false : true,
+            };
+
+            game.actionController.AddActionToWork(roundAction);
         }
 
         private void OnAttackRequest(NetMessage message, NetworkConnection connection)
@@ -316,6 +306,19 @@ public class Server : INetworkService
             if (string.IsNullOrEmpty(clientId))
             {
                 NetworkLogger.Log("Client tried to attack but CLIENTID is empty");
+                return;
+            }
+
+            Player player = game.GetPlayer(clientId);
+            if (player == null)
+            {
+                NetworkLogger.Log("Client tried to attack but Player is null");
+                return;
+            }
+
+            if (!game.IsPlayerHasInitiation(player))
+            {
+                NetworkLogger.Log("Client tried to attack but Player hasnt initiation");
                 return;
             }
 
@@ -372,6 +375,19 @@ public class Server : INetworkService
             if (string.IsNullOrEmpty(clientId))
             {
                 NetworkLogger.Log("Client tried to move entity but CLIENTID is empty");
+                return;
+            }
+
+            Player player = game.GetPlayer(clientId);
+            if (player == null)
+            {
+                NetworkLogger.Log("Client tried to move but Player is null");
+                return;
+            }
+
+            if (!game.IsPlayerHasInitiation(player))
+            {
+                NetworkLogger.Log("Client tried to move but Player hasnt initiation");
                 return;
             }
 

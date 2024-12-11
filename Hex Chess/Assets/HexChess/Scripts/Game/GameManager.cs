@@ -19,7 +19,7 @@ public class LocalPlayer : Singleton<LocalPlayer>
 
         if(IsLocalClientOwner(selectedEntity) && CanLocalPlayerDoAction())
         {
-            if (movementBehaviour != null && movementBehaviour is IActionTileSelection movementTiles)
+            if (movementBehaviour != null && movementBehaviour is ITileSelection movementTiles)
             {
                 foreach (var availableTile in movementTiles.GetAvailableTiles())
                     availableTile.SetColor(Color.green);
@@ -29,7 +29,7 @@ public class LocalPlayer : Singleton<LocalPlayer>
                     unAvailableTile.SetColor(DarkGreen);
             }
 
-            if (attackBehaviour != null && attackBehaviour is IActionTileSelection attackTiles)
+            if (attackBehaviour != null && attackBehaviour is ITileSelection attackTiles)
                 foreach (var availableTile in attackTiles.GetAvailableTiles())
                     availableTile.SetColor(Color.red);
         }
@@ -37,12 +37,12 @@ public class LocalPlayer : Singleton<LocalPlayer>
         {
 
             Color DarkGreen = new Color(0, 0.5f, 0f);
-            if (movementBehaviour != null && movementBehaviour is IActionTileSelection movementTiles)
+            if (movementBehaviour != null && movementBehaviour is ITileSelection movementTiles)
                 foreach (var tiles in movementTiles.GetTiles())
                     tiles.SetColor(DarkGreen);
 
             Color DarkRed = new Color(0.5f, 0f, 0f);
-            if (attackBehaviour != null && attackBehaviour is IActionTileSelection attackTiles)
+            if (attackBehaviour != null && attackBehaviour is ITileSelection attackTiles)
                 foreach (var availableTile in attackTiles.GetAvailableTiles())
                     availableTile.SetColor(DarkRed);
         }

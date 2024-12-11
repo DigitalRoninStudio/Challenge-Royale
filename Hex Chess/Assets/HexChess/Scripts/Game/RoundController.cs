@@ -1,4 +1,5 @@
 ﻿
+using System;
 using UnityEngine;
 
 public class RoundController
@@ -112,5 +113,47 @@ public class RoundController
             StartRoundTeam = startRoundTeam,
             TeamWithInitiation = teamWithInitiation
         }; 
+    }
+}
+public class RoundAction : INetAction, ILifecycleAction
+{
+    public bool EndRound;
+    public bool SwitchInitiation;
+    public Action OnActionStart { get; set; } = () => { };
+    public Action OnActionExecuted { get; set; } = () => { };
+    public Action OnActionEnd { get; set; } = () => { };
+
+    public void Enter()
+    {
+        OnActionStart?.Invoke();
+    }
+
+    public void Execute()
+    {
+        Game game = GameManager.Instance.GetFirstMatch();
+
+        if (EndRound && SwitchInitiation)
+            game.roundController.EndRoundAndSwitchInitiation();
+        else if (SwitchInitiation)
+            game.roundController.SwitchInitiation();
+        else if (EndRound)
+            game.roundController.EndRound();
+
+        Exit();
+    }
+
+    public void Exit()
+    {
+        OnActionEnd?.Invoke();
+    }
+
+    public NetGameAction SerializeAction() => new NetRoundAction() { EndRound = this.EndRound, SwitchInitiation = this.SwitchInitiation };
+
+    public void DeserializeAction(NetGameAction gameAction)
+    {
+        NetRoundAction responess = gameAction as NetRoundAction;
+        EndRound = responess.EndRound;
+        SwitchInitiation = responess.SwitchInitiation;
+
     }
 }

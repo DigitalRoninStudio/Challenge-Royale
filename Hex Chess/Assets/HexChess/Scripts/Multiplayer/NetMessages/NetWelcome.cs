@@ -1,6 +1,4 @@
-﻿using Mono.Cecil.Cil;
-using System.Collections.Generic;
-using Unity.Collections;
+﻿using Unity.Collections;
 using Unity.Networking.Transport;
 using UnityEngine;
 
@@ -27,43 +25,6 @@ public class NetWelcome : NetMessage
     public override void ReceivedOnClient()
     {
         Client.Receiver.C_ON_WELCOME_RESPONESS?.Invoke(this);
-    }
-}
-
-public class NetGameAction : NetMessage
-{
-    public string entityGUID;
-    public string behaviourGUID;
-    public string serializedBehaviour;
-    public NetGameAction()
-    {
-        Code = OpCode.ON_GAME_ACTION;
-    }
-    public NetGameAction(DataStreamReader reader)
-    {
-        Code = OpCode.ON_GAME_ACTION;
-        Deserialize(reader);
-    }
-    public override void Serialize(ref DataStreamWriter writer)
-    {
-        WriteString(ref writer, entityGUID);
-        WriteString(ref writer, behaviourGUID);
-
-        WriteString(ref writer, serializedBehaviour);
-    }
-    public override void Deserialize(DataStreamReader reader)
-    {
-        entityGUID = ReadString(ref reader);
-        behaviourGUID = ReadString(ref reader);
-
-        serializedBehaviour = ReadString(ref reader);
-    }
-    public override void ReceivedOnServer(NetworkConnection connection)
-    {
-    }
-    public override void ReceivedOnClient()
-    {
-        Client.Receiver.C_ON_GAME_ACTION_RESPONESS?.Invoke(this);
     }
 }
 
@@ -210,28 +171,21 @@ public class NetEndRound : NetMessage
     }
     public override void Serialize(ref DataStreamWriter writer)
     {
-        if(Client.IsClient)
-            WriteString(ref writer, MatchId);
+        WriteString(ref writer, MatchId);
     }
     public override void Deserialize(DataStreamReader reader)
     {
-        if (Server.IsServer)
-            MatchId = ReadString(ref reader);
+        MatchId = ReadString(ref reader);
     }
     public override void ReceivedOnServer(NetworkConnection connection)
     {
         Server.Receiver.S_ON_END_ROUND_REQUEST?.Invoke(this, connection);
-    }
-    public override void ReceivedOnClient()
-    {
-        Client.Receiver.C_ON_END_ROUND_RESPONESS?.Invoke(this);
     }
 }
 
 public class NetHandOverTheInitiative : NetMessage
 {
     public string MatchId;
-    public bool EndTurn;
     public NetHandOverTheInitiative()
     {
         Code = OpCode.ON_HAND_OVER_THE_INITIATIVE;
@@ -243,54 +197,145 @@ public class NetHandOverTheInitiative : NetMessage
     }
     public override void Serialize(ref DataStreamWriter writer)
     {
-        if (Client.IsClient)
-            WriteString(ref writer, MatchId);
-        if (Server.IsServer)
-            writer.WriteByte(EndTurn ? (byte)1 : (byte)0);
+        WriteString(ref writer, MatchId);
     }
     public override void Deserialize(DataStreamReader reader)
     {
-        if (Server.IsServer)
-            MatchId = ReadString(ref reader);
-        if (Client.IsClient)
-            EndTurn = reader.ReadByte() == 1;
+        MatchId = ReadString(ref reader);
     }
     public override void ReceivedOnServer(NetworkConnection connection)
     {
         Server.Receiver.S_ON_HAND_OVER_THE_INITIATIVE_REQUEST?.Invoke(this, connection);
     }
+}
+
+
+public class NetGameAction : NetMessage
+{
+    public GameActionType ActionType;
+    public NetGameAction()
+    {
+        Code = OpCode.ON_GAME_ACTION;
+    }
+    public NetGameAction(DataStreamReader reader) : base()
+    {
+        Code = OpCode.ON_GAME_ACTION;
+    }
+    public override void Serialize(ref DataStreamWriter writer)
+    {
+        writer.WriteByte((byte)ActionType);
+    }
+    public override void Deserialize(DataStreamReader reader)
+    {
+        ActionType = (GameActionType)reader.ReadByte();
+    }
     public override void ReceivedOnClient()
     {
-        Client.Receiver.C_ON_HAND_OVER_THE_INITIATIVE_RESPONESS?.Invoke(this);
+        Client.Receiver.C_ON_GAME_ACTION_RESPONESS?.Invoke(this);
     }
 }
 
-public class NetChangePlayerState : NetMessage
+public enum GameActionType
 {
-    public string ClientId;
-    public PlayerState PlayerState;
-    public NetChangePlayerState()
+    ON_BEHAVIOUR_ACTION, ON_ROUND_ACTION
+}
+
+
+public class NetBehaviourAction : NetGameAction
+{
+    public string EntityGUID;
+    public string BehaviourGUID;
+    public NetBehaviourAction() : base()
     {
-        Code = OpCode.ON_CHANGE_PLAYER_STATE;
+        ActionType = GameActionType.ON_BEHAVIOUR_ACTION;
     }
-    public NetChangePlayerState(DataStreamReader reader)
+
+    public NetBehaviourAction(DataStreamReader reader) : base()
     {
-        Code = OpCode.ON_CHANGE_PLAYER_STATE;
+        ActionType = GameActionType.ON_BEHAVIOUR_ACTION;
         Deserialize(reader);
     }
     public override void Serialize(ref DataStreamWriter writer)
     {
-        WriteString(ref writer, ClientId);
-        writer.WriteByte((byte)PlayerState);
+        base.Serialize(ref writer);
+        WriteString(ref writer, EntityGUID);
+        WriteString(ref writer, BehaviourGUID);
     }
     public override void Deserialize(DataStreamReader reader)
     {
-        ClientId = ReadString(ref reader);
-        PlayerState = (PlayerState)reader.ReadByte();
+        base.Deserialize(reader);
+        EntityGUID = ReadString(ref reader);
+        BehaviourGUID = ReadString(ref reader);
     }
-    public override void ReceivedOnClient()
+}
+
+public class NetMovementAction : NetBehaviourAction
+{
+    public Vector2Int TileCoordinate;
+    public NetMovementAction() : base() { }
+
+    public NetMovementAction(DataStreamReader reader) : base() { }
+
+    public override void Serialize(ref DataStreamWriter writer)
     {
-        Client.Receiver.C_ON_CHANGE_PLAYER_STATE_RESPONESS?.Invoke(this);
+        base.Serialize(ref writer);
+        writer.WriteInt(TileCoordinate.x);
+        writer.WriteInt(TileCoordinate.y);
+    }
+    public override void Deserialize(DataStreamReader reader)
+    {
+        base.Deserialize(reader);
+        TileCoordinate = new Vector2Int(reader.ReadInt(), reader.ReadInt());
+    }
+}
+
+public class NetAttackAction : NetBehaviourAction
+{
+    public string EnemyGUID;
+    public string DamageableGUID;
+    public NetAttackAction() : base() { }
+
+    public NetAttackAction(DataStreamReader reader) : base() { }
+
+    public override void Serialize(ref DataStreamWriter writer)
+    {
+        base.Serialize(ref writer);
+        WriteString(ref writer, EnemyGUID);
+        WriteString(ref writer, DamageableGUID);
+    }
+    public override void Deserialize(DataStreamReader reader)
+    {
+        base.Deserialize(reader);
+        EnemyGUID = ReadString(ref reader);
+        DamageableGUID = ReadString(ref reader);
+    }
+}
+
+public class NetRoundAction : NetGameAction
+{
+    public bool EndRound;
+    public bool SwitchInitiation;
+    public NetRoundAction() : base()
+    {
+        ActionType = GameActionType.ON_ROUND_ACTION;
+    }
+
+    public NetRoundAction(DataStreamReader reader) : base()
+    {
+        ActionType = GameActionType.ON_ROUND_ACTION;
+        Deserialize(reader);
+    }
+    public override void Serialize(ref DataStreamWriter writer)
+    {
+        base.Serialize(ref writer);
+        writer.WriteByte(EndRound ? (byte)1 : (byte)0);
+        writer.WriteByte(SwitchInitiation ? (byte)1 : (byte)0);
+    }
+    public override void Deserialize(DataStreamReader reader)
+    {
+        base.Deserialize(reader);
+        EndRound = reader.ReadByte() == 1;
+        SwitchInitiation = reader.ReadByte() == 1;
     }
 }
 

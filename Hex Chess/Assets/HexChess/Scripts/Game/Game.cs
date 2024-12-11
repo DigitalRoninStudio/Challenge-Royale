@@ -2,18 +2,17 @@
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Networking.Transport;
-using UnityEditor;
-using UnityEditor.PackageManager;
 using UnityEngine;
 
 public class ActionController
 {
-    public Action OnActionQueueEmpty;
-    protected Queue<IActionLifecycle> pendingActions;
+    protected Game game;
+    protected Queue<ILifecycleAction> pendingActions;
 
-    public ActionController()
+    public ActionController(Game game)
     {
-        pendingActions = new Queue<IActionLifecycle>();
+        this.game = game;
+        pendingActions = new Queue<ILifecycleAction>();
     }
 
     public void Update()
@@ -22,7 +21,7 @@ public class ActionController
             pendingActions.Peek().Execute();
     }
 
-    public void AddActionToWork(IActionLifecycle action)
+    public void AddActionToWork(ILifecycleAction action)
     {
         if (action != null)
         {
@@ -39,9 +38,6 @@ public class ActionController
 
     private void ChangeAction()
     {
-        if(pendingActions.Count == 0)
-            OnActionQueueEmpty?.Invoke();
-
         if (pendingActions.Count > 0)
             pendingActions.Dequeue();
 
@@ -49,19 +45,32 @@ public class ActionController
             StartAction(pendingActions.Peek());
     }
 
-    private void StartAction(IActionLifecycle action)
+    private void StartAction(ILifecycleAction actionLifecycle)
     {
         void OnActionEndHandler()
         {
-            action.OnActionEnd -= OnActionEndHandler;
+            actionLifecycle.OnActionEnd -= OnActionEndHandler;
             ChangeAction();
         }
 
-        action.OnActionEnd += OnActionEndHandler;
-        action.Enter();
+        actionLifecycle.OnActionEnd += OnActionEndHandler;
+        actionLifecycle.Enter();
+
+        if (Server.IsServer && actionLifecycle is INetAction serializable)
+            BroadcastActionToClients(game, serializable);
     }
 
-    public bool IsActionQueueEmpty() => pendingActions.Count == 0;
+    public static void BroadcastActionToClients(Game game, INetAction serializable)
+    {
+        NetGameAction responess = serializable.SerializeAction();
+
+        foreach (var player in game.players)
+        {
+            NetworkConnection connection = GameManager.Instance.GetNetworkConnection(player.clientId);
+            if (connection != null)
+                Sender.ServerSendData(connection, responess, Pipeline.Reliable);
+        }
+    }
 }
 public class Game
 {
@@ -78,7 +87,7 @@ public class Game
         players = new List<Player>();
         randomGenerator = new RandomGenerator();
         roundController = new RoundController(this);
-        actionController = new ActionController();
+        actionController = new ActionController(this);
     }
 
     public Game(GameData gameData)
@@ -88,7 +97,7 @@ public class Game
         players = new List<Player>();
         randomGenerator = new RandomGenerator(gameData.RandomState);
         roundController = new RoundController(this, gameData.RoundData);
-        actionController = new ActionController();//TODO serialize and deserialize
+        actionController = new ActionController(this);//TODO serialize and deserialize
 
         foreach (var playerData in gameData.PlayersData)
             AddPlayer(new Player(playerData));

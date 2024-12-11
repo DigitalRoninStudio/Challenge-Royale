@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public abstract class MovementBehaviour : Behaviour, IActionLifecycle ,ISerializableAction, IActionTileSelection
+public abstract class MovementBehaviour : Behaviour, ILifecycleAction ,INetAction, ITileSelection
 {
     public float speed;
     public int range;
@@ -45,7 +45,6 @@ public abstract class MovementBehaviour : Behaviour, IActionLifecycle ,ISerializ
     {
         time = Time.time;
         OnActionStart?.Invoke();
-        BehaviourUtility.BroadcastActionToClients(this);
     }
 
     public virtual void Execute()
@@ -116,20 +115,13 @@ public abstract class MovementBehaviour : Behaviour, IActionLifecycle ,ISerializ
     {
         currentTile = Map.GetTile(Owner);
     }
-    public string SerializeAction()
+    public NetGameAction SerializeAction() =>  new NetMovementAction() { TileCoordinate = path.Last().coordinate };
+    
+    public void DeserializeAction(NetGameAction gameAction)
     {
-        MovementBehaviourAction movementAction = new MovementBehaviourAction
-        {
-            EndCoord = path.Last().coordinate,
-        };
+        NetMovementAction responess = gameAction as NetMovementAction;
 
-        return JsonConvert.SerializeObject(movementAction);
-    }
-    public void DeserializeAction(string data)
-    {
-        MovementBehaviourAction movementAction = JsonConvert.DeserializeObject<MovementBehaviourAction>(data);
-
-        Tile end = Map.GetTile(movementAction.EndCoord );
+        Tile end = Map.GetTile(responess.TileCoordinate);
         SetPath(end);
     }
 
@@ -152,7 +144,7 @@ public abstract class Activebility : AbilityBehaviour
 
 }
 
-public abstract class AttackBehaviour : Behaviour, ISerializableAction, IActionTileSelection, IActionLifecycle
+public abstract class AttackBehaviour : Behaviour, INetAction, ITileSelection, ILifecycleAction
 {
     protected int baseDamage;
     protected int attackRange;
@@ -190,7 +182,6 @@ public abstract class AttackBehaviour : Behaviour, ISerializableAction, IActionT
     {
         time = Time.time;
         OnActionStart?.Invoke();
-        BehaviourUtility.BroadcastActionToClients(this);
     }
 
     public virtual void Execute()
@@ -268,24 +259,15 @@ public abstract class AttackBehaviour : Behaviour, ISerializableAction, IActionT
           enemy.GetBehaviour<DamageableBehaviour>() != null;
     }
 
-    public string SerializeAction()
+    public NetGameAction SerializeAction() => new NetAttackAction() {EnemyGUID = target.Owner.guid, DamageableGUID = target.guid };
+    
+    public void DeserializeAction(NetGameAction gameAction)
     {
-        AttackBehaviourAction attackAction = new AttackBehaviourAction
-        {
-            EnemyGUID = target.Owner.guid,
-            DamageableGUID = target.guid
-        };
-
-        return JsonConvert.SerializeObject(attackAction);
-    }
-    public void DeserializeAction(string data)
-    {
-        var attackAction = JsonConvert.DeserializeObject<AttackBehaviourAction>(data);
-
+        NetAttackAction responess = gameAction as NetAttackAction;
         var damageable = Owner.Owner.match.GetAllEntities()
-            .FirstOrDefault(e => e.guid == attackAction.EnemyGUID)?
+            .FirstOrDefault(e => e.guid == responess.EnemyGUID)?
             .Behaviours
-            .FirstOrDefault(b => b.guid == attackAction.DamageableGUID) as DamageableBehaviour;
+            .FirstOrDefault(b => b.guid == responess.DamageableGUID) as DamageableBehaviour;
 
         if (damageable != null)
             SetAttack(damageable);

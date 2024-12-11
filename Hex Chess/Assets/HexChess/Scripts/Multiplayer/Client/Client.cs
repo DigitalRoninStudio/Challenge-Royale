@@ -128,15 +128,6 @@ public class Client : INetworkService
             case OpCode.ON_SYNC_GAME:
                 msg = new NetSyncGame(reader);
                 break;
-            case OpCode.ON_END_ROUND:
-                msg = new NetEndRound(reader);
-                break;
-            case OpCode.ON_HAND_OVER_THE_INITIATIVE:
-                msg = new NetHandOverTheInitiative(reader);
-                break;
-            case OpCode.ON_CHANGE_PLAYER_STATE:
-                msg = new NetChangePlayerState(reader);
-                break;
             default:
                 break;
         }
@@ -153,9 +144,6 @@ public class Client : INetworkService
             C_ON_WELCOME_RESPONESS += OnWelcomeResponess;
             C_ON_GAME_ACTION_RESPONESS += OnGameActionResponess;
             C_ON_SYNC_GAME_RESPONESS += OnGameSyncResponess;
-            C_ON_END_ROUND_RESPONESS += OnEndRoundResponess;
-            C_ON_HAND_OVER_THE_INITIATIVE_RESPONESS += OnHandOverTheInitiativeRequest;
-            C_ON_CHANGE_PLAYER_STATE_RESPONESS += OnChangePlayerState;
 
         }
 
@@ -165,41 +153,6 @@ public class Client : INetworkService
             C_ON_WELCOME_RESPONESS -= OnWelcomeResponess;
             C_ON_GAME_ACTION_RESPONESS -= OnGameActionResponess;
             C_ON_SYNC_GAME_RESPONESS -= OnGameSyncResponess;
-            C_ON_END_ROUND_RESPONESS -= OnEndRoundResponess;
-            C_ON_HAND_OVER_THE_INITIATIVE_RESPONESS -= OnHandOverTheInitiativeRequest;
-            C_ON_CHANGE_PLAYER_STATE_RESPONESS -= OnChangePlayerState;
-
-        }
-
-        private void OnChangePlayerState(NetMessage message)
-        {
-            NetChangePlayerState responess = message as NetChangePlayerState;
-
-            foreach (var player in GameManager.Instance.GetFirstMatch().players)
-            {
-                if(player.clientId == responess.ClientId)
-                {
-                    player.playerState = responess.PlayerState;
-                    break;
-                }
-            }
-        }
-
-        private void OnHandOverTheInitiativeRequest(NetMessage message)
-        {
-            NetHandOverTheInitiative responess = message as NetHandOverTheInitiative;
-            Game game = GameManager.Instance.GetFirstMatch();
-
-            if (responess.EndTurn)
-                game.roundController.EndRoundAndSwitchInitiation();
-            else
-                game.roundController.SwitchInitiation();
-        }
-
-        private void OnEndRoundResponess(NetMessage message)
-        {
-            Game game = GameManager.Instance.GetFirstMatch();
-            game.roundController.EndRound();
 
         }
 
@@ -228,41 +181,81 @@ public class Client : INetworkService
 
         private void OnGameActionResponess(NetMessage message)
         {
-            NetGameAction responess = message as NetGameAction;
+            if (message is not NetGameAction responess)
+            {
+                Debug.LogWarning("Invalid message received.");
+                return;
+            }
 
             var match = GameManager.Instance.GetFirstMatch();
-            if (match != null) 
+            if (match == null)
             {
-                var entity = match.players
-                   .SelectMany(player => player.entities)
-                   .FirstOrDefault(e => e.guid == responess.entityGUID);
+                Debug.LogWarning("No active match found.");
+                return;
+            }
 
-                if (entity == null) return;
+            switch (responess.ActionType)
+            {
+                case GameActionType.ON_BEHAVIOUR_ACTION:
+                    HandleBehaviourAction(match, responess as NetBehaviourAction);
+                    break;
 
-                var behaviour = entity.Behaviours
-                    .FirstOrDefault(b => b.guid == responess.behaviourGUID);
+                case GameActionType.ON_ROUND_ACTION:
+                    HandleRoundAction(match, responess as NetRoundAction);
+                    break;
 
-                if (behaviour != null && behaviour is ISerializableAction action)
-                {
-                    action.DeserializeAction(responess.serializedBehaviour);
-                    match.actionController.AddActionToWork(behaviour as IActionLifecycle);//HOTFIX
-                }
-                else
-                {
-                    //create behaviour
-                    //add to work behaviour
-                }
+                default:
+                    Debug.LogWarning($"Unknown ActionType: {responess.ActionType}");
+                    break;
             }
         }
+        private void HandleBehaviourAction(Game game, NetBehaviourAction responess)
+        {
+            if (responess == null)
+            {
+                Debug.LogWarning("Invalid behaviour action received.");
+                return;
+            }
+
+            var entity = game.players
+                  .SelectMany(player => player.entities)
+                  .FirstOrDefault(e => e.guid == responess.EntityGUID);
+
+            if (entity == null)
+            {
+                Debug.LogWarning($"Entity with GUID {responess.EntityGUID} not found.");
+                return;
+            }
+
+            var behaviour = entity.Behaviours
+                .FirstOrDefault(b => b.guid == responess.BehaviourGUID);
+
+            if (behaviour is INetAction action)
+            {
+                action.DeserializeAction(responess);
+                game.actionController.AddActionToWork(behaviour as ILifecycleAction);
+            }
+        }
+
+        private void HandleRoundAction(Game game, NetRoundAction roundAction)
+        {
+            if (roundAction == null)
+            {
+                Debug.LogWarning("Invalid round action received.");
+                return;
+            }
+
+            RoundAction action = new RoundAction();
+            action.DeserializeAction(roundAction);
+
+            game.actionController.AddActionToWork(roundAction as ILifecycleAction);
+        }        
 
         #region NetMessages Events
         public static Action<NetMessage> C_ON_KEEP_ALIVE_RESPONESS;
         public static Action<NetMessage> C_ON_WELCOME_RESPONESS;
         public static Action<NetMessage> C_ON_GAME_ACTION_RESPONESS;
         public static Action<NetMessage> C_ON_SYNC_GAME_RESPONESS;
-        public static Action<NetMessage> C_ON_END_ROUND_RESPONESS;
-        public static Action<NetMessage> C_ON_HAND_OVER_THE_INITIATIVE_RESPONESS;
-        public static Action<NetMessage> C_ON_CHANGE_PLAYER_STATE_RESPONESS;
         #endregion
     }
 
