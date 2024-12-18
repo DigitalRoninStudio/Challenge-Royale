@@ -5,14 +5,17 @@ public class Figure : Entity
     public FractionType FractionType { get; private set; }
     public FigureType FigureType { get; private set; }
 
-    public Figure() : base() { }
-
-    public Figure(FigureBlueprint figureData) : base(figureData)
+    public class Builder : Builder<Figure, FigureBlueprint, FigureData>
     {
-        FigureType = figureData.FigureType;
-        FractionType = figureData.FractionType;
+        public new Builder WithBlueprint(FigureBlueprint blueprint)
+        {
+            base.WithBlueprint(blueprint);
+            _entity.FigureType = blueprint.FigureType;
+            _entity.FractionType = blueprint.FractionType;
 
-        gameObject.GetComponent<FigureVisual>().Initialize(this, figureData);
+            _entity.gameObject.GetComponent<FigureVisual>().Initialize(_entity, blueprint);  //???
+            return this;
+        }
     }
     public override EntityData GetEntityData() => new FigureData(this);
 }

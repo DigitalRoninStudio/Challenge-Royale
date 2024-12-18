@@ -3,6 +3,94 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+
+public interface IModifierSource
+{
+    Modifier FindModifier(string guid);
+    ModifierSource GetModifierSource();
+}
+public class ModifierSource
+{
+    public string ModifierGuid;
+    public string SourceGuid;
+    public ModifierSourceType SourceType;
+}
+public enum ModifierSourceType
+{
+    BEHHAVIOUR, STATUS_EFFECT
+}
+public abstract class Modifier
+{
+    public string guid;
+    public IModifierSource modifierSource;
+    public int value;
+
+    public abstract bool CanBeApplied(Entity entity);
+    public abstract void ApplyModifier(Entity entity);
+    public abstract void RemoveModifier(Entity entity);
+
+    public virtual ModifierData GetModifierData()
+    {
+        return new ModifierData() 
+        {
+            Guid = guid,
+        };
+    }
+    public virtual ModifierSource GetModifierSource()
+    {
+        ModifierSource source = modifierSource.GetModifierSource();
+        source.ModifierGuid = guid;
+        return source;
+    }
+
+}
+public class HealthModifier : Modifier
+{
+
+    public override bool CanBeApplied(Entity entity)
+    {
+        return entity.HasBehaviour<DamageableBehaviour>();
+    }
+    public override void ApplyModifier(Entity entity)
+    {
+        DamageableBehaviour damageable = entity.GetBehaviour<DamageableBehaviour>();
+        damageable.IncreaseMaxHealth(value);
+        damageable.IncreaseCurrentHealth(value);
+    }
+
+    public override void RemoveModifier(Entity entity)
+    {
+        DamageableBehaviour damageable = entity.GetBehaviour<DamageableBehaviour>();
+        damageable.IncreaseMaxHealth(-value);
+        if(damageable.CurrentHealth > damageable.MaxHealth)
+            damageable.SetCurrentHealth(damageable.MaxHealth);
+    }
+}
+
+public class ModifierController
+{
+    private Entity owner;
+    public List<Modifier> Modifiers => modifiers;
+    private List<Modifier> modifiers;
+    public ModifierController(Entity entity)
+    {
+        this.owner = entity;
+        modifiers = new List<Modifier>();
+    }
+
+    public void AddModifier(Modifier modifier)
+    {
+        modifier.ApplyModifier(owner);
+        modifiers.Add(modifier);
+    }
+
+    public void RemoveModifier(Modifier modifier)
+    {
+        modifier.RemoveModifier(owner);
+        modifiers.Remove(modifier);
+    }
+
+}
 public abstract class Entity : IDisposable
 {
     public string guid;
@@ -21,34 +109,73 @@ public abstract class Entity : IDisposable
     public StatusEffectController StatusEffectController => statusEffectController;
     private StatusEffectController statusEffectController;
 
+    public ModifierController ModifierController => modifierController;
+    private ModifierController modifierController;
+
     public EntityBlueprint EntityBlueprint { get; private set; }
     public Player Owner { get; private set; }
 
-    public Entity()
+    protected Entity()
     {
         behaviours = new List<Behaviour>();
         statusEffectController = new StatusEffectController();
+        modifierController = new ModifierController(this);
     }
 
-    public Entity(EntityBlueprint blueprint)
+    #region Builder
+    public class Builder<T, TB, TD>
+       where T : Entity, new()
+       where TB : EntityBlueprint
+       where TD : EntityData
     {
-        behaviours = new List<Behaviour>();
-        statusEffectController = new StatusEffectController();
+        protected readonly T _entity;
 
-        guid = Guid.NewGuid().ToString();
-        EntityBlueprint = blueprint;
-        isBlockingMovement = blueprint.IsBlockingMovement;
-        visibility = Visibility.BOTH;
-        gameObject = GameObject.Instantiate(blueprint.GameObject);
-
-        foreach (var behaviourData in blueprint.BehaviourDatas)
+        public Builder()
         {
-            Behaviour behaviour = behaviourData.CreateBehaviour();
-            AddBehaviour(behaviour);
+            _entity = new T();
+        }
+        public virtual Builder<T, TB, TD> WithBlueprint(TB blueprint)
+        {
+            _entity.EntityBlueprint = blueprint;
+            _entity.isBlockingMovement = blueprint.IsBlockingMovement;
+            _entity.visibility = Visibility.BOTH;
+            _entity.gameObject = GameObject.Instantiate(blueprint.GameObject);
+            return this;
+        }
+        public virtual Builder<T, TB, TD> WithBehaviours(TB blueprint)
+        {
+            foreach (var behaviourBlueprint in blueprint.BehaviourDatas)
+            {
+                Behaviour behaviour = behaviourBlueprint.CreateBehaviour();
+                _entity.AddBehaviour(behaviour);
+            }    
+
+            return this;
+        }
+        public Builder<T, TB, TD> WithGeneratedId()
+        {
+            _entity.guid = Guid.NewGuid().ToString();
+            return this;
+        }
+        public Builder<T, TB, TD> WithSyncGeneratedId(string guid)
+        {
+            _entity.guid = guid;
+            return this;
         }
 
+        public virtual Builder<T, TB, TD> WithData(TD entityData)
+        {
+            _entity.guid = entityData.GUID;
+            _entity.visibility = entityData.Visibility;
+            _entity.direction = entityData.Direction;
+            return this;
+        }
+
+        public T Build() => _entity;
     }
-    public void SetOwner(Player player) => Owner = player; 
+    #endregion
+
+    public void SetOwner(Player player) => Owner = player;
     public void ResetDirection()
     {
         if (Team == Team.GOOD_BOYS) direction = Direction.UP;
@@ -59,69 +186,29 @@ public abstract class Entity : IDisposable
         behaviours.Add(behaviour);
         behaviour.SetOwner(this);
     }
+    public bool TryGetBehaviour<T>(out T behaviour) where T : Behaviour
+    {
+        behaviour = behaviours.OfType<T>().FirstOrDefault();
+        return behaviour != null;
+    }
+    public bool HasBehaviour<T>() where T : Behaviour
+    {
+        return behaviours.Exists(b => b is T);
+    }
     public T GetBehaviour<T>() where T : Behaviour
     {
-        foreach (Behaviour behaviour in behaviours)
-            if (behaviour is T b)
-                return b;
-        return null;
+        return behaviours.OfType<T>().FirstOrDefault();
     }
     public abstract EntityData GetEntityData();
-
 
     public void SetRotation()
     {
         gameObject.transform.eulerAngles = new Vector3(0, 0, Map.directionToRotation[direction]);
     }
 
-    public virtual void FillWithData(EntityData entityData)
-    {
-        guid = entityData.GUID;
-        visibility = entityData.Visibility;
-        direction = entityData.Direction;
-        SetRotation();
-        SetUpBehaviours(entityData);
-        SetUpStatusEffect(entityData.StatusEffectDatas);
-    }
-
     public virtual void Dispose()
     {
         GameObject.Destroy(gameObject);
-    }
-    // HOT FIX
-    private void SetUpBehaviours(EntityData entityData)
-    {
-        HashSet<string> behaviourDataIds = entityData.BehaviourDatas.Select(bd => bd.Id).ToHashSet();
-        List<Behaviour> behavioursToDispose = behaviours.Where(b => !behaviourDataIds.Contains(b.BehaviourBlueprint.Id)).ToList();
-        foreach (Behaviour behaviour in behavioursToDispose)
-        {
-            if(behaviour is IDisposable disposable)
-                disposable.Dispose();
-
-            behaviours.Remove(behaviour);
-        }
-
-        Dictionary<string, Behaviour> behaviourDict = behaviours.ToDictionary(b => b.BehaviourBlueprint.Id);
-
-        foreach (BehaviourData behaviourData in entityData.BehaviourDatas)
-        {
-            if (behaviourDict.TryGetValue(behaviourData.Id, out Behaviour behaviour))
-                behaviour.FillWithData(behaviourData);
-            else
-            {
-                behaviour = GameFactory.CreateBehaviour(behaviourData);
-                AddBehaviour(behaviour);
-            }
-        }
-    }
-
-    private void SetUpStatusEffect(List<StatusEffectData> statusEffectDatas)
-    {
-        foreach (var statusEffectData in statusEffectDatas)
-        {
-           StatusEffect statusEffect = GameFactory.CreateStatusEffect(statusEffectData);
-           statusEffectController.AddStatusEffect(statusEffect); 
-        }
     }
 }
 

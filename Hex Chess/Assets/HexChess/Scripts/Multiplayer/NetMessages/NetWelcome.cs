@@ -210,133 +210,38 @@ public class NetHandOverTheInitiative : NetMessage
 }
 
 
-public class NetGameAction : NetMessage
+public class NetAction : NetMessage
 {
-    public GameActionType ActionType;
-    public NetGameAction()
+    public ActionType ActionType;
+    public string Action;
+    public NetAction()
     {
-        Code = OpCode.ON_GAME_ACTION;
+        Code = OpCode.ON_ACTION;
     }
-    public NetGameAction(DataStreamReader reader) : base()
+    public NetAction(DataStreamReader reader) : base()
     {
-        Code = OpCode.ON_GAME_ACTION;
+        Code = OpCode.ON_ACTION;
+        Deserialize(reader);
     }
     public override void Serialize(ref DataStreamWriter writer)
     {
         writer.WriteByte((byte)ActionType);
+        WriteString(ref writer, Action);
     }
     public override void Deserialize(DataStreamReader reader)
     {
-        ActionType = (GameActionType)reader.ReadByte();
+        ActionType = (ActionType)reader.ReadByte();
+        Action = ReadString(ref reader);
     }
     public override void ReceivedOnClient()
     {
-        Client.Receiver.C_ON_GAME_ACTION_RESPONESS?.Invoke(this);
+        Client.Receiver.C_ON_ACTION_RESPONESS?.Invoke(this);
     }
 }
 
-public enum GameActionType
+public enum ActionType
 {
-    ON_BEHAVIOUR_ACTION, ON_ROUND_ACTION
-}
-
-
-public class NetBehaviourAction : NetGameAction
-{
-    public string EntityGUID;
-    public string BehaviourGUID;
-    public NetBehaviourAction() : base()
-    {
-        ActionType = GameActionType.ON_BEHAVIOUR_ACTION;
-    }
-
-    public NetBehaviourAction(DataStreamReader reader) : base()
-    {
-        ActionType = GameActionType.ON_BEHAVIOUR_ACTION;
-        Deserialize(reader);
-    }
-    public override void Serialize(ref DataStreamWriter writer)
-    {
-        base.Serialize(ref writer);
-        WriteString(ref writer, EntityGUID);
-        WriteString(ref writer, BehaviourGUID);
-    }
-    public override void Deserialize(DataStreamReader reader)
-    {
-        base.Deserialize(reader);
-        EntityGUID = ReadString(ref reader);
-        BehaviourGUID = ReadString(ref reader);
-    }
-}
-
-public class NetMovementAction : NetBehaviourAction
-{
-    public Vector2Int TileCoordinate;
-    public NetMovementAction() : base() { }
-
-    public NetMovementAction(DataStreamReader reader) : base() { }
-
-    public override void Serialize(ref DataStreamWriter writer)
-    {
-        base.Serialize(ref writer);
-        writer.WriteInt(TileCoordinate.x);
-        writer.WriteInt(TileCoordinate.y);
-    }
-    public override void Deserialize(DataStreamReader reader)
-    {
-        base.Deserialize(reader);
-        TileCoordinate = new Vector2Int(reader.ReadInt(), reader.ReadInt());
-    }
-}
-
-public class NetAttackAction : NetBehaviourAction
-{
-    public string EnemyGUID;
-    public string DamageableGUID;
-    public NetAttackAction() : base() { }
-
-    public NetAttackAction(DataStreamReader reader) : base() { }
-
-    public override void Serialize(ref DataStreamWriter writer)
-    {
-        base.Serialize(ref writer);
-        WriteString(ref writer, EnemyGUID);
-        WriteString(ref writer, DamageableGUID);
-    }
-    public override void Deserialize(DataStreamReader reader)
-    {
-        base.Deserialize(reader);
-        EnemyGUID = ReadString(ref reader);
-        DamageableGUID = ReadString(ref reader);
-    }
-}
-
-public class NetRoundAction : NetGameAction
-{
-    public bool EndRound;
-    public bool SwitchInitiation;
-    public NetRoundAction() : base()
-    {
-        ActionType = GameActionType.ON_ROUND_ACTION;
-    }
-
-    public NetRoundAction(DataStreamReader reader) : base()
-    {
-        ActionType = GameActionType.ON_ROUND_ACTION;
-        Deserialize(reader);
-    }
-    public override void Serialize(ref DataStreamWriter writer)
-    {
-        base.Serialize(ref writer);
-        writer.WriteByte(EndRound ? (byte)1 : (byte)0);
-        writer.WriteByte(SwitchInitiation ? (byte)1 : (byte)0);
-    }
-    public override void Deserialize(DataStreamReader reader)
-    {
-        base.Deserialize(reader);
-        EndRound = reader.ReadByte() == 1;
-        SwitchInitiation = reader.ReadByte() == 1;
-    }
+    BEHAVIOUR, ROUND
 }
 
 

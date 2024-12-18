@@ -9,4 +9,6 @@ public abstract class BehaviourBlueprint : ScriptableObject
 
     public BehaviourVisual Visual;
     public abstract Behaviour CreateBehaviour();
+    public abstract Behaviour CreateBehaviour(RandomGenerator randomGenerator);
+    public abstract Behaviour CreateBehaviour(BehaviourData behaviourData);
 }

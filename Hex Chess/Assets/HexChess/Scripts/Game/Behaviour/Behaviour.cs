@@ -11,20 +11,47 @@ public abstract class Behaviour
     protected float time;
     protected Map Map => Owner.Owner.match.map;
     public BehaviourBlueprint BehaviourBlueprint { get; private set; }
-    public Behaviour() { }
-    public Behaviour(BehaviourBlueprint blueprint)
+    protected Behaviour() { }
+    #region Builder
+    public class Builder<T, TB, TD>
+     where T : Behaviour
+     where TB : BehaviourBlueprint
+     where TD : BehaviourData
     {
-        guid = Guid.NewGuid().ToString();
+        protected T _behaviour;
 
-        BehaviourBlueprint = blueprint;
-        name = blueprint.Name;
+        public Builder(T behaviour)
+        {
+            _behaviour = behaviour;
+        }
+        public virtual Builder<T, TB, TD> WithBlueprint(TB blueprint)
+        {
+            _behaviour.BehaviourBlueprint = blueprint;
+            _behaviour.name = blueprint.name;
+
+            return this;
+        }
+        public Builder<T, TB, TD> WithGeneratedId()
+        {
+            _behaviour.guid = Guid.NewGuid().ToString();
+            return this;
+        }
+        public Builder<T, TB, TD> WithSyncGeneratedId(string guid)
+        {
+            _behaviour.guid = guid;
+            return this;
+        }
+
+        public virtual Builder<T, TB, TD> WithData(TD behaviourData)
+        {
+            _behaviour.guid = behaviourData.GUID;
+            return this;
+        }
+
+        public T Build() => _behaviour;
     }
-
+    #endregion
     public abstract BehaviourData GetBehaviourData();
-    public virtual void FillWithData(BehaviourData behaviourData)
-    {
-        guid = behaviourData.GUID;
-    }
 
     public virtual void SetOwner(Entity entity)
     {
@@ -59,9 +86,40 @@ public interface ILifecycleAction
 
 public interface INetAction
 {
-    NetGameAction SerializeAction();
-    void DeserializeAction(NetGameAction gameAction);
+    ActionType ActionType { get; }
+    string SerializeAction();
+    void DeserializeAction(string action);
 }
+
+
+public class RoundActionData
+{
+    public bool EndRound;
+    public bool SwitchInitiation;
+}
+
+public class BehaviourActionData
+{
+    public string EntityGUID;
+    public string BehaviourGUID;
+}
+
+public class MovementActionData : BehaviourActionData
+{
+    public Vector2Int TileCoordinate;
+}
+
+public class AttackActionData : BehaviourActionData
+{
+    public string EnemyGUID;
+    public string DamageableGUID;
+}
+
+public class SwordsmanSpecialActionData : BehaviourActionData
+{
+}
+
+
 
 
 

@@ -18,23 +18,33 @@ public abstract class MovementBehaviour : Behaviour, ILifecycleAction ,INetActio
     private Tile nextTile;
     private Vector3 direction;
     private Queue<float> steps;
+    public ActionType ActionType => ActionType.BEHAVIOUR;
 
     public Action OnActionStart { get; set; } = () => { };
     public Action OnActionExecuted { get; set; } = () => { };
     public Action OnActionEnd { get; set; } = () => { };
+    protected MovementBehaviour() : base()
+    {
+        path = new Queue<Tile>();
+        steps = new Queue<float>();
+    }
+    #region Builder
+    public new abstract class Builder<T, TB, TD> : Behaviour.Builder<T, TB, TD>
+        where T : MovementBehaviour
+        where TB : MovementBehaviourBlueprint
+        where TD : MovementBehaviourData
+    {
+        public Builder(T behaviour) : base(behaviour) { }
 
-    public MovementBehaviour() : base()
-    {
-        path = new Queue<Tile>();
-        steps = new Queue<float>();
+        public new Builder<T, TB, TD> WithBlueprint(TB blueprint)
+        {
+            base.WithBlueprint(blueprint);
+            _behaviour.speed = blueprint.Speed;
+            _behaviour.range = blueprint.Range;
+            return this;
+        }
     }
-    public MovementBehaviour(MovementBehaviourBlueprint blueprint) : base(blueprint)
-    {
-        path = new Queue<Tile>();
-        steps = new Queue<float>();
-        speed = blueprint.Speed;
-        range = blueprint.Range;
-    }
+    #endregion
 
     public override void SetOwner(Entity entity)
     {
@@ -115,13 +125,22 @@ public abstract class MovementBehaviour : Behaviour, ILifecycleAction ,INetActio
     {
         currentTile = Map.GetTile(Owner);
     }
-    public NetGameAction SerializeAction() =>  new NetMovementAction() { TileCoordinate = path.Last().coordinate };
-    
-    public void DeserializeAction(NetGameAction gameAction)
+    public string SerializeAction()
     {
-        NetMovementAction responess = gameAction as NetMovementAction;
+        MovementActionData actionData = new MovementActionData()
+        {
+            EntityGUID = Owner.guid,
+            BehaviourGUID = guid,
+            TileCoordinate = path.Last().coordinate
+        };
 
-        Tile end = Map.GetTile(responess.TileCoordinate);
+        return JsonConvert.SerializeObject(actionData);
+    }
+    
+    public void DeserializeAction(string actionJson)
+    {
+        MovementActionData actionData = JsonConvert.DeserializeObject<MovementActionData>(actionJson);
+        Tile end = Map.GetTile(actionData.TileCoordinate);
         SetPath(end);
     }
 
@@ -131,17 +150,258 @@ public abstract class MovementBehaviour : Behaviour, ILifecycleAction ,INetActio
 
 public abstract class AbilityBehaviour : Behaviour
 {
-    
+    protected AbilityBehaviour() : base() { }
+    #region Builder
+    public new abstract class Builder<T, TB, TD> : Behaviour.Builder<T, TB, TD>
+        where T : AbilityBehaviour
+        where TB : AbilityBlueprint
+        where TD : AbilityBehaviourData
+    {
+        public Builder(T behaviour) : base(behaviour) { }
+    }
+    #endregion
+
 }
 
 public abstract class PassiveAbility : AbilityBehaviour
 {
-    
+    protected PassiveAbility() : base() { }
+    #region Builder
+    public new abstract class Builder<T, TB, TD> : AbilityBehaviour.Builder<T, TB, TD>
+        where T : PassiveAbility
+        where TB : PassiveAbilityBlueprint
+        where TD : PassiveAbilityBehaviourData
+    {
+        public Builder(T behaviour) : base(behaviour) { }
+    }
+    #endregion
+
+    public abstract void Apply();
+    public abstract void Remove();
+
 }
 
-public abstract class Activebility : AbilityBehaviour
-{
 
+public abstract class ActiveAbility : AbilityBehaviour, ILifecycleAction, INetAction, ITileSelection
+{
+    protected int maxTargets;
+    protected int radius;
+    protected int maxCooldown;
+    protected int currentCooldown;
+    public virtual int MaxTargets => maxTargets;
+    public virtual int Radius => radius;
+    public virtual int MaxCooldown => maxCooldown;
+    public virtual int CurrentCooldow => currentCooldown;
+    public Action OnActionStart { get; set; } = () => { };
+    public Action OnActionExecuted { get; set; } = () => { };
+    public Action OnActionEnd { get; set; } = () => { };
+    public ActionType ActionType => ActionType.BEHAVIOUR;
+
+    protected ActiveAbility() : base() { }
+    #region Builder
+    public new abstract class Builder<T, TB, TD> : AbilityBehaviour.Builder<T, TB, TD>
+        where T : ActiveAbility
+        where TB : ActiveAbilityBlueprint
+        where TD : ActiveAbilityBehaviourData
+    {
+        public Builder(T behaviour) : base(behaviour) { }
+
+        public new Builder<T, TB, TD> WithBlueprint(TB blueprint)
+        {
+            base.WithBlueprint(blueprint);
+            _behaviour.maxTargets = blueprint.MaxTargets;
+            _behaviour.radius = blueprint.Radius;
+            _behaviour.maxCooldown = blueprint.MaxCooldown;
+
+            return this;
+        }
+
+        public new Builder<T, TB, TD> WithData(TD behaviourData)
+        {
+            base.WithData(behaviourData);
+            _behaviour.currentCooldown = behaviourData.CurrentCooldown;
+
+            return this;
+        }
+
+
+    }
+    #endregion
+
+    public virtual void Enter()
+    {
+        time = Time.time;
+        OnActionStart?.Invoke();
+    }
+    public abstract void Execute();
+    public virtual void Exit()
+    {
+        OnActionEnd?.Invoke();
+    }
+
+    public abstract List<Tile> GetAvailableTiles();
+    public abstract List<Tile> GetTiles();
+
+    public void ResetCooldown() => currentCooldown = maxCooldown;
+    public bool IsOnCooldown() => currentCooldown > 0;
+    public void TickCooldown() => currentCooldown = Math.Max(0, currentCooldown - 1);
+    public virtual bool CanUseAbility()
+    {
+        if (currentCooldown > 0)
+            return false;
+
+        return true;
+    }
+
+    public abstract string SerializeAction();
+    public abstract void DeserializeAction(string action);
+}
+
+public class SwordsmanSpecial : ActiveAbility, IToggleable, IModifierSource
+{
+    public bool IsToogle => toggle;
+
+    private bool toggle = false;
+
+    public HealthModifier healthModifier;
+
+    #region Builder
+    public class Builder : Builder<SwordsmanSpecial, SwordsmanSpecialBlueprint, SwordsmanSpecialData>
+    {
+        public Builder() : base(new SwordsmanSpecial()) { }
+
+        public new Builder WithGeneratedId()
+        {
+            base.WithGeneratedId();
+            _behaviour.healthModifier.guid = Guid.NewGuid().ToString();
+            _behaviour.healthModifier.modifierSource = _behaviour;
+
+            return this;
+
+        }
+        public new Builder WithBlueprint(SwordsmanSpecialBlueprint blueprint)
+        {
+            base.WithBlueprint(blueprint);
+            _behaviour.healthModifier = new HealthModifier() 
+            {
+                value = blueprint.HealthModifierValue 
+            };
+
+            return this;
+        }
+
+        public new Builder WithData(SwordsmanSpecialData behaviourData)
+        {
+            base.WithData(behaviourData);
+            _behaviour.toggle = behaviourData.Toggle;
+            _behaviour.healthModifier.guid = behaviourData.HealthModifierData.Guid;
+            _behaviour.healthModifier.modifierSource = _behaviour;
+
+            return this;
+        }
+    }
+    #endregion
+
+    public override void Execute()
+    {
+        Toggle();
+        Exit();
+    }
+
+    public override List<Tile> GetAvailableTiles()
+    {
+        List<Tile> availableMoves = new List<Tile>();
+
+        Tile tile = Map.GetTile(Owner);
+
+        if (tile == null) return availableMoves;
+
+        availableMoves.Add(tile);
+
+        return availableMoves;
+    }
+
+    public override BehaviourData GetBehaviourData() => new SwordsmanSpecialData(this);
+
+    public override List<Tile> GetTiles()
+    {
+        List<Tile> availableMoves = new List<Tile>();
+
+        Tile tile = Map.GetTile(Owner);
+
+        if (tile == null) return availableMoves;
+
+        availableMoves.Add(tile);
+
+        return availableMoves;
+    }
+
+    public override string SerializeAction()
+    {
+        SwordsmanSpecialActionData actionData = new SwordsmanSpecialActionData()
+        {
+            EntityGUID = Owner.guid,
+            BehaviourGUID = guid,
+        };
+        return JsonConvert.SerializeObject(actionData);
+    }
+    public override void DeserializeAction(string actionJson)
+    {
+    }
+    public bool CanToggle()
+    {
+        if(Owner.StatusEffectController.HasStatusEffect<Stun>())
+            return false;
+
+        return true;
+    }
+
+    public void Toggle()
+    {
+        if(toggle)
+            Deactivated();
+        else
+            Activated();
+    }
+
+    public void Activated()
+    {
+        Owner.ModifierController.AddModifier(healthModifier);
+        toggle = true;
+    }
+
+    public void Deactivated()
+    {
+        Owner.ModifierController.RemoveModifier(healthModifier);
+        toggle = false;
+    }
+
+    public Modifier FindModifier(string guid)
+    {
+        if (healthModifier.guid == guid)
+            return healthModifier;
+
+        return null;
+    }
+
+
+    public ModifierSource GetModifierSource()
+    {
+        return new ModifierSource()
+        {
+            SourceGuid = guid,
+            SourceType = ModifierSourceType.BEHHAVIOUR
+        };
+    }
+}
+
+public interface IToggleable
+{
+    bool IsToogle { get; }
+    bool CanToggle();
+    void Toggle();
+    void Activated();
+    void Deactivated();
 }
 
 public abstract class AttackBehaviour : Behaviour, INetAction, ITileSelection, ILifecycleAction
@@ -154,6 +414,7 @@ public abstract class AttackBehaviour : Behaviour, INetAction, ITileSelection, I
     public virtual int AttackDamage => baseDamage;
     public virtual int AttackRange => attackRange;
     public virtual float TimeToPerformAttack => timeToPerformAttack;
+    public ActionType ActionType => ActionType.BEHAVIOUR;
 
     public Action OnActionStart { get; set; } = () => { };
     public Action OnActionExecuted { get; set; } = () => { };
@@ -164,14 +425,26 @@ public abstract class AttackBehaviour : Behaviour, INetAction, ITileSelection, I
 
     public Action<DamageableBehaviour, Damage> OnAttackPerformed;
 
-    public AttackBehaviour() : base() { }
-    public AttackBehaviour(AttackBehaviourBlueprint blueprint) : base(blueprint)
+    protected AttackBehaviour() : base() { }
+    #region Builder
+    public new abstract class Builder<T, TB, TD> : Behaviour.Builder<T, TB, TD>
+        where T : AttackBehaviour
+        where TB : AttackBehaviourBlueprint
+        where TD : AttackBehaviourData
     {
-        baseDamage = blueprint.BaseDamage;
-        attackRange = blueprint.AttackRange;
-        damageType = blueprint.DamageType;
-        timeToPerformAttack = blueprint.TimeToPerformAttack;
+        public Builder(T behaviour) : base(behaviour) { }
+
+        public new Builder<T, TB, TD> WithBlueprint(TB blueprint)
+        {
+            base.WithBlueprint(blueprint);
+            _behaviour.baseDamage = blueprint.BaseDamage;
+            _behaviour.attackRange = blueprint.AttackRange;
+            _behaviour.damageType = blueprint.DamageType;
+            _behaviour.timeToPerformAttack = blueprint.TimeToPerformAttack;
+            return this;
+        }
     }
+    #endregion
     public virtual void SetAttack(DamageableBehaviour target)
     {
         this.target = target;
@@ -258,16 +531,25 @@ public abstract class AttackBehaviour : Behaviour, INetAction, ITileSelection, I
         return enemy.Owner.team != Owner.Owner.team &&
           enemy.GetBehaviour<DamageableBehaviour>() != null;
     }
-
-    public NetGameAction SerializeAction() => new NetAttackAction() {EnemyGUID = target.Owner.guid, DamageableGUID = target.guid };
-    
-    public void DeserializeAction(NetGameAction gameAction)
+    public string SerializeAction()
     {
-        NetAttackAction responess = gameAction as NetAttackAction;
+        AttackActionData actionData = new AttackActionData()
+        {
+            EntityGUID = Owner.guid,
+            BehaviourGUID = guid,
+            EnemyGUID = target.Owner.guid,
+            DamageableGUID = target.guid
+        };
+
+        return JsonConvert.SerializeObject(actionData);
+    }
+    public void DeserializeAction(string actionJson)
+    {
+        AttackActionData actionData = JsonConvert.DeserializeObject<AttackActionData>(actionJson);
         var damageable = Owner.Owner.match.GetAllEntities()
-            .FirstOrDefault(e => e.guid == responess.EnemyGUID)?
+            .FirstOrDefault(e => e.guid == actionData.EnemyGUID)?
             .Behaviours
-            .FirstOrDefault(b => b.guid == responess.DamageableGUID) as DamageableBehaviour;
+            .FirstOrDefault(b => b.guid == actionData.DamageableGUID) as DamageableBehaviour;
 
         if (damageable != null)
             SetAttack(damageable);
@@ -279,12 +561,28 @@ public class DamageableBehaviour : Behaviour
     protected int currentHealth;
     protected int maxHealth;
 
-    public DamageableBehaviour() : base() { }
-    public DamageableBehaviour(DamageableBlueprint blueprint) : base(blueprint)
+    protected DamageableBehaviour() : base() { }
+    #region Builder
+    public class Builder : Builder<DamageableBehaviour, DamageableBlueprint, DamageableBehaviourData>
     {
-        maxHealth = blueprint.MaxHealth;
-        currentHealth = maxHealth;
+        public Builder() : base(new DamageableBehaviour()) { }
+        public new Builder WithBlueprint(DamageableBlueprint blueprint)
+        {
+            base.WithBlueprint(blueprint);
+            _behaviour.maxHealth = blueprint.MaxHealth;
+            _behaviour.currentHealth = blueprint.MaxHealth;
+
+            return this;
+        }
+        public new Builder WithData(DamageableBehaviourData behaviourData)
+        {
+            base.WithData(behaviourData);
+            _behaviour.currentHealth = behaviourData.CurrentHealth;
+
+            return this;
+        }
     }
+    #endregion
 
     public virtual int CurrentHealth => currentHealth;
     public virtual int MaxHealth => maxHealth;
@@ -293,15 +591,6 @@ public class DamageableBehaviour : Behaviour
 
     public Action<int,int> OnDamageReceived;
     public Action OnDeath;
-
-    public override void FillWithData(BehaviourData behaviourData)
-    {
-        base.FillWithData(behaviourData);
-        if(behaviourData is DamageableBehaviourData damageableData)
-        {
-            currentHealth = damageableData.CurrentHealth;
-        }
-    }
     public virtual void ReceiveDamage(Damage damage, bool damageReturn = false)
     {
         if (!CanReceiveDamage) return;
@@ -375,21 +664,63 @@ public class DamageableBehaviour : Behaviour
             }
         }
     }
+
+    public void IncreaseCurrentHealth(int value)
+    {
+        currentHealth += value;
+
+        if(currentHealth < 1)
+            currentHealth = 1;
+    }
+
+    public void IncreaseMaxHealth(int valuse)
+    {
+        maxHealth += valuse;
+
+        if (maxHealth < 1)
+            maxHealth = 1;
+    }
+
+    public void SetCurrentHealth(int currentHealth)
+    {
+        this.currentHealth = currentHealth;
+
+        if (this.currentHealth < 1)
+            this.currentHealth = 1;
+    }
+
+    public void SetMaxHealth(int maxHealth)
+    {
+        this.maxHealth = maxHealth;
+
+        if(this.maxHealth < 1)
+            this.maxHealth = 1;
+    }
     public override BehaviourData GetBehaviourData() => new DamageableBehaviourData(this);
 }
 
 public class MeleeAttackBehaviour : AttackBehaviour
 {
-    public MeleeAttackBehaviour() : base() { }
-    public MeleeAttackBehaviour(MeleeAttackBlueprint blueprint) : base(blueprint) { }
+    protected MeleeAttackBehaviour() : base() { }
+    #region Builder
+    public class Builder : Builder<MeleeAttackBehaviour, MeleeAttackBlueprint, MeleeAttackData>
+    {
+        public Builder() : base(new MeleeAttackBehaviour()) { }
+    }
+    #endregion
     public override BehaviourData GetBehaviourData() => new MeleeAttackData(this);
     protected override Damage CreateDamage() => new Damage(AttackDamage, DamageType.Physical, Owner);
 }
 
 public class RangedAttackBehaviour : AttackBehaviour
 {
-    public RangedAttackBehaviour() : base() { }
-    public RangedAttackBehaviour(RangedAttackBlueprint blueprint) : base(blueprint) { }
+    protected RangedAttackBehaviour() : base() { }
+    #region Builder
+    public class Builder : Builder<RangedAttackBehaviour, RangedAttackBlueprint, RangedAttackData>
+    {
+        public Builder() : base(new RangedAttackBehaviour()) { }
+    }
+    #endregion
     public override BehaviourData GetBehaviourData() => new RangedAttackData(this);
     protected override Damage CreateDamage() => new Damage(AttackDamage, DamageType.Physical, Owner);
 }

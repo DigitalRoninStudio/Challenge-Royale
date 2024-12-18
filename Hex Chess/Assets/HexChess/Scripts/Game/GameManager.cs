@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.Networking.Transport;
 using UnityEngine;
+using static UnityEngine.EventSystems.EventTrigger;
 
 public class LocalPlayer : Singleton<LocalPlayer>
 {
@@ -57,7 +58,6 @@ public class LocalPlayer : Singleton<LocalPlayer>
         if (game.IsPlayerHasInitiation(player))
         {
             Sender.ClientSendData(new NetEndRound() { MatchId = game.GUID }, Pipeline.Reliable);
-            Debug.Log("END ROUND");
         }
     }
 
@@ -70,7 +70,6 @@ public class LocalPlayer : Singleton<LocalPlayer>
         if (game.IsPlayerHasInitiation(player))
         {
             Sender.ClientSendData(new NetHandOverTheInitiative() { MatchId = game.GUID }, Pipeline.Reliable);
-            Debug.Log("END INITIATION");
         }
     }
 
@@ -253,6 +252,7 @@ public class GameManager : Singleton<GameManager>
             string json = GameManager.Instance.GetGameJson(GetFirstMatch());
             Debug.Log(json);
         }
+        
     }
 
     private void OnDestroy()

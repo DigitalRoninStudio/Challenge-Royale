@@ -65,6 +65,12 @@ MonoBehaviour:
     - {fileID: 11400000, guid: 8467ea45ec2f7224bacc1106bde9d42a, type: 2}
     - {fileID: 11400000, guid: 24b9cd5836382df49a11efa200e8399f, type: 2}
     - {fileID: 11400000, guid: a38e068f2a1c92642a83c1e0550be834, type: 2}
+    AbilityBehaviourBlueprints:
+    - {fileID: 11400000, guid: c892b1c81614e6f468284820ba02456d, type: 2}
   StatusEffectBlueprintsContainer:
     StunBlueprints:
     - {fileID: 11400000, guid: 6428ded00715ffb49847a04a09bbff2b, type: 2}
+    DisarmBlueprints: []
+    RootBlueprints: []
+    DamageImmuneBlueprints: []
+    ShieldBlueprints: []

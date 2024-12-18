@@ -2,37 +2,50 @@
 
 public class Stun : StatusEffect
 {
-    public Stun() : base() { }
-    public Stun(StunBlueprint blueprint) : base(blueprint) { }
-
+    #region Builder
+    public class Builder : Builder<Stun, StunBlueprint, StunData>
+    {
+    }
+    #endregion
     public override StatusEffectData GetStatusEffectData() => new StunData(this);
 }
 
 public class Disarm : StatusEffect
 {
-    public Disarm() : base() { }
-    public Disarm(DisarmBlueprint blueprint) : base(blueprint) { }
-
+    #region Builder
+    public class Builder : Builder<Disarm, DisarmBlueprint, DisarmData>
+    {
+    }
+    #endregion
     public override StatusEffectData GetStatusEffectData() => new DisarmData(this);
 }
 
 public class Root : StatusEffect
 {
-    public Root() : base() { }
-    public Root(RootBlueprint blueprint) : base(blueprint) { }
-
+    #region Builder
+    public class Builder : Builder<Root, RootBlueprint, RootData>
+    {
+    }
+    #endregion
     public override StatusEffectData GetStatusEffectData() => new RootData(this);
 }
 
 public class DamageImmune : StatusEffect
 {
     public DamageType DamageType { get; private set; }
-    public DamageImmune() : base() { }
-    public DamageImmune(DamageImmuneBlueprint blueprint) : base(blueprint) 
-    {
-        DamageType = blueprint.DamageType;
-    }
 
+    #region Builder
+    public class Builder : Builder<DamageImmune, DamageImmuneBlueprint, DamageImmuneData>
+    {
+        public new  Builder WithBlueprint(DamageImmuneBlueprint blueprint)
+        {
+            base.WithBlueprint(blueprint);
+            _statusEffect.DamageType = blueprint.DamageType;
+
+            return this;
+        }
+    }
+    #endregion
     public override StatusEffectData GetStatusEffectData() => new DamageImmuneData(this);
 }
 
@@ -40,11 +53,18 @@ public class DamageReturn : StatusEffect
 {
     public float ReturnPercentage { get; private set; }
 
-    public DamageReturn() : base() { }
-    public DamageReturn(DamageReturnBlueprint blueprint) : base(blueprint) 
+    #region Builder
+    public class Builder : Builder<DamageReturn, DamageReturnBlueprint, DamageReturnData>
     {
-        ReturnPercentage = blueprint.ReturnPercentage;
+        public new Builder WithBlueprint(DamageReturnBlueprint blueprint)
+        {
+            base.WithBlueprint(blueprint);
+            _statusEffect.ReturnPercentage = blueprint.ReturnPercentage;
+
+            return this;
+        }
     }
+    #endregion
 
     public override StatusEffectData GetStatusEffectData() => new DamageReturnData(this);
 }
@@ -55,22 +75,29 @@ public class Shield : StatusEffect
     public DamageType DamageType { get; private set; }
     public int MaxHealth { get; private set; }
     public int CurrentHealth { get; private set; }
-    public Shield() : base() { }
-    public Shield(ShieldBlueprint blueprint) : base(blueprint)
-    {
-        DamageType = blueprint.DamageType;
-        MaxHealth = blueprint.MaxShieldHealth;
-        CurrentHealth = blueprint.MaxShieldHealth;
-    }
 
-    public override void FillWithData(StatusEffectData statusEffectData)
+    #region Builder
+    public class Builder : Builder<Shield, ShieldBlueprint, ShieldData>
     {
-        base.FillWithData(statusEffectData);
-        if (statusEffectData is ShieldData shieldData)
+        public new Builder WithBlueprint(ShieldBlueprint blueprint)
         {
-            CurrentHealth = shieldData.CurrentHealth;
+            base.WithBlueprint(blueprint);
+            _statusEffect.DamageType = blueprint.DamageType;
+            _statusEffect.MaxHealth = blueprint.MaxShieldHealth;
+            _statusEffect.CurrentHealth = blueprint.MaxShieldHealth;
+
+            return this;
+        }
+
+        public new Builder WithData(ShieldData shieldData)
+        {
+            base.WithData(shieldData);
+            _statusEffect.CurrentHealth = shieldData.CurrentHealth;
+
+            return this;
         }
     }
+    #endregion
 
     public override StatusEffectData GetStatusEffectData() => new ShieldData(this);
 

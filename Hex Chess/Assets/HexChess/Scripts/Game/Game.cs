@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.Networking.Transport;
 using UnityEngine;
+using static UnityEngine.InputSystem.OnScreen.OnScreenStick;
 
 public class ActionController
 {
@@ -56,13 +57,17 @@ public class ActionController
         actionLifecycle.OnActionEnd += OnActionEndHandler;
         actionLifecycle.Enter();
 
-        if (Server.IsServer && actionLifecycle is INetAction serializable)
-            BroadcastActionToClients(game, serializable);
+        if (Server.IsServer && actionLifecycle is INetAction netAction)
+            BroadcastActionToClients(game, netAction);
     }
 
-    public static void BroadcastActionToClients(Game game, INetAction serializable)
+    public static void BroadcastActionToClients(Game game, INetAction netAction)
     {
-        NetGameAction responess = serializable.SerializeAction();
+        NetAction responess = new NetAction()
+        {
+            ActionType = netAction.ActionType,
+            Action = netAction.SerializeAction()
+        };
 
         foreach (var player in game.players)
         {
@@ -225,6 +230,19 @@ public class RandomGenerator
     {
         return (float)Next();
     }
+    public string NextGuid()
+    {
+        byte[] guidBytes = new byte[16];
+        byte[] doubleBytes = BitConverter.GetBytes(Next());
+
+        for (int i = 0; i < 8; i++)
+        {
+            guidBytes[i] = doubleBytes[i];
+            guidBytes[i + 8] = doubleBytes[i];
+        }
+
+        return Convert.ToBase64String(guidBytes);
+    }
 
     public uint GetSeed() => initialSeed;
 }
@@ -237,23 +255,63 @@ public static class GameFactory
         Entity entity = GameManager.Instance.GlobalData.FractionBlueprints
             .SelectMany(f => f.EntityBlueprints)
             .FirstOrDefault(e => e.Id == entityData.Id)
-            ?.CreateEntity();
-        entity.FillWithData(entityData);
+            ?.CreateEntity(entityData);
         return entity;
     }
 
-    public static Behaviour CreateBehaviour(BehaviourData behaviourData)
+    public static BehaviourBlueprint FindBehaviourBlueprint(BehaviourData behaviourData)
     {
-        Behaviour behaviour = GameManager.Instance.GlobalData.BehaviourDatasContainer.GetBehaviour(behaviourData);
-        behaviour.FillWithData(behaviourData);
-        return behaviour;
+        return GameManager.Instance.GlobalData.BehaviourDatasContainer.GetBehaviourBlueprint(behaviourData);
+    }
+    public static Modifier FindModifier(ModifierSource modifierSource, List<Entity> entities)
+    {
+        switch (modifierSource.SourceType)
+        {
+            case ModifierSourceType.BEHHAVIOUR:
+                return FindModifierInBehaviours(modifierSource, entities);
+
+            case ModifierSourceType.STATUS_EFFECT:
+                return FindModifierInStatusEffects(modifierSource, entities);
+
+            default:
+                return null;
+        }
+    }
+    private static Modifier FindModifierInBehaviours(ModifierSource modifierSource, List<Entity> entities)
+    {
+        var behaviour = entities
+            .SelectMany(e => e.Behaviours)
+            .FirstOrDefault(b => b.guid == modifierSource.SourceGuid);
+
+        if (behaviour != null && behaviour is IModifierSource source)
+            return source.FindModifier(modifierSource.ModifierGuid);
+
+        return null;
     }
 
-    public static StatusEffect CreateStatusEffect(StatusEffectData statusEffectData)
+    private static Modifier FindModifierInStatusEffects(ModifierSource modifierSource, List<Entity> entities)
     {
-        StatusEffect statusEffect = GameManager.Instance.GlobalData.StatusEffectBlueprintsContainer.GetStatusEffect(statusEffectData);
-        statusEffect.FillWithData(statusEffectData);
-        return statusEffect;
+        var statusEffect = entities
+            .SelectMany(e => e.StatusEffectController.StatusEffects)
+            .FirstOrDefault(se => se.guid == modifierSource.SourceGuid);
+
+        if (statusEffect != null && statusEffect is IModifierSource source)
+            return source.FindModifier(modifierSource.ModifierGuid);
+
+        return null;
+    }
+    public static StatusEffect CreateStatusEffect(StatusEffectData statusEffectData, List<Entity> entities)
+    {
+        return entities
+        .Where(entity => entity.guid == statusEffectData.EntityGuid)
+        .SelectMany(entity => entity.Behaviours
+            .Where(behaviour => behaviour.guid == statusEffectData.BehaviourGuid)
+            .Select(matchedBehaviour =>
+            {
+                var statusEffectBlueprint = GameManager.Instance.GlobalData.StatusEffectBlueprintsContainer.GetStatusEffectBlueprint(statusEffectData);
+                return statusEffectBlueprint?.CreateStatusEffect(statusEffectData, matchedBehaviour);
+            }))
+        .FirstOrDefault();
     }
 
     public static Map CreateMap(MapData mapData)

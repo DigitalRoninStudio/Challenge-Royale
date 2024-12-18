@@ -4,9 +4,13 @@ using UnityEngine;
 
 public class NormalMovementBehaviour : MovementBehaviour
 {
-    public NormalMovementBehaviour() { }
-    public NormalMovementBehaviour(NormalMovementBlueprint blueprint) : base(blueprint) { }
-
+    protected NormalMovementBehaviour() : base() { }
+    #region Builder
+    public class Builder : Builder<NormalMovementBehaviour, NormalMovementBlueprint, NormalMovementData>
+    {
+        public Builder() : base(new NormalMovementBehaviour()) { }
+    }
+    #endregion
     public override void SetPath(Tile end)
     {
         base.SetPath(end);
@@ -41,8 +45,13 @@ public class NormalMovementBehaviour : MovementBehaviour
 
 public class KnightMovementBehaviour : MovementBehaviour
 {
-    public KnightMovementBehaviour() { }
-    public KnightMovementBehaviour(KnightMovementBlueprint blueprint) : base(blueprint) { }
+    protected KnightMovementBehaviour() : base() { }
+    #region Builder
+    public class Builder : Builder<KnightMovementBehaviour, KnightMovementBlueprint, KnightMovementData>
+    {
+        public Builder() : base(new KnightMovementBehaviour()) { }
+    }
+    #endregion
 
     public override List<Tile> GetAvailableTiles()
     {
@@ -98,8 +107,13 @@ public class KnightMovementBehaviour : MovementBehaviour
 
 public class TeleportMovementBehaviour : MovementBehaviour
 {
-    public TeleportMovementBehaviour() { }
-    public TeleportMovementBehaviour(TeleportMovementBlueprint blueprint) : base(blueprint) { }
+    protected TeleportMovementBehaviour() { }
+    #region Builder
+    public class Builder : Builder<TeleportMovementBehaviour, TeleportMovementBlueprint, TeleportMovementData>
+    {
+        public Builder() : base(new TeleportMovementBehaviour()) { }
+    }
+    #endregion
 
     public override void Execute()
     {
@@ -145,8 +159,13 @@ public class TeleportMovementBehaviour : MovementBehaviour
 
 public class DirectionMovementBehaviour : MovementBehaviour
 {
-    public DirectionMovementBehaviour() { }
-    public DirectionMovementBehaviour(DirectionMovementBlueprint blueprint) : base(blueprint) { }
+    protected DirectionMovementBehaviour() { }
+    #region Builder
+    public class Builder : Builder<DirectionMovementBehaviour, DirectionMovementBlueprint, DirectionMovementData>
+    {
+        public Builder() : base(new DirectionMovementBehaviour()) { }
+    }
+    #endregion
 
     public override List<Tile> GetAvailableTiles()
     {

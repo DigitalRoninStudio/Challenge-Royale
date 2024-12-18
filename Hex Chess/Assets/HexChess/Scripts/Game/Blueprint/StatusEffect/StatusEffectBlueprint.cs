@@ -9,5 +9,8 @@ public abstract class StatusEffectBlueprint : ScriptableObject
 
     public int Duration;
     public bool IsPermanent;
-    public abstract StatusEffect CreateStatusEffect();
+
+    public abstract StatusEffect CreateStatusEffect(Behaviour Owner);
+    public abstract StatusEffect CreateStatusEffect(RandomGenerator randomGenerator, Behaviour Owner);
+    public abstract StatusEffect CreateStatusEffect(StatusEffectData statusEffectData, Behaviour Owner);
 }

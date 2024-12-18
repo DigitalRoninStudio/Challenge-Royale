@@ -25,19 +25,22 @@ public class BehaviourBlueprintsContainer
     public List<BehaviourBlueprint> MovementBehaviourBlueprints = new List<BehaviourBlueprint>();
     public List<BehaviourBlueprint> AttackBehaviourBlueprints = new List<BehaviourBlueprint>();
     public List<BehaviourBlueprint> DamageableBehaviourBlueprints = new List<BehaviourBlueprint>();
+    public List<BehaviourBlueprint> AbilityBehaviourBlueprints = new List<BehaviourBlueprint>();
 
-    public Behaviour GetBehaviour(BehaviourData behaviourData)
+    public BehaviourBlueprint GetBehaviourBlueprint(BehaviourData behaviourData)
     {
         Behaviour behaviour = null;
 
-        if(behaviourData is MovementBehaviourData)
-            behaviour = MovementBehaviourBlueprints.FirstOrDefault(b => b.Id == behaviourData.Id)?.CreateBehaviour();
-        else if(behaviourData is AttackBehaviourData)
-            behaviour = AttackBehaviourBlueprints.FirstOrDefault(b => b.Id == behaviourData.Id)?.CreateBehaviour();
-        else if(behaviourData is DamageableBehaviourData)
-            behaviour = DamageableBehaviourBlueprints.FirstOrDefault(b => b.Id == behaviourData.Id)?.CreateBehaviour();
+        if (behaviourData is MovementBehaviourData)
+            return MovementBehaviourBlueprints.FirstOrDefault(b => b.Id == behaviourData.Id);
+        else if (behaviourData is AttackBehaviourData)
+            return AttackBehaviourBlueprints.FirstOrDefault(b => b.Id == behaviourData.Id);
+        else if (behaviourData is DamageableBehaviourData)
+            return DamageableBehaviourBlueprints.FirstOrDefault(b => b.Id == behaviourData.Id);
+        else if (behaviourData is AbilityBehaviourData)
+            return AbilityBehaviourBlueprints.FirstOrDefault(b => b.Id == behaviourData.Id);
 
-        return behaviour;
+        return null;
     }
 
 }
@@ -51,22 +54,20 @@ public class StatusEffectBlueprintsContainer
     public List<StatusEffectBlueprint> DamageImmuneBlueprints = new List<StatusEffectBlueprint>();
     public List<StatusEffectBlueprint> ShieldBlueprints = new List<StatusEffectBlueprint>();
 
-    public StatusEffect GetStatusEffect(StatusEffectData statusEffectData)
+    public StatusEffectBlueprint GetStatusEffectBlueprint(StatusEffectData statusEffectData)
     {
-        StatusEffect statusEffect = null;
-
-        if(statusEffectData is StunData)
-            statusEffect = StunBlueprints.FirstOrDefault(s => s.Id == statusEffectData.Id)?.CreateStatusEffect();
+        if (statusEffectData is StunData)
+            return StunBlueprints.FirstOrDefault(s => s.Id == statusEffectData.BlueprintId);//?.CreateStatusEffect(statusEffectData);
         if (statusEffectData is DisarmData)
-            statusEffect = DisarmBlueprints.FirstOrDefault(s => s.Id == statusEffectData.Id)?.CreateStatusEffect();
+            return DisarmBlueprints.FirstOrDefault(s => s.Id == statusEffectData.BlueprintId);
         if (statusEffectData is RootData)
-            statusEffect = RootBlueprints.FirstOrDefault(s => s.Id == statusEffectData.Id)?.CreateStatusEffect();
+            return RootBlueprints.FirstOrDefault(s => s.Id == statusEffectData.BlueprintId);
         if (statusEffectData is DamageImmuneData)
-            statusEffect = DamageImmuneBlueprints.FirstOrDefault(s => s.Id == statusEffectData.Id)?.CreateStatusEffect();
+            return DamageImmuneBlueprints.FirstOrDefault(s => s.Id == statusEffectData.BlueprintId);
         if (statusEffectData is ShieldData)
-            statusEffect = ShieldBlueprints.FirstOrDefault(s => s.Id == statusEffectData.Id)?.CreateStatusEffect();
+            return ShieldBlueprints.FirstOrDefault(s => s.Id == statusEffectData.BlueprintId);
 
-        return statusEffect;
+        return null;
     }
 }
 

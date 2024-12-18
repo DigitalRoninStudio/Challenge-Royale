@@ -1,4 +1,5 @@
 ﻿
+using Newtonsoft.Json;
 using System;
 using UnityEngine;
 
@@ -21,6 +22,7 @@ public class RoundController
 
     public void EndRound()
     {
+        Debug.Log("END ROUND");
         bool shouldRoll = false;
         foreach (Player player in game.players)
         {
@@ -92,6 +94,7 @@ public class RoundController
 
     public void SwitchInitiation()
     {
+        Debug.Log("Switch Initiation");
         teamWithInitiation = teamWithInitiation == Team.GOOD_BOYS ? Team.BAD_BOYS : Team.GOOD_BOYS;
 
         foreach (var player in game.players)
@@ -101,6 +104,7 @@ public class RoundController
 
     public void EndRoundAndSwitchInitiation()
     {
+        Debug.Log("End Round And Switch Initiation");
         SwitchInitiation();
         endTurnCalled = true;
     }
@@ -118,7 +122,8 @@ public class RoundController
 public class RoundAction : INetAction, ILifecycleAction
 {
     public bool EndRound;
-    public bool SwitchInitiation;
+    public bool SwitchInitiation; 
+    public ActionType ActionType => ActionType.ROUND;
     public Action OnActionStart { get; set; } = () => { };
     public Action OnActionExecuted { get; set; } = () => { };
     public Action OnActionEnd { get; set; } = () => { };
@@ -147,13 +152,22 @@ public class RoundAction : INetAction, ILifecycleAction
         OnActionEnd?.Invoke();
     }
 
-    public NetGameAction SerializeAction() => new NetRoundAction() { EndRound = this.EndRound, SwitchInitiation = this.SwitchInitiation };
-
-    public void DeserializeAction(NetGameAction gameAction)
+    public string SerializeAction()
     {
-        NetRoundAction responess = gameAction as NetRoundAction;
-        EndRound = responess.EndRound;
-        SwitchInitiation = responess.SwitchInitiation;
+        RoundActionData actionData = new RoundActionData()
+        {
+            EndRound = this.EndRound,
+            SwitchInitiation = this.SwitchInitiation
+        };
+
+        return JsonConvert.SerializeObject(actionData);
+    }
+
+    public void DeserializeAction(string actionJson)
+    {
+        RoundActionData actionData = JsonConvert.DeserializeObject<RoundActionData>(actionJson);
+        EndRound = actionData.EndRound;
+        SwitchInitiation = actionData.SwitchInitiation;
 
     }
 }

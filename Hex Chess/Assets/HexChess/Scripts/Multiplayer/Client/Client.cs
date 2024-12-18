@@ -1,3 +1,4 @@
+using Newtonsoft.Json;
 using System;
 using System.Linq;
 using Unity.Collections;
@@ -122,8 +123,8 @@ public class Client : INetworkService
             case OpCode.ON_WELCOME:
                 msg = new NetWelcome(reader);
                 break;
-            case OpCode.ON_GAME_ACTION:
-                msg = new NetGameAction(reader);
+            case OpCode.ON_ACTION:
+                msg = new NetAction(reader);
                 break;
             case OpCode.ON_SYNC_GAME:
                 msg = new NetSyncGame(reader);
@@ -142,7 +143,7 @@ public class Client : INetworkService
         {
             C_ON_KEEP_ALIVE_RESPONESS += OnKeepAliveResponess;
             C_ON_WELCOME_RESPONESS += OnWelcomeResponess;
-            C_ON_GAME_ACTION_RESPONESS += OnGameActionResponess;
+            C_ON_ACTION_RESPONESS += OnActionResponess;
             C_ON_SYNC_GAME_RESPONESS += OnGameSyncResponess;
 
         }
@@ -151,7 +152,7 @@ public class Client : INetworkService
         {
             C_ON_KEEP_ALIVE_RESPONESS -= OnKeepAliveResponess;
             C_ON_WELCOME_RESPONESS -= OnWelcomeResponess;
-            C_ON_GAME_ACTION_RESPONESS -= OnGameActionResponess;
+            C_ON_ACTION_RESPONESS -= OnActionResponess;
             C_ON_SYNC_GAME_RESPONESS -= OnGameSyncResponess;
 
         }
@@ -179,9 +180,9 @@ public class Client : INetworkService
             Sender.ClientSendData(message, Pipeline.Reliable);
         }
 
-        private void OnGameActionResponess(NetMessage message)
+        private void OnActionResponess(NetMessage message)
         {
-            if (message is not NetGameAction responess)
+            if (message is not NetAction responess)
             {
                 Debug.LogWarning("Invalid message received.");
                 return;
@@ -196,12 +197,12 @@ public class Client : INetworkService
 
             switch (responess.ActionType)
             {
-                case GameActionType.ON_BEHAVIOUR_ACTION:
-                    HandleBehaviourAction(match, responess as NetBehaviourAction);
+                case ActionType.BEHAVIOUR:
+                    HandleBehaviourAction(match, responess.Action);
                     break;
 
-                case GameActionType.ON_ROUND_ACTION:
-                    HandleRoundAction(match, responess as NetRoundAction);
+                case ActionType.ROUND:
+                    HandleRoundAction(match, responess.Action);
                     break;
 
                 default:
@@ -209,9 +210,10 @@ public class Client : INetworkService
                     break;
             }
         }
-        private void HandleBehaviourAction(Game game, NetBehaviourAction responess)
+        private void HandleBehaviourAction(Game game, string actionJson)
         {
-            if (responess == null)
+            BehaviourActionData actionData = JsonConvert.DeserializeObject<BehaviourActionData>(actionJson);
+            if (actionData == null)
             {
                 Debug.LogWarning("Invalid behaviour action received.");
                 return;
@@ -219,42 +221,42 @@ public class Client : INetworkService
 
             var entity = game.players
                   .SelectMany(player => player.entities)
-                  .FirstOrDefault(e => e.guid == responess.EntityGUID);
+                  .FirstOrDefault(e => e.guid == actionData.EntityGUID);
 
             if (entity == null)
             {
-                Debug.LogWarning($"Entity with GUID {responess.EntityGUID} not found.");
+                Debug.LogWarning($"Entity with GUID {actionData.EntityGUID} not found.");
                 return;
             }
 
             var behaviour = entity.Behaviours
-                .FirstOrDefault(b => b.guid == responess.BehaviourGUID);
+                .FirstOrDefault(b => b.guid == actionData.BehaviourGUID);
 
             if (behaviour is INetAction action)
             {
-                action.DeserializeAction(responess);
+                action.DeserializeAction(actionJson);
                 game.actionController.AddActionToWork(behaviour as ILifecycleAction);
             }
         }
 
-        private void HandleRoundAction(Game game, NetRoundAction roundAction)
+        private void HandleRoundAction(Game game, string actionJson)
         {
-            if (roundAction == null)
+            RoundActionData actionData = JsonConvert.DeserializeObject<RoundActionData>(actionJson);
+            if (actionData == null)
             {
                 Debug.LogWarning("Invalid round action received.");
                 return;
             }
 
             RoundAction action = new RoundAction();
-            action.DeserializeAction(roundAction);
-
-            game.actionController.AddActionToWork(roundAction as ILifecycleAction);
+            action.DeserializeAction(actionJson);
+            game.actionController.AddActionToWork(action);
         }        
 
         #region NetMessages Events
         public static Action<NetMessage> C_ON_KEEP_ALIVE_RESPONESS;
         public static Action<NetMessage> C_ON_WELCOME_RESPONESS;
-        public static Action<NetMessage> C_ON_GAME_ACTION_RESPONESS;
+        public static Action<NetMessage> C_ON_ACTION_RESPONESS;
         public static Action<NetMessage> C_ON_SYNC_GAME_RESPONESS;
         #endregion
     }

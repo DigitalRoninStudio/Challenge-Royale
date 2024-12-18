@@ -15,7 +15,8 @@ public abstract class EntityBlueprint : ScriptableObject
     public Sprite Icon;
     public bool Fliped;
 
-    //public abstract Entity CreateEntity(EntityData entityData, GameFactory factory);
     public abstract Entity CreateEntity();
+    public abstract Entity CreateEntity(RandomGenerator randomGenerator);
+    public abstract Entity CreateEntity(EntityData entityData);
 }
 

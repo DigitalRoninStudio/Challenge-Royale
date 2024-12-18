@@ -26,7 +26,7 @@ public class StatusEffectController
     }
     public void AddStatusEffect(StatusEffect statusEffect)
     {
-        if (statusEffect.Duration == 0 && !statusEffect.StatusEffectBlueprint.IsPermanent)
+        if (statusEffect.duration == 0 && !statusEffect.StatusEffectBlueprint.IsPermanent)
         {
             statusEffect.ExecuteEffect();
             return;
@@ -46,7 +46,7 @@ public class StatusEffectController
         {
             case StackType.Stacks:
                 Debug.Log("STACK");
-                statusEffect.Duration += existingEffect.Duration;
+                statusEffect.duration += existingEffect.duration;
                 RemoveStatusEffect(existingEffect);
 
                 statusEffects.Add(statusEffect);
@@ -108,8 +108,8 @@ public class StatusEffectController
     {
         if (statusEffect.StatusEffectBlueprint.IsPermanent) return false;
 
-        statusEffect.Duration--;
-        return statusEffect.Duration <= 0;
+        statusEffect.duration--;
+        return statusEffect.duration <= 0;
     }
     private StatusEffect GetExistingStatusEffect(StatusEffect newStatusEffect)
     {
