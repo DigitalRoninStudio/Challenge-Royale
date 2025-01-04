@@ -4,30 +4,27 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "Disarm", menuName = "StatusEffectBlueprint/Disarm")]
 public class DisarmBlueprint : StatusEffectBlueprint
 {
-    public override StatusEffect CreateStatusEffect(Behaviour owner)
+    public override StatusEffect CreateStatusEffect(Behaviour owner, Entity target)
     {
-        return new Disarm.Builder()
-             .WithGeneratedId(Guid.NewGuid().ToString())
+        return new Disarm.Builder(owner, target)
              .WithBlueprint(this)
-             .WithOwner(owner)
+             .WithGeneratedId()
              .Build();
     }
 
-    public override StatusEffect CreateStatusEffect(RandomGenerator randomGenerator, Behaviour owner)
+    public override StatusEffect CreateStatusEffect(RandomGenerator randomGenerator, Behaviour owner, Entity target)
     {
-        return new Disarm.Builder()
-            .WithGeneratedId(randomGenerator.NextGuid())
+        return new Disarm.Builder(owner, target)
             .WithBlueprint(this)
-            .WithOwner(owner)
+            .WithSyncGeneratedId(randomGenerator.NextGuid())
             .Build();
     }
 
-    public override StatusEffect CreateStatusEffect(StatusEffectData statusEffectData, Behaviour owner)
+    public override StatusEffect CreateStatusEffect(StatusEffectData statusEffectData, Behaviour owner, Entity target)
     {
-        return new Disarm.Builder()
+        return new Disarm.Builder(owner, target)
             .WithBlueprint(this)
             .WithData(statusEffectData as DisarmData)
-            .WithOwner(owner)
             .Build();
     }
 }

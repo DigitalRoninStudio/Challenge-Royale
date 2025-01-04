@@ -4,25 +4,25 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "NormalMovement", menuName = "BehaviourData/Movement/NormalMovement")]
 public class NormalMovementBlueprint : MovementBehaviourBlueprint
 {
-    public override Behaviour CreateBehaviour()
+    public override Behaviour CreateBehaviour(Entity owner)
     {
-        return new NormalMovementBehaviour.Builder()
-           .WithGeneratedId()
+        return new NormalMovementBehaviour.Builder(owner)
            .WithBlueprint(this)
+           .WithGeneratedId()
            .Build();
     }
 
-    public override Behaviour CreateBehaviour(RandomGenerator randomGenerator)
+    public override Behaviour CreateBehaviour(RandomGenerator randomGenerator, Entity owner)
     {
-        return new NormalMovementBehaviour.Builder()
-            .WithSyncGeneratedId(randomGenerator.NextGuid())
+        return new NormalMovementBehaviour.Builder(owner)
             .WithBlueprint(this)
+            .WithSyncGeneratedId(randomGenerator.NextGuid())
             .Build();
     }
 
-    public override Behaviour CreateBehaviour(BehaviourData behaviourData)
+    public override Behaviour CreateBehaviour(BehaviourData behaviourData, Entity owner)
     {
-        return new NormalMovementBehaviour.Builder()
+        return new NormalMovementBehaviour.Builder(owner)
             .WithBlueprint(this)
             .WithData(behaviourData as NormalMovementData)
             .Build();

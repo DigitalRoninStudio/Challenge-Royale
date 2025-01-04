@@ -8,6 +8,8 @@ public abstract class MovementBehaviour : Behaviour, ILifecycleAction ,INetActio
 {
     public float speed;
     public int range;
+    public Direction direction;
+    
 
     public Action<Tile, Tile> OnTileExit;
     public Action<Tile> OnTileEntered;
@@ -16,7 +18,7 @@ public abstract class MovementBehaviour : Behaviour, ILifecycleAction ,INetActio
     protected Tile currentTile;
 
     private Tile nextTile;
-    private Vector3 direction;
+    private Vector3 lookDirection;
     private Queue<float> steps;
     public ActionType ActionType => ActionType.BEHAVIOUR;
 
@@ -34,13 +36,23 @@ public abstract class MovementBehaviour : Behaviour, ILifecycleAction ,INetActio
         where TB : MovementBehaviourBlueprint
         where TD : MovementBehaviourData
     {
-        public Builder(T behaviour) : base(behaviour) { }
+        public Builder(T behaviour, Entity owner) : base(behaviour, owner) { }
 
         public new Builder<T, TB, TD> WithBlueprint(TB blueprint)
         {
             base.WithBlueprint(blueprint);
             _behaviour.speed = blueprint.Speed;
             _behaviour.range = blueprint.Range;
+            return this;
+        }
+        public new Builder<T, TB, TD> WithData(TD behaviourData)
+        {
+            base.WithData(behaviourData);
+            _behaviour.direction = behaviourData.Direction;
+
+            Vector2Int dir = HexagonMap.directionToCoordinate[behaviourData.Direction];
+            Vector3 direction = new Vector3(dir.x, dir.y, 0).normalized;
+            _behaviour.Owner.GameObject.transform.GetChild(0).rotation = Quaternion.FromToRotation(Vector3.up, direction);
             return this;
         }
     }
@@ -70,8 +82,14 @@ public abstract class MovementBehaviour : Behaviour, ILifecycleAction ,INetActio
         if (nextTile == null && path.Count > 0)
         {
             nextTile = path.Dequeue();
+            var cooridnateDirection = nextTile.coordinate - currentTile.coordinate;
+            if(cooridnateDirection != Vector2Int.zero)
+            {
+                var unitCoordinate = HexagonMap.TransformCoordinatesToUnitCoordinates(cooridnateDirection);
+                direction = HexagonMap.coordinateToDirection[unitCoordinate];
+            }
 
-            direction = (nextTile.GetPosition() - Owner.GameObject.transform.position).normalized;
+            lookDirection = (nextTile.GetPosition() - Owner.GameObject.transform.position).normalized;
             float movePerFrame = speed * Time.fixedDeltaTime;
             float distance = Vector3.Distance(nextTile.GetPosition(), Owner.GameObject.transform.position);
             int numberOfSteps = Mathf.FloorToInt(distance / movePerFrame);
@@ -79,20 +97,27 @@ public abstract class MovementBehaviour : Behaviour, ILifecycleAction ,INetActio
             for (int i = 0; i < numberOfSteps; i++)
                 steps.Enqueue(movePerFrame);
 
-            OnTileExit?.Invoke(currentTile, nextTile);
+            if (cooridnateDirection != Vector2Int.zero)
+                OnTileExit?.Invoke(currentTile, nextTile);
         }
 
         if (steps.Count == 0)
         {
+            var cooridnateDirection = nextTile.coordinate - currentTile.coordinate;
+
             currentTile.RemoveEntity(Owner);
             currentTile = nextTile;
             currentTile.AddEntity(Owner);
             nextTile = null;
 
-            OnTileEntered?.Invoke(currentTile);
+            if (cooridnateDirection != Vector2Int.zero)
+                OnTileEntered?.Invoke(currentTile);
         }
         else
-            Owner.GameObject.transform.position += direction * steps.Dequeue();
+        {
+            Owner.GameObject.transform.position += lookDirection * steps.Dequeue();
+            Owner.GameObject.transform.GetChild(0).rotation = Quaternion.FromToRotation(Vector3.up, lookDirection);
+        }
 
     }
 
@@ -157,7 +182,7 @@ public abstract class AbilityBehaviour : Behaviour
         where TB : AbilityBlueprint
         where TD : AbilityBehaviourData
     {
-        public Builder(T behaviour) : base(behaviour) { }
+        public Builder(T behaviour, Entity owner) : base(behaviour, owner) { }
     }
     #endregion
 
@@ -172,7 +197,7 @@ public abstract class PassiveAbility : AbilityBehaviour
         where TB : PassiveAbilityBlueprint
         where TD : PassiveAbilityBehaviourData
     {
-        public Builder(T behaviour) : base(behaviour) { }
+        public Builder(T behaviour, Entity owner) : base(behaviour, owner) { }
     }
     #endregion
 
@@ -204,7 +229,7 @@ public abstract class ActiveAbility : AbilityBehaviour, ILifecycleAction, INetAc
         where TB : ActiveAbilityBlueprint
         where TD : ActiveAbilityBehaviourData
     {
-        public Builder(T behaviour) : base(behaviour) { }
+        public Builder(T behaviour, Entity owner) : base(behaviour, owner) { }
 
         public new Builder<T, TB, TD> WithBlueprint(TB blueprint)
         {
@@ -257,35 +282,60 @@ public abstract class ActiveAbility : AbilityBehaviour, ILifecycleAction, INetAc
     public abstract void DeserializeAction(string action);
 }
 
-public class SwordsmanSpecial : ActiveAbility, IToggleable, IModifierSource
+public class SwordsmanSpecial : ActiveAbility, IToggleable
 {
     public bool IsToogle => toggle;
 
     private bool toggle = false;
 
-    public HealthModifier healthModifier;
+    public DamageModifierBlueprint damageModifierBlueprint;
+    public string damageModifierInstanceId = "";
+    public HealthModifierBlueprint healthModifierBlueprint;
+    public string healthModifierInstanceId = "";
+
+    private HashSet<Tile> subscribedTiles = new HashSet<Tile>();
+
 
     #region Builder
     public class Builder : Builder<SwordsmanSpecial, SwordsmanSpecialBlueprint, SwordsmanSpecialData>
     {
-        public Builder() : base(new SwordsmanSpecial()) { }
+        public Builder(Entity owner) : base(new SwordsmanSpecial(), owner) { }
 
         public new Builder WithGeneratedId()
         {
             base.WithGeneratedId();
-            _behaviour.healthModifier.guid = Guid.NewGuid().ToString();
-            _behaviour.healthModifier.modifierSource = _behaviour;
+
+            // we add a damage modifier to the creation of the swordsman special
+            if (_behaviour.Owner.HasBehaviour<AttackBehaviour>())
+            {
+                DamageModifier damageModifier = _behaviour.damageModifierBlueprint.CreateStatusEffect(_behaviour, _behaviour.Owner) as DamageModifier;
+                _behaviour.Owner.StatusEffectController.AddStatusEffect(damageModifier);
+                _behaviour.damageModifierInstanceId = damageModifier.guid;
+            }
 
             return this;
-
         }
+        public new Builder WithSyncGeneratedId(string guid)
+        {
+            base.WithSyncGeneratedId(guid);
+
+            // we add a damage modifier to the creation of the swordsman special
+            if (_behaviour.Owner.HasBehaviour<AttackBehaviour>())
+            {
+                DamageModifier damageModifier = _behaviour.damageModifierBlueprint.CreateStatusEffect(_behaviour.Owner.Owner.match.randomGenerator, _behaviour, _behaviour.Owner) as DamageModifier;
+                _behaviour.Owner.StatusEffectController.AddStatusEffect(damageModifier);
+                _behaviour.damageModifierInstanceId = damageModifier.guid;
+            }
+
+            return this;
+        }
+
+
         public new Builder WithBlueprint(SwordsmanSpecialBlueprint blueprint)
         {
             base.WithBlueprint(blueprint);
-            _behaviour.healthModifier = new HealthModifier() 
-            {
-                value = blueprint.HealthModifierValue 
-            };
+            _behaviour.healthModifierBlueprint = blueprint.HealthBlueprint;
+            _behaviour.damageModifierBlueprint = blueprint.DamageBlueprint;
 
             return this;
         }
@@ -294,12 +344,26 @@ public class SwordsmanSpecial : ActiveAbility, IToggleable, IModifierSource
         {
             base.WithData(behaviourData);
             _behaviour.toggle = behaviourData.Toggle;
-            _behaviour.healthModifier.guid = behaviourData.HealthModifierData.Guid;
-            _behaviour.healthModifier.modifierSource = _behaviour;
+            _behaviour.damageModifierInstanceId = behaviourData.DamageModifierInstanceId;
+            _behaviour.healthModifierInstanceId = behaviourData.HealthModifierInstanceId;
+
+            return this;
+        }
+
+        public Builder WithSubscription()
+        {
+            if (Server.IsServer)
+                if (_behaviour.Owner.TryGetBehaviour<MovementBehaviour>(out var movementBehaviour))
+                {
+                    movementBehaviour.OnTileEntered += _behaviour.OnSwordsmanEnterTile;
+                    movementBehaviour.OnTileExit += _behaviour.OnSwordsmanExitTile;
+                    //TODO UNSUBSCRIBE ON DEATH
+                }
 
             return this;
         }
     }
+
     #endregion
 
     public override void Execute()
@@ -366,33 +430,150 @@ public class SwordsmanSpecial : ActiveAbility, IToggleable, IModifierSource
 
     public void Activated()
     {
-        Owner.ModifierController.AddModifier(healthModifier);
+        //Remove Damage Modifier
+        if(!string.IsNullOrEmpty(damageModifierInstanceId))
+        {
+            var damageModifier = Owner.StatusEffectController
+               .GetStatusEffectsOfType<DamageModifier>()
+               .FirstOrDefault(d => d.guid == damageModifierInstanceId);
+
+            if (damageModifier != null)
+                Owner.StatusEffectController.RemoveStatusEffect(damageModifier);
+        }
+
+        //Add Health Modifier
+        if(Owner.HasBehaviour<DamageableBehaviour>())
+        {
+            HealthModifier healthModifier = healthModifierBlueprint.CreateStatusEffect(Owner.Owner.match.randomGenerator, this, Owner) as HealthModifier;
+            Owner.StatusEffectController.AddStatusEffect(healthModifier);
+            healthModifierInstanceId = healthModifier.guid;
+        }
+
+        if (Owner.TryGetBehaviour<MovementBehaviour>(out var movementBehaviour))
+        {
+            Tile tile = Map.GetTile(Owner);
+            if (tile != null)
+            {
+                var unitDirection = Map.DirectionToCoordinate(movementBehaviour.direction);
+                SubscribeToTiles(tile, unitDirection);
+            }
+
+        }
+
         toggle = true;
     }
 
     public void Deactivated()
     {
-        Owner.ModifierController.RemoveModifier(healthModifier);
+        //Remove Health Modifier
+        if (!string.IsNullOrEmpty(healthModifierInstanceId))
+        {
+            var healthModifier = Owner.StatusEffectController
+               .GetStatusEffectsOfType<HealthModifier>()
+               .FirstOrDefault(d => d.guid == healthModifierInstanceId);
+
+            if (healthModifier != null)
+                Owner.StatusEffectController.RemoveStatusEffect(healthModifier);
+        }
+
+        //Add Damage Modifier
+        if (Owner.HasBehaviour<AttackBehaviour>())
+        {
+            DamageModifier damageModifier = damageModifierBlueprint.CreateStatusEffect(Owner.Owner.match.randomGenerator, this, Owner) as DamageModifier;
+            Owner.StatusEffectController.AddStatusEffect(damageModifier);
+            damageModifierInstanceId = damageModifier.guid;
+        }
+
+        UnsubscribeFromTiles();
+
         toggle = false;
     }
 
-    public Modifier FindModifier(string guid)
+
+    // Happens only on server because we only subscribe on server and not on client
+    private void OnSwordsmanEnterTile(Tile tile)
     {
-        if (healthModifier.guid == guid)
-            return healthModifier;
-
-        return null;
-    }
-
-
-    public ModifierSource GetModifierSource()
-    {
-        return new ModifierSource()
+        if (toggle) // defense
         {
-            SourceGuid = guid,
-            SourceType = ModifierSourceType.BEHHAVIOUR
-        };
+            // subs on 3 facing fields
+            if (Owner.TryGetBehaviour<MovementBehaviour>(out var movementBehaviour))
+            {
+                var unitDirection = Map.DirectionToCoordinate(movementBehaviour.direction);
+                SubscribeToTiles(tile, unitDirection);
+            }
+        }
+        else // attack
+        {
+            // try to attack face field
+            if (Owner.TryGetBehaviour<MovementBehaviour>(out var movementBehaviour))
+            {
+                if (HexagonMap.directionToCoordinate.TryGetValue(movementBehaviour.direction, out var unitCoordinate))
+                {
+                    Tile faceTile = Map.GetTile(tile.coordinate + unitCoordinate);
+                    if(faceTile != null)
+                    {
+                        foreach (var entity in faceTile.GetEntities())
+                        {
+                            if(entity.Team != Owner.Team && 
+                                Owner.TryGetBehaviour<AttackBehaviour>(out var attackBehaviour) && 
+                                entity.TryGetBehaviour<DamageableBehaviour>(out var damageableBehaviour))
+                            {
+                                attackBehaviour.SetAttack(damageableBehaviour);
+                                Owner.Owner.match.actionController.AddActionToWork(attackBehaviour);
+                            }
+                        }
+                    }
+                }
+            }
+
+        }
     }
+
+    private void OnFacedTileBeenOccupied(Entity entity)
+    {
+        if (entity.Team != Owner.Team &&
+            Owner.TryGetBehaviour<AttackBehaviour>(out var attackBehaviour) &&
+            entity.TryGetBehaviour<DamageableBehaviour>(out var damageableBehaviour))
+        {
+            attackBehaviour.SetAttack(damageableBehaviour);
+            Owner.Owner.match.actionController.AddActionToWork(attackBehaviour);
+        }
+    }
+
+
+    private void OnSwordsmanExitTile(Tile previous, Tile current)
+    {
+        UnsubscribeFromTiles();
+    }
+
+    private void SubscribeToTiles(Tile tile, Vector2Int unitCoordinate)
+    {
+        var directionCoordinate = Map.CoordinateToDirection(unitCoordinate);
+        (Vector2Int left, Vector2Int right) leftAndRightUnitCoordinate = HexagonMap.GetLeftAndRightCoordinate(directionCoordinate);
+
+        SubscribeToTile(Map.GetTile(tile.coordinate + unitCoordinate));
+        SubscribeToTile(Map.GetTile(tile.coordinate + leftAndRightUnitCoordinate.left));
+        SubscribeToTile(Map.GetTile(tile.coordinate + leftAndRightUnitCoordinate.right));
+    }
+
+
+    private void SubscribeToTile(Tile tile)
+    {
+        if (tile != null && !subscribedTiles.Contains(tile))
+        {
+            tile.OnOccupied += OnFacedTileBeenOccupied;
+            subscribedTiles.Add(tile);
+        }
+    }
+
+    private void UnsubscribeFromTiles()
+    {
+        foreach (var tile in subscribedTiles)
+            tile.OnOccupied -= OnFacedTileBeenOccupied;
+
+        subscribedTiles.Clear();
+    }
+
 }
 
 public interface IToggleable
@@ -432,7 +613,7 @@ public abstract class AttackBehaviour : Behaviour, INetAction, ITileSelection, I
         where TB : AttackBehaviourBlueprint
         where TD : AttackBehaviourData
     {
-        public Builder(T behaviour) : base(behaviour) { }
+        public Builder(T behaviour, Entity owner) : base(behaviour, owner) { }
 
         public new Builder<T, TB, TD> WithBlueprint(TB blueprint)
         {
@@ -441,6 +622,13 @@ public abstract class AttackBehaviour : Behaviour, INetAction, ITileSelection, I
             _behaviour.attackRange = blueprint.AttackRange;
             _behaviour.damageType = blueprint.DamageType;
             _behaviour.timeToPerformAttack = blueprint.TimeToPerformAttack;
+            return this;
+        }
+
+        public new Builder<T, TB, TD> WithData(TD behaviourData)
+        {
+            base.WithData(behaviourData);
+            _behaviour.baseDamage = behaviourData.BaseDamage;
             return this;
         }
     }
@@ -554,6 +742,11 @@ public abstract class AttackBehaviour : Behaviour, INetAction, ITileSelection, I
         if (damageable != null)
             SetAttack(damageable);
     }
+
+    public void ModifyDamage(int value)
+    {
+        baseDamage += value;
+    }
 }
 
 public class DamageableBehaviour : Behaviour
@@ -565,7 +758,7 @@ public class DamageableBehaviour : Behaviour
     #region Builder
     public class Builder : Builder<DamageableBehaviour, DamageableBlueprint, DamageableBehaviourData>
     {
-        public Builder() : base(new DamageableBehaviour()) { }
+        public Builder(Entity owner) : base(new DamageableBehaviour(), owner) { }
         public new Builder WithBlueprint(DamageableBlueprint blueprint)
         {
             base.WithBlueprint(blueprint);
@@ -577,6 +770,7 @@ public class DamageableBehaviour : Behaviour
         public new Builder WithData(DamageableBehaviourData behaviourData)
         {
             base.WithData(behaviourData);
+            _behaviour.maxHealth = behaviourData.MaxHealth;
             _behaviour.currentHealth = behaviourData.CurrentHealth;
 
             return this;
@@ -705,7 +899,7 @@ public class MeleeAttackBehaviour : AttackBehaviour
     #region Builder
     public class Builder : Builder<MeleeAttackBehaviour, MeleeAttackBlueprint, MeleeAttackData>
     {
-        public Builder() : base(new MeleeAttackBehaviour()) { }
+        public Builder(Entity owner) : base(new MeleeAttackBehaviour(), owner) { }
     }
     #endregion
     public override BehaviourData GetBehaviourData() => new MeleeAttackData(this);
@@ -718,7 +912,7 @@ public class RangedAttackBehaviour : AttackBehaviour
     #region Builder
     public class Builder : Builder<RangedAttackBehaviour, RangedAttackBlueprint, RangedAttackData>
     {
-        public Builder() : base(new RangedAttackBehaviour()) { }
+        public Builder(Entity owner) : base(new RangedAttackBehaviour(), owner) { }
     }
     #endregion
     public override BehaviourData GetBehaviourData() => new RangedAttackData(this);

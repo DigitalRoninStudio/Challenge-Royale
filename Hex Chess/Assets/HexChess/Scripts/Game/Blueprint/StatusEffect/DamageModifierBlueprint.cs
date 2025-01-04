@@ -1,12 +1,12 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
-[CreateAssetMenu(fileName = "Stun", menuName = "StatusEffectBlueprint/Stun")]
-public class StunBlueprint : StatusEffectBlueprint
+[CreateAssetMenu(fileName = "DamageModifier", menuName = "StatusEffectBlueprint/Modifiers/DamageModifier")]
+public class DamageModifierBlueprint : StatusEffectBlueprint
 {
+    public int Value;
     public override StatusEffect CreateStatusEffect(Behaviour owner, Entity target)
     {
-        return new Stun.Builder(owner, target)
+        return new DamageModifier.Builder(owner, target)
              .WithBlueprint(this)
              .WithGeneratedId()
              .Build();
@@ -14,7 +14,7 @@ public class StunBlueprint : StatusEffectBlueprint
 
     public override StatusEffect CreateStatusEffect(RandomGenerator randomGenerator, Behaviour owner, Entity target)
     {
-        return new Stun.Builder(owner, target)
+        return new DamageModifier.Builder(owner, target)
             .WithBlueprint(this)
             .WithSyncGeneratedId(randomGenerator.NextGuid())
             .Build();
@@ -22,9 +22,9 @@ public class StunBlueprint : StatusEffectBlueprint
 
     public override StatusEffect CreateStatusEffect(StatusEffectData statusEffectData, Behaviour owner, Entity target)
     {
-        return new Stun.Builder(owner, target)
+        return new DamageModifier.Builder(owner, target)
             .WithBlueprint(this)
-            .WithData(statusEffectData as StunData)
+            .WithData(statusEffectData as DamageModifierData)
             .Build();
     }
 }

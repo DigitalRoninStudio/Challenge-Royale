@@ -161,7 +161,7 @@ public class Client : INetworkService
         {
             NetSyncGame responess = message as NetSyncGame;
             GameManager.Instance.CreateMatch(responess.gameData, true);
-            Debug.Log(GameManager.Instance.GetGameJson(GameManager.Instance.GetFirstMatch()));
+
             NetworkLogger.Log("CLIENT RECEIVER GAME");
         }
 

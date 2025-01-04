@@ -53,11 +53,13 @@ public class StatusEffectBlueprintsContainer
     public List<StatusEffectBlueprint> RootBlueprints = new List<StatusEffectBlueprint>();
     public List<StatusEffectBlueprint> DamageImmuneBlueprints = new List<StatusEffectBlueprint>();
     public List<StatusEffectBlueprint> ShieldBlueprints = new List<StatusEffectBlueprint>();
+    public List<StatusEffectBlueprint> HealthModifierBlueprints = new List<StatusEffectBlueprint>();
+    public List<StatusEffectBlueprint> DamageModifierBlueprints = new List<StatusEffectBlueprint>();
 
     public StatusEffectBlueprint GetStatusEffectBlueprint(StatusEffectData statusEffectData)
     {
         if (statusEffectData is StunData)
-            return StunBlueprints.FirstOrDefault(s => s.Id == statusEffectData.BlueprintId);//?.CreateStatusEffect(statusEffectData);
+            return StunBlueprints.FirstOrDefault(s => s.Id == statusEffectData.BlueprintId);
         if (statusEffectData is DisarmData)
             return DisarmBlueprints.FirstOrDefault(s => s.Id == statusEffectData.BlueprintId);
         if (statusEffectData is RootData)
@@ -66,6 +68,10 @@ public class StatusEffectBlueprintsContainer
             return DamageImmuneBlueprints.FirstOrDefault(s => s.Id == statusEffectData.BlueprintId);
         if (statusEffectData is ShieldData)
             return ShieldBlueprints.FirstOrDefault(s => s.Id == statusEffectData.BlueprintId);
+        if (statusEffectData is HealthModifierData)
+            return HealthModifierBlueprints.FirstOrDefault(s => s.Id == statusEffectData.BlueprintId);
+        if (statusEffectData is DamageModifierData)
+            return DamageModifierBlueprints.FirstOrDefault(s => s.Id == statusEffectData.BlueprintId);
 
         return null;
     }

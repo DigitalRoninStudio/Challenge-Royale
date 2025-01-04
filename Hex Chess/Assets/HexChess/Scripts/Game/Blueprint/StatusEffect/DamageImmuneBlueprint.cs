@@ -6,30 +6,27 @@ public class DamageImmuneBlueprint : StatusEffectBlueprint
 {
     public DamageType DamageType;
 
-    public override StatusEffect CreateStatusEffect(Behaviour owner)
+    public override StatusEffect CreateStatusEffect(Behaviour owner, Entity target)
     {
-        return new DamageImmune.Builder()
-             .WithGeneratedId(Guid.NewGuid().ToString())
+        return new DamageImmune.Builder(owner, target)
              .WithBlueprint(this)
-             .WithOwner(owner)
+             .WithGeneratedId()
              .Build();
     }
 
-    public override StatusEffect CreateStatusEffect(RandomGenerator randomGenerator, Behaviour owner)
+    public override StatusEffect CreateStatusEffect(RandomGenerator randomGenerator, Behaviour owner, Entity target)
     {
-        return new DamageImmune.Builder()
-            .WithGeneratedId(randomGenerator.NextGuid())
+        return new DamageImmune.Builder(owner, target)
             .WithBlueprint(this)
-            .WithOwner(owner)
+            .WithSyncGeneratedId(randomGenerator.NextGuid())
             .Build();
     }
 
-    public override StatusEffect CreateStatusEffect(StatusEffectData statusEffectData, Behaviour owner)
+    public override StatusEffect CreateStatusEffect(StatusEffectData statusEffectData, Behaviour owner, Entity target)
     {
-        return new DamageImmune.Builder()
+        return new DamageImmune.Builder(owner, target)
             .WithBlueprint(this)
             .WithData(statusEffectData as DamageImmuneData)
-            .WithOwner(owner)
             .Build();
     }
 }

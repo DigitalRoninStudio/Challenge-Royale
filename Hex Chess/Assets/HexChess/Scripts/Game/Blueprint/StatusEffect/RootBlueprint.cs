@@ -4,30 +4,27 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "Root", menuName = "StatusEffectBlueprint/Root")]
 public class RootBlueprint : StatusEffectBlueprint
 {
-    public override StatusEffect CreateStatusEffect(Behaviour owner)
+    public override StatusEffect CreateStatusEffect(Behaviour owner, Entity target)
     {
-        return new Root.Builder()
-             .WithGeneratedId(Guid.NewGuid().ToString())
+        return new Root.Builder(owner, target)
              .WithBlueprint(this)
-             .WithOwner(owner)
+             .WithGeneratedId()
              .Build();
     }
 
-    public override StatusEffect CreateStatusEffect(RandomGenerator randomGenerator, Behaviour owner)
+    public override StatusEffect CreateStatusEffect(RandomGenerator randomGenerator, Behaviour owner, Entity target)
     {
-        return new Root.Builder()
-            .WithGeneratedId(randomGenerator.NextGuid())
+        return new Root.Builder(owner, target)
             .WithBlueprint(this)
-            .WithOwner(owner)
+            .WithSyncGeneratedId(randomGenerator.NextGuid())
             .Build();
     }
 
-    public override StatusEffect CreateStatusEffect(StatusEffectData statusEffectData, Behaviour owner)
+    public override StatusEffect CreateStatusEffect(StatusEffectData statusEffectData, Behaviour owner, Entity target)
     {
-        return new Root.Builder()
+        return new Root.Builder(owner, target)
             .WithBlueprint(this)
             .WithData(statusEffectData as RootData)
-            .WithOwner(owner)
             .Build();
     }
 }

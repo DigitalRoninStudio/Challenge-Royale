@@ -5,25 +5,25 @@ using UnityEngine;
 public class DamageableBlueprint : BehaviourBlueprint
 {
     public int MaxHealth;
-    public override Behaviour CreateBehaviour()
+    public override Behaviour CreateBehaviour(Entity owner)
     {
-        return new DamageableBehaviour.Builder()
-           .WithGeneratedId()
+        return new DamageableBehaviour.Builder(owner)
            .WithBlueprint(this)
+           .WithGeneratedId()
            .Build();
     }
 
-    public override Behaviour CreateBehaviour(RandomGenerator randomGenerator)
+    public override Behaviour CreateBehaviour(RandomGenerator randomGenerator, Entity owner)
     {
-        return new DamageableBehaviour.Builder()
-            .WithSyncGeneratedId(randomGenerator.NextGuid())
+        return new DamageableBehaviour.Builder(owner)
             .WithBlueprint(this)
+            .WithSyncGeneratedId(randomGenerator.NextGuid())
             .Build();
     }
 
-    public override Behaviour CreateBehaviour(BehaviourData behaviourData)
+    public override Behaviour CreateBehaviour(BehaviourData behaviourData, Entity owner)
     {
-        return new DamageableBehaviour.Builder()
+        return new DamageableBehaviour.Builder(owner)
             .WithBlueprint(this)
             .WithData(behaviourData as DamageableBehaviourData)
             .Build();

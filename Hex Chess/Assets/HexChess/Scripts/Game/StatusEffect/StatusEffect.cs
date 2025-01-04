@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public abstract class StatusEffect
@@ -5,6 +6,7 @@ public abstract class StatusEffect
     public string guid;
     public Behaviour owner;
     public int duration;
+    public Entity target;
     public StatusEffectBlueprint StatusEffectBlueprint { get; private set; }
     protected StatusEffect() { }
     #region Builder
@@ -14,33 +16,43 @@ public abstract class StatusEffect
        where TD : StatusEffectData
     {
         protected readonly T _statusEffect;
-
-        public Builder()
+        /*
+         
+          public Builder(T behaviour, Entity owner)
         {
-            _statusEffect = new T();
+            _behaviour = behaviour;
+            _behaviour.Owner = owner;
+        }
+         
+         */
+        public Builder(Behaviour owner, Entity target)
+        {
+            _statusEffect = new T(); 
+            _statusEffect.owner = owner;
+            _statusEffect.target = target;
         }
         public virtual Builder<T, TB, TD> WithBlueprint(TB blueprint)
         {
             _statusEffect.StatusEffectBlueprint = blueprint;
-            _statusEffect.duration = blueprint.Duration;
+            _statusEffect.duration = blueprint.Duration; 
             return this;
         }
 
-        public Builder<T, TB, TD> WithGeneratedId(string guid)
+        public Builder<T, TB, TD> WithGeneratedId()
+        {
+            _statusEffect.guid = Guid.NewGuid().ToString();
+            return this;
+        }
+        public Builder<T, TB, TD> WithSyncGeneratedId(string guid)
         {
             _statusEffect.guid = guid;
             return this;
         }
 
-        public Builder<T, TB, TD> WithOwner(Behaviour behaviour)
+        public virtual Builder<T, TB, TD> WithData(TD statisEffectData)
         {
-            _statusEffect.owner = behaviour;
-            return this;
-        }
-
-        public virtual Builder<T, TB, TD> WithData(TD entityData)
-        {
-            _statusEffect.duration = entityData.Duration;
+            _statusEffect.guid = statisEffectData.Guid;
+            _statusEffect.duration = statisEffectData.Duration;
             return this;
         }
 

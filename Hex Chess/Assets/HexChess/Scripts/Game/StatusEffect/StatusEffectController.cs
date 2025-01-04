@@ -37,7 +37,7 @@ public class StatusEffectController
         if (existingEffect == null)
         {
             statusEffects.Add(statusEffect);
-            Debug.Log("STATUS EFFECT ADDED");
+            Debug.Log($"STATUS EFFECT {statusEffect.GetType()} ADDED");
             statusEffect.ApplyEffect();
             return;
         }
@@ -73,6 +73,7 @@ public class StatusEffectController
     {
         statusEffects.Remove(statusEffect);
         statusEffect.RemoveEffect();
+        Debug.Log($"STATUS EFFECT {statusEffect.GetType()} REMOVED");
     }
     public bool HasStatusEffect<T>() where T : StatusEffect
     {

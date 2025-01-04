@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 public class Player
 {
@@ -40,7 +41,7 @@ public class Player
                 foreach (BehaviourData behaviourData in entityData.BehaviourDatas)
                 {
                     var blueprint = GameFactory.FindBehaviourBlueprint(behaviourData);
-                    Behaviour behaviour = blueprint?.CreateBehaviour(behaviourData); 
+                    Behaviour behaviour = blueprint?.CreateBehaviour(behaviourData, entity); 
                     entity.AddBehaviour(behaviour);
                 }
             }
@@ -54,22 +55,8 @@ public class Player
             {
                 foreach (var statusEffectData in entityData.StatusEffectDatas)
                 {
-                    StatusEffect statusEffect = GameFactory.CreateStatusEffect(statusEffectData, entities);
+                    StatusEffect statusEffect = GameFactory.CreateStatusEffect(statusEffectData, entities, entity);
                     entity.StatusEffectController.StatusEffects.Add(statusEffect);
-                }
-            }
-        }
-
-        // CREATE MODFIERS
-        foreach (var entityData in playerData.EntityData)
-        {
-            var entity = entities.FirstOrDefault(e => e.guid == entityData.GUID);
-            if (entity != null)
-            {
-                foreach (var modifierData in entityData.ModifierSourceDatas)
-                {
-                    Modifier modifier = GameFactory.FindModifier(modifierData, entities);
-                    entity.ModifierController.Modifiers.Add(modifier);
                 }
             }
         }

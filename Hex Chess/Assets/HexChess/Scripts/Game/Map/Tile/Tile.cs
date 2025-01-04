@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
@@ -14,6 +15,8 @@ public abstract class Tile
     public GameObject GameObject => gameObject;
     protected GameObject gameObject;
 
+    public Action<Entity> OnOccupied;
+
     public Tile(Vector2Int coordinate, Vector3 position)
     {
         this.coordinate = coordinate;
@@ -27,6 +30,8 @@ public abstract class Tile
     {
         entity.GameObject.transform.position = this.position;
         entities.Add(entity);
+
+        OnOccupied?.Invoke(entity);
     }
 
     public void RemoveEntity(Entity entity) 

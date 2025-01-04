@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.Networking.Transport;
 using UnityEngine;
-using static UnityEngine.InputSystem.OnScreen.OnScreenStick;
 
 public class ActionController
 {
@@ -263,44 +262,8 @@ public static class GameFactory
     {
         return GameManager.Instance.GlobalData.BehaviourDatasContainer.GetBehaviourBlueprint(behaviourData);
     }
-    public static Modifier FindModifier(ModifierSource modifierSource, List<Entity> entities)
-    {
-        switch (modifierSource.SourceType)
-        {
-            case ModifierSourceType.BEHHAVIOUR:
-                return FindModifierInBehaviours(modifierSource, entities);
-
-            case ModifierSourceType.STATUS_EFFECT:
-                return FindModifierInStatusEffects(modifierSource, entities);
-
-            default:
-                return null;
-        }
-    }
-    private static Modifier FindModifierInBehaviours(ModifierSource modifierSource, List<Entity> entities)
-    {
-        var behaviour = entities
-            .SelectMany(e => e.Behaviours)
-            .FirstOrDefault(b => b.guid == modifierSource.SourceGuid);
-
-        if (behaviour != null && behaviour is IModifierSource source)
-            return source.FindModifier(modifierSource.ModifierGuid);
-
-        return null;
-    }
-
-    private static Modifier FindModifierInStatusEffects(ModifierSource modifierSource, List<Entity> entities)
-    {
-        var statusEffect = entities
-            .SelectMany(e => e.StatusEffectController.StatusEffects)
-            .FirstOrDefault(se => se.guid == modifierSource.SourceGuid);
-
-        if (statusEffect != null && statusEffect is IModifierSource source)
-            return source.FindModifier(modifierSource.ModifierGuid);
-
-        return null;
-    }
-    public static StatusEffect CreateStatusEffect(StatusEffectData statusEffectData, List<Entity> entities)
+   
+    public static StatusEffect CreateStatusEffect(StatusEffectData statusEffectData, List<Entity> entities, Entity target)
     {
         return entities
         .Where(entity => entity.guid == statusEffectData.EntityGuid)
@@ -309,7 +272,7 @@ public static class GameFactory
             .Select(matchedBehaviour =>
             {
                 var statusEffectBlueprint = GameManager.Instance.GlobalData.StatusEffectBlueprintsContainer.GetStatusEffectBlueprint(statusEffectData);
-                return statusEffectBlueprint?.CreateStatusEffect(statusEffectData, matchedBehaviour);
+                return statusEffectBlueprint?.CreateStatusEffect(statusEffectData, matchedBehaviour, target);
             }))
         .FirstOrDefault();
     }

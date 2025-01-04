@@ -4,25 +4,25 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "RangedAttack", menuName = "BehaviourData/Attack/RangedAttack")]
 public class RangedAttackBlueprint : AttackBehaviourBlueprint
 {
-    public override Behaviour CreateBehaviour()
+    public override Behaviour CreateBehaviour(Entity owner)
     {
-        return new RangedAttackBehaviour.Builder()
-           .WithGeneratedId()
+        return new RangedAttackBehaviour.Builder(owner)
            .WithBlueprint(this)
+           .WithGeneratedId()
            .Build();
     }
 
-    public override Behaviour CreateBehaviour(RandomGenerator randomGenerator)
+    public override Behaviour CreateBehaviour(RandomGenerator randomGenerator, Entity owner)
     {
-        return new RangedAttackBehaviour.Builder()
-            .WithSyncGeneratedId(randomGenerator.NextGuid())
+        return new RangedAttackBehaviour.Builder(owner)
             .WithBlueprint(this)
+            .WithSyncGeneratedId(randomGenerator.NextGuid())
             .Build();
     }
 
-    public override Behaviour CreateBehaviour(BehaviourData behaviourData)
+    public override Behaviour CreateBehaviour(BehaviourData behaviourData, Entity owner)
     {
-        return new RangedAttackBehaviour.Builder()
+        return new RangedAttackBehaviour.Builder(owner)
             .WithBlueprint(this)
             .WithData(behaviourData as RangedAttackData)
             .Build();

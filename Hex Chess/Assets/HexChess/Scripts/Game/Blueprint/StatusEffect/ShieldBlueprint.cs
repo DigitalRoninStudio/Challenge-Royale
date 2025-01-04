@@ -5,31 +5,29 @@ using UnityEngine;
 public class ShieldBlueprint : StatusEffectBlueprint
 {
     public DamageType DamageType;
-    public int MaxShieldHealth;
-    public override StatusEffect CreateStatusEffect(Behaviour owner)
+    public int MaxShieldPoints;
+    public override StatusEffect CreateStatusEffect(Behaviour owner, Entity target)
     {
-        return new Shield.Builder()
-             .WithGeneratedId(Guid.NewGuid().ToString())
+        return new Shield.Builder(owner, target)
              .WithBlueprint(this)
-             .WithOwner(owner)
+             .WithGeneratedId()
              .Build();
     }
 
-    public override StatusEffect CreateStatusEffect(RandomGenerator randomGenerator, Behaviour owner)
+    public override StatusEffect CreateStatusEffect(RandomGenerator randomGenerator, Behaviour owner, Entity target)
     {
-        return new Shield.Builder()
-            .WithGeneratedId(randomGenerator.NextGuid())
+        return new Shield.Builder(owner, target)
             .WithBlueprint(this)
-            .WithOwner(owner)
+            .WithSyncGeneratedId(randomGenerator.NextGuid())
             .Build();
     }
 
-    public override StatusEffect CreateStatusEffect(StatusEffectData statusEffectData, Behaviour owner)
+    public override StatusEffect CreateStatusEffect(StatusEffectData statusEffectData, Behaviour owner, Entity target)
     {
-        return new Shield.Builder()
+        return new Shield.Builder(owner, target)
             .WithBlueprint(this)
             .WithData(statusEffectData as ShieldData)
-            .WithOwner(owner)
             .Build();
     }
 }
+

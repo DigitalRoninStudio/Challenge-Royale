@@ -3,101 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-
-public interface IModifierSource
-{
-    Modifier FindModifier(string guid);
-    ModifierSource GetModifierSource();
-}
-public class ModifierSource
-{
-    public string ModifierGuid;
-    public string SourceGuid;
-    public ModifierSourceType SourceType;
-}
-public enum ModifierSourceType
-{
-    BEHHAVIOUR, STATUS_EFFECT
-}
-public abstract class Modifier
-{
-    public string guid;
-    public IModifierSource modifierSource;
-    public int value;
-
-    public abstract bool CanBeApplied(Entity entity);
-    public abstract void ApplyModifier(Entity entity);
-    public abstract void RemoveModifier(Entity entity);
-
-    public virtual ModifierData GetModifierData()
-    {
-        return new ModifierData() 
-        {
-            Guid = guid,
-        };
-    }
-    public virtual ModifierSource GetModifierSource()
-    {
-        ModifierSource source = modifierSource.GetModifierSource();
-        source.ModifierGuid = guid;
-        return source;
-    }
-
-}
-public class HealthModifier : Modifier
-{
-
-    public override bool CanBeApplied(Entity entity)
-    {
-        return entity.HasBehaviour<DamageableBehaviour>();
-    }
-    public override void ApplyModifier(Entity entity)
-    {
-        DamageableBehaviour damageable = entity.GetBehaviour<DamageableBehaviour>();
-        damageable.IncreaseMaxHealth(value);
-        damageable.IncreaseCurrentHealth(value);
-    }
-
-    public override void RemoveModifier(Entity entity)
-    {
-        DamageableBehaviour damageable = entity.GetBehaviour<DamageableBehaviour>();
-        damageable.IncreaseMaxHealth(-value);
-        if(damageable.CurrentHealth > damageable.MaxHealth)
-            damageable.SetCurrentHealth(damageable.MaxHealth);
-    }
-}
-
-public class ModifierController
-{
-    private Entity owner;
-    public List<Modifier> Modifiers => modifiers;
-    private List<Modifier> modifiers;
-    public ModifierController(Entity entity)
-    {
-        this.owner = entity;
-        modifiers = new List<Modifier>();
-    }
-
-    public void AddModifier(Modifier modifier)
-    {
-        modifier.ApplyModifier(owner);
-        modifiers.Add(modifier);
-    }
-
-    public void RemoveModifier(Modifier modifier)
-    {
-        modifier.RemoveModifier(owner);
-        modifiers.Remove(modifier);
-    }
-
-}
 public abstract class Entity : IDisposable
 {
     public string guid;
     public GameObject GameObject => gameObject;
     public GameObject gameObject;
+    public float rotation;
     public Visibility visibility;
-    public Direction direction;
+   // public Direction direction;
     public Team Team => Owner.team;
 
     public bool isBlockingMovement;
@@ -109,17 +22,12 @@ public abstract class Entity : IDisposable
     public StatusEffectController StatusEffectController => statusEffectController;
     private StatusEffectController statusEffectController;
 
-    public ModifierController ModifierController => modifierController;
-    private ModifierController modifierController;
-
     public EntityBlueprint EntityBlueprint { get; private set; }
     public Player Owner { get; private set; }
-
     protected Entity()
     {
         behaviours = new List<Behaviour>();
         statusEffectController = new StatusEffectController();
-        modifierController = new ModifierController(this);
     }
 
     #region Builder
@@ -146,7 +54,7 @@ public abstract class Entity : IDisposable
         {
             foreach (var behaviourBlueprint in blueprint.BehaviourDatas)
             {
-                Behaviour behaviour = behaviourBlueprint.CreateBehaviour();
+                Behaviour behaviour = behaviourBlueprint.CreateBehaviour(_entity);
                 _entity.AddBehaviour(behaviour);
             }    
 
@@ -167,7 +75,6 @@ public abstract class Entity : IDisposable
         {
             _entity.guid = entityData.GUID;
             _entity.visibility = entityData.Visibility;
-            _entity.direction = entityData.Direction;
             return this;
         }
 
@@ -176,11 +83,11 @@ public abstract class Entity : IDisposable
     #endregion
 
     public void SetOwner(Player player) => Owner = player;
-    public void ResetDirection()
+   /* public void ResetDirection()
     {
         if (Team == Team.GOOD_BOYS) direction = Direction.UP;
         else if (Team == Team.BAD_BOYS) direction = Direction.DOWN;
-    }
+    }*/
     public void AddBehaviour(Behaviour behaviour)
     {
         behaviours.Add(behaviour);
@@ -200,11 +107,6 @@ public abstract class Entity : IDisposable
         return behaviours.OfType<T>().FirstOrDefault();
     }
     public abstract EntityData GetEntityData();
-
-    public void SetRotation()
-    {
-        gameObject.transform.eulerAngles = new Vector3(0, 0, Map.directionToRotation[direction]);
-    }
 
     public virtual void Dispose()
     {

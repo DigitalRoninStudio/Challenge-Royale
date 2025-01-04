@@ -10,16 +10,17 @@ public class FigureBlueprint : EntityBlueprint
     public override Entity CreateEntity()
     {
         return new Figure.Builder()
-            .WithGeneratedId()
             .WithBlueprint(this)
+            .WithGeneratedId()
             .WithBehaviours(this)
             .Build();
     }
     public override Entity CreateEntity(RandomGenerator randomGenerator)
     {
         return new Figure.Builder()
-            .WithSyncGeneratedId(randomGenerator.NextGuid())
             .WithBlueprint(this)
+            .WithSyncGeneratedId(randomGenerator.NextGuid())
+            .WithBehaviours(this)
             .Build();
     }
     public override Entity CreateEntity(EntityData entityData)

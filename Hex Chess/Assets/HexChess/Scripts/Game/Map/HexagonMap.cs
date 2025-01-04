@@ -7,12 +7,12 @@ public class HexagonMap : Map
 {
     public static readonly List<Vector2Int> neighborsVectors = new List<Vector2Int> 
     {
-        new Vector2Int(0, 1),
-        new Vector2Int(0, -1),
-        new Vector2Int(1, 0),
-        new Vector2Int(-1, 1),
-        new Vector2Int(1, -1),
-        new Vector2Int(-1, 0),
+        new Vector2Int(0, 1),  // UP
+        new Vector2Int(1, 0),  // UPPER_RIGHT
+        new Vector2Int(1, -1), // LOWER_RIGHT
+        new Vector2Int(0, -1), // DOWN
+        new Vector2Int(-1, 0), // LOWER_LEFT
+        new Vector2Int(-1, 1)  // UPPER_LEFT
     };
 
     public static readonly List<Vector2Int> diagonalsNeighborsVectors = new List<Vector2Int>() {
@@ -26,11 +26,11 @@ public class HexagonMap : Map
     public static readonly Dictionary<Vector2Int, Direction> coordinateToDirection = new Dictionary<Vector2Int, Direction>
     {
         { new Vector2Int(0, 1), Direction.UP },
-        { new Vector2Int(0, -1), Direction.DOWN },
         { new Vector2Int(1, 0), Direction.UPPER_RIGHT_60 },
-        { new Vector2Int(-1, 1), Direction.UPPER_LEFT_60 },
         { new Vector2Int(1, -1), Direction.LOWER_RIGHT_120 },
+        { new Vector2Int(0, -1), Direction.DOWN },
         { new Vector2Int(-1, 0), Direction.LOWER_LEFT_120 },
+        { new Vector2Int(-1, 1), Direction.UPPER_LEFT_60 },
 
 
         { new Vector2Int(-2, 1), Direction.LEFT },
@@ -43,12 +43,12 @@ public class HexagonMap : Map
 
     public static readonly Dictionary<Direction, Vector2Int> directionToCoordinate = new Dictionary<Direction, Vector2Int>
     {
-        { Direction.UP, new Vector2Int(0, 1) },
-        { Direction.DOWN, new Vector2Int(0, -1) },
-        { Direction.UPPER_RIGHT_60, new Vector2Int(1, 0) },
-        { Direction.UPPER_LEFT_60, new Vector2Int(-1, 1) },
-        { Direction.LOWER_RIGHT_120, new Vector2Int(1, -1) },
-        { Direction.LOWER_LEFT_120, new Vector2Int(-1, 0) },
+        { Direction.UP, new Vector2Int(0, 1) },            
+        { Direction.UPPER_RIGHT_60, new Vector2Int(1, 0) },  
+        { Direction.LOWER_RIGHT_120, new Vector2Int(1, -1) }, 
+        { Direction.DOWN, new Vector2Int(0, -1) },           
+        { Direction.LOWER_LEFT_120, new Vector2Int(-1, 0) },  
+        { Direction.UPPER_LEFT_60, new Vector2Int(-1, 1) },    
 
         { Direction.LEFT, new Vector2Int(-2, 1) },
         { Direction.RIGHT, new Vector2Int(2, -1) },
@@ -235,6 +235,44 @@ public class HexagonMap : Map
     {
         Hex hex = new Hex(new Vector2Int(column, row), pos);
         tiles.Add(new Vector2Int(column, row), hex);
+    }
+
+    public static (Vector2Int left, Vector2Int right) GetLeftAndRightCoordinate(Direction direction)
+    {
+        if(!directionToCoordinate.TryGetValue(direction, out var facingVector))
+            throw new ArgumentException("Invalid facing direction!");
+
+        int index = neighborsVectors.IndexOf(facingVector);
+
+        int leftIndex = (index + 5) % 6;
+        int rightIndex = (index + 1) % 6;
+
+        return (
+           neighborsVectors[leftIndex],
+           neighborsVectors[rightIndex]
+       );
+    }
+
+    public static (Direction left, Direction right) GetLeftAndRightDirections(Direction direction)
+    {
+        if (directionToCoordinate.TryGetValue(direction, out var facingVector))
+            throw new ArgumentException("Invalid facing direction!");
+
+        int index = neighborsVectors.IndexOf(facingVector);
+        int leftIndex = (index + 5) % 6;
+        int rightIndex = (index + 1) % 6;
+
+        var leftDirection = coordinateToDirection[neighborsVectors[leftIndex]];
+        var rightDirection = coordinateToDirection[neighborsVectors[rightIndex]];
+
+        return (leftDirection, rightDirection);
+    }
+    public static Vector2Int TransformCoordinatesToUnitCoordinates(Vector2Int coordinates)
+    {
+        int x = coordinates.x != 0 ? Math.Sign(coordinates.x) : 0;
+        int y = coordinates.y != 0 ? Math.Sign(coordinates.y) : 0;
+
+        return new Vector2Int(x, y);
     }
 }
 

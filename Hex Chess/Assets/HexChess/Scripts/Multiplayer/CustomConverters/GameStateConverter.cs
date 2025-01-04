@@ -117,42 +117,6 @@ public static class GameStateConverter
         }
     }
 
-    public class ModifierListJsonConverter : JsonConverter<List<Modifier>>
-    {
-        public override List<Modifier> ReadJson(JsonReader reader, Type objectType, List<Modifier> existingValue, bool hasExistingValue, JsonSerializer serializer)
-        {
-            var list = new List<Modifier>();
-
-            JArray jsonArray = JArray.Load(reader);
-
-            foreach (JObject jObject in jsonArray.Children<JObject>())
-            {
-                var type = jObject.GetValue("Type").ToString();
-                var value = jObject.GetValue("Value").CreateReader();
-                var obj = serializer.Deserialize(value, Type.GetType(type)) as Modifier;
-                list.Add(obj);
-            }
-
-            return list;
-        }
-
-        public override void WriteJson(JsonWriter writer, List<Modifier> value, JsonSerializer serializer)
-        {
-            writer.WriteStartArray();
-
-            foreach (Modifier obj in value)
-            {
-                JObject jo = new JObject();
-                jo.Add("Type", obj.GetType().Name);
-                jo.Add("Value", JToken.FromObject(obj, serializer));
-
-                jo.WriteTo(writer);
-            }
-
-            writer.WriteEndArray();
-        }
-    }
-
     public class EntityCoordinateConvertor : JsonConverter<Dictionary<Vector2Int, List<string>>>
     {
         public override Dictionary<Vector2Int, List<string>> ReadJson(JsonReader reader, Type objectType, Dictionary<Vector2Int, List<string>> existingValue, bool hasExistingValue, JsonSerializer serializer)
@@ -211,7 +175,6 @@ public static class GameStateConverter
             new EntityDataListJsonConverter(),
             new BehaviourListJsonConverter(),
             new StatusEffectListJsonConverter(),
-            new ModifierListJsonConverter(),
             new EntityCoordinateConvertor()
         }
         };
@@ -229,7 +192,6 @@ public static class GameStateConverter
             new EntityDataListJsonConverter(),
             new BehaviourListJsonConverter(),
             new StatusEffectListJsonConverter(),
-            new ModifierListJsonConverter(),
             new EntityCoordinateConvertor()
         }
 
@@ -323,18 +285,15 @@ public abstract class EntityData
     public string GUID;
     public string Id;
     public Visibility Visibility;
-    public Direction Direction;
     public bool IsBlockingMovemenet;
 
     public List<BehaviourData> BehaviourDatas;
     public List<StatusEffectData> StatusEffectDatas;
-    public List<ModifierSource> ModifierSourceDatas;
 
     public EntityData()
     {
         BehaviourDatas = new List<BehaviourData>();
         StatusEffectDatas = new List<StatusEffectData>();
-        ModifierSourceDatas = new List<ModifierSource>();
     }
 
     public EntityData(Entity entity)
@@ -342,7 +301,6 @@ public abstract class EntityData
         GUID = entity.guid;
         Id = entity.EntityBlueprint.Id;
         Visibility = entity.visibility;
-        Direction = entity.direction;
         IsBlockingMovemenet = entity.isBlockingMovement;
 
         BehaviourDatas = new List<BehaviourData>();
@@ -352,10 +310,6 @@ public abstract class EntityData
         StatusEffectDatas = new List<StatusEffectData>();
         foreach (var statusEffect in entity.StatusEffectController.StatusEffects)
             StatusEffectDatas.Add(statusEffect.GetStatusEffectData());
-
-        ModifierSourceDatas = new List<ModifierSource>();
-        foreach (var modifier in entity.ModifierController.Modifiers)
-            ModifierSourceDatas.Add(modifier.GetModifierSource());
     }
 }
 
@@ -383,8 +337,12 @@ public class BehaviourData
 #region MovementBehaviourData
 public abstract class MovementBehaviourData : BehaviourData
 {
+    public Direction Direction;
     public MovementBehaviourData() : base() { }
-    public MovementBehaviourData(MovementBehaviour behaviour) : base(behaviour) { }
+    public MovementBehaviourData(MovementBehaviour behaviour) : base(behaviour) 
+    {
+        Direction = behaviour.direction;
+    }
 }
 
 
@@ -414,8 +372,12 @@ public class DirectionMovementData : MovementBehaviourData
 #region AttackBehaviourData
 public abstract class AttackBehaviourData : BehaviourData
 {
+    public int BaseDamage;
     public AttackBehaviourData() : base() { }
-    public AttackBehaviourData(AttackBehaviour behaviour) : base(behaviour) { }
+    public AttackBehaviourData(AttackBehaviour behaviour) : base(behaviour) 
+    {
+        BaseDamage = behaviour.AttackDamage;
+    }
 }
 public class MeleeAttackData : AttackBehaviourData
 {
@@ -433,10 +395,12 @@ public class RangedAttackData : AttackBehaviourData
 #region DamageableBehaviourData
 public class DamageableBehaviourData : BehaviourData
 {
+    public int MaxHealth;
     public int CurrentHealth;
     public DamageableBehaviourData() : base() { }
     public DamageableBehaviourData(DamageableBehaviour behaviour) : base(behaviour) 
     {
+        MaxHealth = behaviour.MaxHealth;
         CurrentHealth = behaviour.CurrentHealth;
     }
 }
@@ -459,12 +423,14 @@ public class ActiveAbilityBehaviourData : AbilityBehaviourData
 public class SwordsmanSpecialData : ActiveAbilityBehaviourData
 {
     public bool Toggle;
-    public ModifierData HealthModifierData;
+    public string DamageModifierInstanceId;
+    public string HealthModifierInstanceId;
     public SwordsmanSpecialData() : base() { }
     public SwordsmanSpecialData(SwordsmanSpecial special) : base(special) 
     {
         Toggle = special.IsToogle;
-        HealthModifierData = special.healthModifier.GetModifierData();
+        DamageModifierInstanceId = special.damageModifierInstanceId;
+        HealthModifierInstanceId = special.healthModifierInstanceId;
     }
 
 }
@@ -477,24 +443,6 @@ public class PassiveAbilityBehaviourData : AbilityBehaviourData
 #endregion
 #endregion
 
-public class ModifierData
-{
-    public string Guid;
-    //public ModifierSource ModifierSource;
-    public ModifierData() { }
-
-    public ModifierData(Modifier modifier)
-    {
-        Guid = modifier.guid;
-       // ModifierSource = modifier.modifierSource.GetModifierSource();
-    }
-}
-
-public class HealthModifierData : ModifierData
-{
-    public HealthModifierData() : base() { }
-    public HealthModifierData(HealthModifier modifier) : base(modifier) { }
-}
 public abstract class StatusEffectData
 {
     public string Guid;
@@ -543,12 +491,23 @@ public class DamageReturnData : StatusEffectData
 }
 public class ShieldData : StatusEffectData
 {
-    public int CurrentHealth;
+    public int ShieldPoints;
     public ShieldData() : base() { }
     public ShieldData(Shield shield) : base(shield) 
     {
-        CurrentHealth = shield.CurrentHealth;
+        ShieldPoints = shield.ShieldPoints;
     }
+}
+
+public class HealthModifierData : StatusEffectData
+{
+    public HealthModifierData() : base() { }
+    public HealthModifierData(HealthModifier healthModifier) : base(healthModifier) { }
+}
+public class DamageModifierData : StatusEffectData
+{
+    public DamageModifierData() : base() { }
+    public DamageModifierData(DamageModifier damageModifier) : base(damageModifier) { }
 }
 
 

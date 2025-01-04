@@ -8,7 +8,7 @@ public class NormalMovementBehaviour : MovementBehaviour
     #region Builder
     public class Builder : Builder<NormalMovementBehaviour, NormalMovementBlueprint, NormalMovementData>
     {
-        public Builder() : base(new NormalMovementBehaviour()) { }
+        public Builder(Entity owner) : base(new NormalMovementBehaviour(), owner) { }
     }
     #endregion
     public override void SetPath(Tile end)
@@ -49,7 +49,7 @@ public class KnightMovementBehaviour : MovementBehaviour
     #region Builder
     public class Builder : Builder<KnightMovementBehaviour, KnightMovementBlueprint, KnightMovementData>
     {
-        public Builder() : base(new KnightMovementBehaviour()) { }
+        public Builder(Entity owner) : base(new KnightMovementBehaviour(), owner) { }
     }
     #endregion
 
@@ -111,7 +111,7 @@ public class TeleportMovementBehaviour : MovementBehaviour
     #region Builder
     public class Builder : Builder<TeleportMovementBehaviour, TeleportMovementBlueprint, TeleportMovementData>
     {
-        public Builder() : base(new TeleportMovementBehaviour()) { }
+        public Builder(Entity owner) : base(new TeleportMovementBehaviour(), owner) { }
     }
     #endregion
 
@@ -163,7 +163,7 @@ public class DirectionMovementBehaviour : MovementBehaviour
     #region Builder
     public class Builder : Builder<DirectionMovementBehaviour, DirectionMovementBlueprint, DirectionMovementData>
     {
-        public Builder() : base(new DirectionMovementBehaviour()) { }
+        public Builder(Entity owner) : base(new DirectionMovementBehaviour(), owner) { }
     }
     #endregion
 

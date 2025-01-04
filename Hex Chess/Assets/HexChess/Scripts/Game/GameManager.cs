@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.Networking.Transport;
 using UnityEngine;
-using static UnityEngine.EventSystems.EventTrigger;
 
 public class LocalPlayer : Singleton<LocalPlayer>
 {
@@ -114,7 +113,7 @@ public class GameManager : Singleton<GameManager>
 
     private void Start()
     {
-        if(isServer)
+        if (isServer)
         {
             NetworkManager.Instance.StartServer();
             CreateMatch(gameJson);
@@ -187,15 +186,17 @@ public class GameManager : Singleton<GameManager>
     {
         return GameStateConverter.Serialize(game.GetGameData());
     }
+   // Game g;
     private void Update()
     {
         foreach(var game in matches)
         {
             game.Value.Update();
         }
-      /*  if(Input.GetKeyDown(KeyCode.Space))
+       /* if(Input.GetKeyDown(KeyCode.Space))
         {
-            Game g = new Game();
+            g = new Game();
+            g.GUID = "GAME";
             Player player1 = new Player()
             {
                 clientId = "PLAYER_1",
@@ -232,9 +233,11 @@ public class GameManager : Singleton<GameManager>
 
                 g.map.GetTile(spawnPosition.Coordinate).AddEntity(entity);
             }
-
             string json = GameManager.Instance.GetGameJson(g);
-            Debug.Log(json);
+            string path = "C:/Users/jovan/Desktop/gamejson.txt";
+            System.IO.File.WriteAllText(path, json);
+
+            //Debug.Log(json);
             GameData gameData = GameStateConverter.Deserialize<GameData>(json);
             //GameData gameData = GameStateConverter.Deserialize<GameData>(json);
         }*/
@@ -247,12 +250,44 @@ public class GameManager : Singleton<GameManager>
         {
             LocalPlayer.Instance.HandOverTheInitiative();
         }
+        if (Input.GetKeyDown(KeyCode.T))
+        {
+            Game game = GetFirstMatch();
+
+            Entity entity = game.map.GetTile(0, -2).GetEntities().First();
+
+            game.actionController.AddActionToWork(entity.GetBehaviour<SwordsmanSpecial>());
+           // game.Update();
+
+            string json = GameManager.Instance.GetGameJson(GetFirstMatch());
+            string path = "C:/Users/jovan/Desktop/gamejson.txt";
+            System.IO.File.WriteAllText(path, json);
+        }
         if (Input.GetKeyDown(KeyCode.J))
         {
             string json = GameManager.Instance.GetGameJson(GetFirstMatch());
-            Debug.Log(json);
+            string path = "C:/Users/jovan/Desktop/gamejson.txt";
+            System.IO.File.WriteAllText(path, json);
+            Debug.Log("JSON SAVED");
         }
-        
+        if (Input.GetKeyDown(KeyCode.X))
+        {
+            Game game = GetFirstMatch();
+            foreach (var entity in game.GetAllEntities())
+            {
+                if(entity.StatusEffectController.StatusEffects.Count > 0)
+                {
+                    foreach (var se in entity.StatusEffectController.StatusEffects)
+                    {
+                        Debug.Log(se.GetType());
+                    }
+                }
+            }
+            string json = GameManager.Instance.GetGameJson(GetFirstMatch());
+            string path = "C:/Users/jovan/Desktop/gamejson.txt";
+            System.IO.File.WriteAllText(path, json);
+        }
+
     }
 
     private void OnDestroy()

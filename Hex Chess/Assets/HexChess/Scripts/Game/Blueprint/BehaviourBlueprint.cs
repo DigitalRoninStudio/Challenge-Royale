@@ -8,7 +8,7 @@ public abstract class BehaviourBlueprint : ScriptableObject
     public string Name;
 
     public BehaviourVisual Visual;
-    public abstract Behaviour CreateBehaviour();
-    public abstract Behaviour CreateBehaviour(RandomGenerator randomGenerator);
-    public abstract Behaviour CreateBehaviour(BehaviourData behaviourData);
+    public abstract Behaviour CreateBehaviour(Entity owner);
+    public abstract Behaviour CreateBehaviour(RandomGenerator randomGenerator, Entity owner);
+    public abstract Behaviour CreateBehaviour(BehaviourData behaviourData, Entity owner);
 }

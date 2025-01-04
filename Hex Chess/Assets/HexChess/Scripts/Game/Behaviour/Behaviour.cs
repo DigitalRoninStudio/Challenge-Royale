@@ -20,9 +20,10 @@ public abstract class Behaviour
     {
         protected T _behaviour;
 
-        public Builder(T behaviour)
+        public Builder(T behaviour, Entity owner)
         {
             _behaviour = behaviour;
+            _behaviour.Owner = owner;
         }
         public virtual Builder<T, TB, TD> WithBlueprint(TB blueprint)
         {
@@ -36,7 +37,7 @@ public abstract class Behaviour
             _behaviour.guid = Guid.NewGuid().ToString();
             return this;
         }
-        public Builder<T, TB, TD> WithSyncGeneratedId(string guid)
+        public virtual Builder<T, TB, TD> WithSyncGeneratedId(string guid)
         {
             _behaviour.guid = guid;
             return this;

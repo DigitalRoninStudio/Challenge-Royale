@@ -214,6 +214,7 @@ public class NetAction : NetMessage
 {
     public ActionType ActionType;
     public string Action;
+    public bool Interupt;
     public NetAction()
     {
         Code = OpCode.ON_ACTION;
