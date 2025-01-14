@@ -55,6 +55,8 @@ public class StatusEffectBlueprintsContainer
     public List<StatusEffectBlueprint> ShieldBlueprints = new List<StatusEffectBlueprint>();
     public List<StatusEffectBlueprint> HealthModifierBlueprints = new List<StatusEffectBlueprint>();
     public List<StatusEffectBlueprint> DamageModifierBlueprints = new List<StatusEffectBlueprint>();
+    public List<StatusEffectBlueprint> DodgeCastAttackBlueprints = new List<StatusEffectBlueprint>();
+    public List<StatusEffectBlueprint> DodgeCastSpellBlueprints = new List<StatusEffectBlueprint>();
 
     public StatusEffectBlueprint GetStatusEffectBlueprint(StatusEffectData statusEffectData)
     {
@@ -72,6 +74,10 @@ public class StatusEffectBlueprintsContainer
             return HealthModifierBlueprints.FirstOrDefault(s => s.Id == statusEffectData.BlueprintId);
         if (statusEffectData is DamageModifierData)
             return DamageModifierBlueprints.FirstOrDefault(s => s.Id == statusEffectData.BlueprintId);
+        if (statusEffectData is DodgeCastAttackData)
+            return DodgeCastAttackBlueprints.FirstOrDefault(s => s.Id == statusEffectData.BlueprintId);
+        if (statusEffectData is DodgeCastSpellData)
+            return DodgeCastSpellBlueprints.FirstOrDefault(s => s.Id == statusEffectData.BlueprintId);
 
         return null;
     }

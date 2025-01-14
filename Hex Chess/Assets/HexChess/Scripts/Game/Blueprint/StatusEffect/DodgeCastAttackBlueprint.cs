@@ -1,13 +1,14 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
-[CreateAssetMenu(fileName = "Shield", menuName = "StatusEffectBlueprint/Shield")]
-public class ShieldBlueprint : StatusEffectBlueprint
+[CreateAssetMenu(fileName = "DodgeCastAttack", menuName = "StatusEffectBlueprint/DodgeCastAttack")]
+public class DodgeCastAttackBlueprint : StatusEffectBlueprint
 {
-    public DamageType DamageType;
-    public int MaxShieldPoints;
+    [Range(1, 12)]
+    public int DodgeChance;
     public override StatusEffect CreateStatusEffect(Behaviour owner, Entity target)
     {
-        return new Shield.Builder(owner, target)
+        return new DodgeCastAttack.Builder(owner, target)
              .WithBlueprint(this)
              .WithGeneratedId()
              .Build();
@@ -15,7 +16,7 @@ public class ShieldBlueprint : StatusEffectBlueprint
 
     public override StatusEffect CreateStatusEffect(RandomGenerator randomGenerator, Behaviour owner, Entity target)
     {
-        return new Shield.Builder(owner, target)
+        return new DodgeCastAttack.Builder(owner, target)
             .WithBlueprint(this)
             .WithSyncGeneratedId(randomGenerator.NextGuid())
             .Build();
@@ -23,9 +24,9 @@ public class ShieldBlueprint : StatusEffectBlueprint
 
     public override StatusEffect CreateStatusEffect(StatusEffectData statusEffectData, Behaviour owner, Entity target)
     {
-        return new Shield.Builder(owner, target)
+        return new DodgeCastAttack.Builder(owner, target)
             .WithBlueprint(this)
-            .WithData(statusEffectData as ShieldData)
+            .WithData(statusEffectData as DodgeCastAttackData)
             .Build();
     }
 }

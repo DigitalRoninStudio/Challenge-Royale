@@ -9,11 +9,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c846f4efd0a02ac408c5d0aa6f759033, type: 3}
-  m_Name: KnightHealth
+  m_Script: {fileID: 11500000, guid: 8eb4976a698fafc4798bd09aedda47ab, type: 3}
+  m_Name: DodgeCastAttack
   m_EditorClassIdentifier: 
-  Id: KNIGHT_HEALTH
-  Name: Health
-  EnergyCost: 0
-  Visual: {fileID: 7357851573940692501, guid: 60d3157b2354e734b8e025c086eb103f, type: 3}
-  MaxHealth: 3
+  Id: DODGE_CAST_ATTACK
+  Name: Dodge Cast Attack
+  Status: 0
+  StackType: 1
+  Duration: 0
+  IsPermanent: 1
+  DodgeChance: 4

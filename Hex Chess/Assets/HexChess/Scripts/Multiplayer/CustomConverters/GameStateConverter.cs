@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using static UnityEngine.Rendering.DebugUI;
 
 
 public static class GameStateConverter
@@ -116,6 +117,48 @@ public static class GameStateConverter
             writer.WriteEndArray();
         }
     }
+    public class BehaviourActionJsonConverter : JsonConverter<BehaviourActionData>
+    {
+        public override void WriteJson(JsonWriter writer, BehaviourActionData value, JsonSerializer serializer)
+        {
+            writer.WriteStartObject();
+
+            writer.WritePropertyName("Type");
+            writer.WriteValue(value.GetType().Name);
+
+            writer.WritePropertyName("Value");
+            var customSerializer = new JsonSerializer
+            {
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+                Formatting = serializer.Formatting,
+                StringEscapeHandling = serializer.StringEscapeHandling,
+                NullValueHandling = NullValueHandling.Ignore,
+            };
+
+            customSerializer.Serialize(writer, value);
+            writer.WriteEndObject();
+        }
+
+        public override BehaviourActionData ReadJson(JsonReader reader, Type objectType, BehaviourActionData existingValue, bool hasExistingValue, JsonSerializer serializer)
+        {
+            JObject jsonObject = JObject.Load(reader);
+
+            var type = jsonObject.GetValue("Type").ToString();
+            var value = jsonObject.GetValue("Value").CreateReader();
+
+            var customSerializer = new JsonSerializer
+            {
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+                Formatting = serializer.Formatting,
+                StringEscapeHandling = serializer.StringEscapeHandling,
+                NullValueHandling = NullValueHandling.Ignore,
+            };
+
+            var obj = customSerializer.Deserialize(value, Type.GetType(type)) as BehaviourActionData;
+
+            return obj;
+        }
+    }
 
     public class EntityCoordinateConvertor : JsonConverter<Dictionary<Vector2Int, List<string>>>
     {
@@ -170,11 +213,13 @@ public static class GameStateConverter
         {
             Formatting = Formatting.None,
             StringEscapeHandling = StringEscapeHandling.Default,
+            NullValueHandling = NullValueHandling.Ignore,
             Converters = new List<JsonConverter>
         {
             new EntityDataListJsonConverter(),
             new BehaviourListJsonConverter(),
             new StatusEffectListJsonConverter(),
+            new BehaviourActionJsonConverter(),
             new EntityCoordinateConvertor()
         }
         };
@@ -187,11 +232,13 @@ public static class GameStateConverter
         {
             Formatting = Formatting.None,
             StringEscapeHandling = StringEscapeHandling.Default,
+            NullValueHandling = NullValueHandling.Ignore,
             Converters = new List<JsonConverter>
         {
             new EntityDataListJsonConverter(),
             new BehaviourListJsonConverter(),
             new StatusEffectListJsonConverter(),
+            new BehaviourActionJsonConverter(),
             new EntityCoordinateConvertor()
         }
 
@@ -206,12 +253,14 @@ public class GameData
     public List<PlayerData> PlayersData;
     public RandomGeneratorState RandomState;
     public RoundData RoundData;
+    public List<ExecutedAction> executedActions;
 
     public GameData()
     {
         PlayersData = new List<PlayerData>();
         RandomState = new RandomGeneratorState();
         RoundData = new RoundData();
+        executedActions = new List<ExecutedAction>();
     }
 
     public GameData(Game game)
@@ -221,6 +270,7 @@ public class GameData
         RoundData = game.roundController.GetRoundData();
         MapData = GameFactory.CreateMapData(game);
         PlayersData = new List<PlayerData>();
+        executedActions = game.executedClientsActions;
 
         foreach (var player in game.players)
             PlayersData.Add(player.GetPlayerData());
@@ -498,7 +548,16 @@ public class ShieldData : StatusEffectData
         ShieldPoints = shield.ShieldPoints;
     }
 }
-
+public class DodgeCastAttackData : StatusEffectData
+{
+    public DodgeCastAttackData() : base() { }
+    public DodgeCastAttackData(DodgeCastAttack dodgeCastAttack) : base(dodgeCastAttack) { }    
+}
+public class DodgeCastSpellData : StatusEffectData
+{
+    public DodgeCastSpellData() : base() { }
+    public DodgeCastSpellData(DodgeCastSpell dodgeCastSpell) : base(dodgeCastSpell) { }
+}
 public class HealthModifierData : StatusEffectData
 {
     public HealthModifierData() : base() { }

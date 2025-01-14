@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.Networking.Transport;
 using UnityEngine;
 
 public abstract class MovementBehaviour : Behaviour, ILifecycleAction ,INetAction, ITileSelection
@@ -13,6 +14,7 @@ public abstract class MovementBehaviour : Behaviour, ILifecycleAction ,INetActio
 
     public Action<Tile, Tile> OnTileExit;
     public Action<Tile> OnTileEntered;
+    public Tile Destination => path.Count > 0 ? path.Last() : null;
 
     protected Queue<Tile> path;
     protected Tile currentTile;
@@ -68,9 +70,20 @@ public abstract class MovementBehaviour : Behaviour, ILifecycleAction ,INetActio
         time = Time.time;
         OnActionStart?.Invoke();
     }
+    public bool CanBeExecuted()
+    {
+        if(Owner.TryGetBehaviour<DamageableBehaviour>(out var damageableBehaviour))
+            if (!damageableBehaviour.IsAlive)
+                return false;
 
+        if (Owner.StatusEffectController.HasStatusEffect<Stun>() || Owner.StatusEffectController.HasStatusEffect<Root>())
+            return false;
+
+        return true;
+    }
     public virtual void Execute()
     {
+
         if (nextTile == null && path.Count == 0)
         {
             currentTile = null;
@@ -81,13 +94,17 @@ public abstract class MovementBehaviour : Behaviour, ILifecycleAction ,INetActio
 
         if (nextTile == null && path.Count > 0)
         {
-            nextTile = path.Dequeue();
-            var cooridnateDirection = nextTile.coordinate - currentTile.coordinate;
-            if(cooridnateDirection != Vector2Int.zero)
+            if(path.Peek() == currentTile)
             {
-                var unitCoordinate = HexagonMap.TransformCoordinatesToUnitCoordinates(cooridnateDirection);
-                direction = HexagonMap.coordinateToDirection[unitCoordinate];
+                path.Dequeue();
+                return;
             }
+
+            nextTile = path.Dequeue();
+
+            var cooridnateDirection = nextTile.coordinate - currentTile.coordinate;
+            var unitCoordinate = HexagonMap.TransformCoordinatesToUnitCoordinates(cooridnateDirection);
+            direction = HexagonMap.coordinateToDirection[unitCoordinate];
 
             lookDirection = (nextTile.GetPosition() - Owner.GameObject.transform.position).normalized;
             float movePerFrame = speed * Time.fixedDeltaTime;
@@ -103,15 +120,12 @@ public abstract class MovementBehaviour : Behaviour, ILifecycleAction ,INetActio
 
         if (steps.Count == 0)
         {
-            var cooridnateDirection = nextTile.coordinate - currentTile.coordinate;
-
             currentTile.RemoveEntity(Owner);
             currentTile = nextTile;
             currentTile.AddEntity(Owner);
             nextTile = null;
 
-            if (cooridnateDirection != Vector2Int.zero)
-                OnTileEntered?.Invoke(currentTile);
+            OnTileEntered?.Invoke(currentTile);
         }
         else
         {
@@ -149,15 +163,26 @@ public abstract class MovementBehaviour : Behaviour, ILifecycleAction ,INetActio
     public virtual void SetPath(Tile end)
     {
         currentTile = Map.GetTile(Owner);
+        nextTile = null;
+        path.Clear();
     }
+
+    public virtual int GetEnergyCost(Tile tile) => energyCost;
     public string SerializeAction()
     {
         MovementActionData actionData = new MovementActionData()
         {
             EntityGUID = Owner.guid,
             BehaviourGUID = guid,
-            TileCoordinate = path.Last().coordinate
+            TileCoordinate = new Vector2Data(path.Last().coordinate)
         };
+
+        ExecutedAction executedAction = new ExecutedAction()
+        {
+            playerGuid = Owner.Owner.clientId,
+            actionData = actionData
+        };
+        Owner.Owner.match.executedClientsActions.Add(executedAction);
 
         return JsonConvert.SerializeObject(actionData);
     }
@@ -165,7 +190,15 @@ public abstract class MovementBehaviour : Behaviour, ILifecycleAction ,INetActio
     public void DeserializeAction(string actionJson)
     {
         MovementActionData actionData = JsonConvert.DeserializeObject<MovementActionData>(actionJson);
-        Tile end = Map.GetTile(actionData.TileCoordinate);
+
+        ExecutedAction executedAction = new ExecutedAction()
+        {
+            playerGuid = Owner.Owner.clientId,
+            actionData = actionData
+        };
+        Owner.Owner.match.executedClientsActions.Add(executedAction);
+
+        Tile end = Map.GetTile(new Vector2Int(actionData.TileCoordinate.X, actionData.TileCoordinate.Y));
         SetPath(end);
     }
 
@@ -258,6 +291,7 @@ public abstract class ActiveAbility : AbilityBehaviour, ILifecycleAction, INetAc
         time = Time.time;
         OnActionStart?.Invoke();
     }
+    public virtual bool CanBeExecuted() => true;
     public abstract void Execute();
     public virtual void Exit()
     {
@@ -292,6 +326,7 @@ public class SwordsmanSpecial : ActiveAbility, IToggleable
     public string damageModifierInstanceId = "";
     public HealthModifierBlueprint healthModifierBlueprint;
     public string healthModifierInstanceId = "";
+    public DodgeCastAttackBlueprint dodgeCastAttackBlueprint;
 
     private HashSet<Tile> subscribedTiles = new HashSet<Tile>();
 
@@ -336,6 +371,7 @@ public class SwordsmanSpecial : ActiveAbility, IToggleable
             base.WithBlueprint(blueprint);
             _behaviour.healthModifierBlueprint = blueprint.HealthBlueprint;
             _behaviour.damageModifierBlueprint = blueprint.DamageBlueprint;
+            _behaviour.dodgeCastAttackBlueprint = blueprint.DodgeCastAttackBlueprint;
 
             return this;
         }
@@ -352,12 +388,12 @@ public class SwordsmanSpecial : ActiveAbility, IToggleable
 
         public Builder WithSubscription()
         {
-            if (Server.IsServer)
+           // if (Server.IsServer)
                 if (_behaviour.Owner.TryGetBehaviour<MovementBehaviour>(out var movementBehaviour))
                 {
+                    _behaviour.Owner.OnPlaced += _behaviour.OnSwordsmanPlacedOnTile;
                     movementBehaviour.OnTileEntered += _behaviour.OnSwordsmanEnterTile;
                     movementBehaviour.OnTileExit += _behaviour.OnSwordsmanExitTile;
-                    //TODO UNSUBSCRIBE ON DEATH
                 }
 
             return this;
@@ -407,7 +443,7 @@ public class SwordsmanSpecial : ActiveAbility, IToggleable
             EntityGUID = Owner.guid,
             BehaviourGUID = guid,
         };
-        return JsonConvert.SerializeObject(actionData);
+        return JsonConvert.SerializeObject(actionData); //HOTFIX
     }
     public override void DeserializeAction(string actionJson)
     {
@@ -457,8 +493,10 @@ public class SwordsmanSpecial : ActiveAbility, IToggleable
                 var unitDirection = Map.DirectionToCoordinate(movementBehaviour.direction);
                 SubscribeToTiles(tile, unitDirection);
             }
-
         }
+
+        DodgeCastAttack dodgeCastAttack = dodgeCastAttackBlueprint.CreateStatusEffect(Owner.Owner.match.randomGenerator, this, Owner) as DodgeCastAttack;
+        Owner.StatusEffectController.AddStatusEffect(dodgeCastAttack);
 
         toggle = true;
     }
@@ -486,11 +524,13 @@ public class SwordsmanSpecial : ActiveAbility, IToggleable
 
         UnsubscribeFromTiles();
 
+        if (Owner.StatusEffectController.TryGetStatusEffect<DodgeCastAttack>(out var dodgeCastAttack))
+            Owner.StatusEffectController.RemoveStatusEffect(dodgeCastAttack);
+
         toggle = false;
     }
 
 
-    // Happens only on server because we only subscribe on server and not on client
     private void OnSwordsmanEnterTile(Tile tile)
     {
         if (toggle) // defense
@@ -505,7 +545,7 @@ public class SwordsmanSpecial : ActiveAbility, IToggleable
         else // attack
         {
             // try to attack face field
-            if (Owner.TryGetBehaviour<MovementBehaviour>(out var movementBehaviour))
+            if (Server.IsServer && Owner.TryGetBehaviour<MovementBehaviour>(out var movementBehaviour))
             {
                 if (HexagonMap.directionToCoordinate.TryGetValue(movementBehaviour.direction, out var unitCoordinate))
                 {
@@ -525,7 +565,18 @@ public class SwordsmanSpecial : ActiveAbility, IToggleable
                     }
                 }
             }
+        }
+    }
 
+    private void OnSwordsmanPlacedOnTile(Tile tile)
+    {
+        if(toggle)
+        {
+            if (Owner.TryGetBehaviour<MovementBehaviour>(out var movementBehaviour))
+            {
+                var unitDirection = Map.DirectionToCoordinate(movementBehaviour.direction);
+                SubscribeToTiles(tile, unitDirection);
+            }
         }
     }
 
@@ -535,8 +586,26 @@ public class SwordsmanSpecial : ActiveAbility, IToggleable
             Owner.TryGetBehaviour<AttackBehaviour>(out var attackBehaviour) &&
             entity.TryGetBehaviour<DamageableBehaviour>(out var damageableBehaviour))
         {
-            attackBehaviour.SetAttack(damageableBehaviour);
-            Owner.Owner.match.actionController.AddActionToWork(attackBehaviour);
+            if(Server.IsServer)
+            {
+                attackBehaviour.SetAttack(damageableBehaviour);
+                Owner.Owner.match.actionController.AddActionToWork(attackBehaviour);
+            }
+
+            if (entity.TryGetBehaviour<MovementBehaviour>(out var enemyMovementBehaviour))
+            {
+                Tile destination = enemyMovementBehaviour.Destination;
+               
+                if (destination != null)
+                {
+                    enemyMovementBehaviour.Exit(); 
+                    if (Server.IsServer)
+                    {
+                        enemyMovementBehaviour.SetPath(destination);
+                        entity.Owner.match.actionController.AddActionToWork(enemyMovementBehaviour);
+                    }
+                }
+            }
         }
     }
 
@@ -644,7 +713,17 @@ public abstract class AttackBehaviour : Behaviour, INetAction, ITileSelection, I
         time = Time.time;
         OnActionStart?.Invoke();
     }
+    public bool CanBeExecuted()
+    {
+        if (Owner.TryGetBehaviour<DamageableBehaviour>(out var damageableBehaviour))
+            if (!damageableBehaviour.IsAlive)
+                return false;
 
+        if (Owner.StatusEffectController.HasStatusEffect<Stun>() || Owner.StatusEffectController.HasStatusEffect<Disarm>())
+            return false;
+
+        return true;
+    }
     public virtual void Execute()
     {
         if (Time.time >= time + TimeToPerformAttack)
@@ -719,6 +798,7 @@ public abstract class AttackBehaviour : Behaviour, INetAction, ITileSelection, I
         return enemy.Owner.team != Owner.Owner.team &&
           enemy.GetBehaviour<DamageableBehaviour>() != null;
     }
+    public virtual int GetEnergyCost(Entity enemy) => energyCost;
     public string SerializeAction()
     {
         AttackActionData actionData = new AttackActionData()
@@ -729,11 +809,26 @@ public abstract class AttackBehaviour : Behaviour, INetAction, ITileSelection, I
             DamageableGUID = target.guid
         };
 
+        ExecutedAction executedAction = new ExecutedAction()
+        {
+            playerGuid = Owner.Owner.clientId,
+            actionData = actionData
+        };
+        Owner.Owner.match.executedClientsActions.Add(executedAction);
+
         return JsonConvert.SerializeObject(actionData);
     }
     public void DeserializeAction(string actionJson)
     {
         AttackActionData actionData = JsonConvert.DeserializeObject<AttackActionData>(actionJson);
+
+        ExecutedAction executedAction = new ExecutedAction()
+        {
+            playerGuid = Owner.Owner.clientId,
+            actionData = actionData
+        };
+        Owner.Owner.match.executedClientsActions.Add(executedAction);
+
         var damageable = Owner.Owner.match.GetAllEntities()
             .FirstOrDefault(e => e.guid == actionData.EnemyGUID)?
             .Behaviours
@@ -785,9 +880,21 @@ public class DamageableBehaviour : Behaviour
 
     public Action<int,int> OnDamageReceived;
     public Action OnDeath;
-    public virtual void ReceiveDamage(Damage damage, bool damageReturn = false)
+    public virtual async void ReceiveDamage(Damage damage, bool damageReturn = false)
     {
         if (!CanReceiveDamage) return;
+
+        if (Owner.StatusEffectController.TryGetStatusEffect<DodgeCastAttack>(out var dodgeCastAttack))
+        {
+            bool dodged = await dodgeCastAttack.TryToDodge(Owner.Owner.match);
+            if (dodged) return;
+        }
+
+        if (Owner.StatusEffectController.TryGetStatusEffect<DodgeCastSpell>(out var dodgeCastSpell))
+        {
+            bool dodged = await dodgeCastSpell.TryToDodge(Owner.Owner.match);
+            if (dodged) return;
+        }
 
         int finalDamage = CalculateDamage(damage);
         currentHealth = Math.Max(0, currentHealth - finalDamage);

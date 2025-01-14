@@ -10,7 +10,8 @@ public class RoundController
     public Team teamWithInitiation;
     public bool endTurnCalled;
     private Game game;
-
+    public Action<int> OnChangeRound;
+    public Action<Team> OnChangeInititation;
     public RoundController(Game game) { round = 0; this.game = game; }
     public RoundController(Game game, RoundData roundData)
     {
@@ -68,6 +69,7 @@ public class RoundController
                 foreach (var player in game.players)
                     player.SetPlayerStateDependOnInitiation(teamWithInitiation);
 
+                OnChangeInititation?.Invoke(teamWithInitiation);
                 return;
             }
         }
@@ -81,6 +83,8 @@ public class RoundController
 
         foreach (var player in game.players)
             player.SetPlayerStateDependOnInitiation(teamWithInitiation);
+
+        OnChangeInititation?.Invoke(teamWithInitiation);
     }
     public void StartNewRound()
     {
@@ -90,6 +94,9 @@ public class RoundController
 
         foreach (var player in game.players)
             player.SetPlayerStateDependOnInitiation(teamWithInitiation);
+
+        OnChangeInititation?.Invoke(teamWithInitiation);
+        OnChangeRound?.Invoke(round);
     }
 
     public void SwitchInitiation()
@@ -99,6 +106,8 @@ public class RoundController
 
         foreach (var player in game.players)
             player.SetPlayerStateDependOnInitiation(teamWithInitiation);
+
+        OnChangeInititation?.Invoke(teamWithInitiation);
 
     }
 
@@ -127,12 +136,17 @@ public class RoundAction : INetAction, ILifecycleAction
     public Action OnActionStart { get; set; } = () => { };
     public Action OnActionExecuted { get; set; } = () => { };
     public Action OnActionEnd { get; set; } = () => { };
+    private Game _game;
+    public RoundAction(Game game)
+    {
+        _game = game;
+    }
 
     public void Enter()
     {
         OnActionStart?.Invoke();
     }
-
+    public bool CanBeExecuted() => true;
     public void Execute()
     {
         Game game = GameManager.Instance.GetFirstMatch();
@@ -159,7 +173,11 @@ public class RoundAction : INetAction, ILifecycleAction
             EndRound = this.EndRound,
             SwitchInitiation = this.SwitchInitiation
         };
-
+        ExecutedAction executedAction = new ExecutedAction()
+        {
+            roundActionData = actionData
+        };
+        _game.executedClientsActions.Add(executedAction);
         return JsonConvert.SerializeObject(actionData);
     }
 
@@ -169,5 +187,10 @@ public class RoundAction : INetAction, ILifecycleAction
         EndRound = actionData.EndRound;
         SwitchInitiation = actionData.SwitchInitiation;
 
+        ExecutedAction executedAction = new ExecutedAction()
+        {
+            roundActionData = actionData
+        };
+        _game.executedClientsActions.Add(executedAction);
     }
 }

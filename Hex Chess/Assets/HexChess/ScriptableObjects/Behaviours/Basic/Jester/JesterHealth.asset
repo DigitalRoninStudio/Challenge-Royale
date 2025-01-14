@@ -14,5 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Id: JESTER_HEALTH
   Name: Health
+  EnergyCost: 0
   Visual: {fileID: 7357851573940692501, guid: 60d3157b2354e734b8e025c086eb103f, type: 3}
   MaxHealth: 3

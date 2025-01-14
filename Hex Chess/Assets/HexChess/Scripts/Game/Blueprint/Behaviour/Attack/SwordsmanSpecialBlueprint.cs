@@ -5,6 +5,7 @@ public class SwordsmanSpecialBlueprint : ActiveAbilityBlueprint
 {
     public DamageModifierBlueprint DamageBlueprint;
     public HealthModifierBlueprint HealthBlueprint;
+    public DodgeCastAttackBlueprint DodgeCastAttackBlueprint;
     public override Behaviour CreateBehaviour(Entity owner)
     {
         return new SwordsmanSpecial.Builder(owner)

@@ -1,9 +1,13 @@
-﻿public class EnergyController
+﻿using System;
+using UnityEngine;
+
+public class EnergyController
 {
     public int energy;
     public int stash;
     public const int MAX_ENERGY = 12;
-
+    public Action<int> OnEnergyChanged;
+    public Action<int> OnStashChanged;
     public EnergyController() 
     { 
         energy = MAX_ENERGY; 
@@ -18,43 +22,39 @@
     public void IncreaseEnergy(int amount)
     {
         energy += amount;
-        energy = energy >= MAX_ENERGY ? MAX_ENERGY : energy;
+        energy = Mathf.Min(energy, MAX_ENERGY);
+        OnEnergyChanged?.Invoke(energy);
     }
     public void DecreaseEnergy(int amount)
     {
-        energy -= amount;
+        if (stash >= amount)
+            stash -= amount;
+        else
+        {
+            amount -= stash;
+            stash = 0;
+            energy = Mathf.Max(0, energy - amount);
+        }
+
+        OnEnergyChanged?.Invoke(energy);
+        OnStashChanged?.Invoke(stash);
     }
 
-    public bool CanDecreaseEnergy(int amount)
-    {
-        return energy >= amount;
-    }
+    public bool HasEnoughEnergy(int amount) => stash + energy >= amount;
     public void MoveEnergyToStash()
     {
         stash += energy;
+        //stash = Mathf.Min(stash, MAX_ENERGY); // Ako stash ima limit
         energy = 0;
+
+        OnEnergyChanged?.Invoke(energy);
+        OnStashChanged?.Invoke(stash);
     }
 
     public void ResetEnergy()
     {
         energy = MAX_ENERGY;
-    }
-
-    public void GetEnergyFromStash(int amount)
-    {
-        if(stash < amount)
-        {
-            amount -= stash;
-            stash = 0;
-            DecreaseEnergy(amount);
-        }
-        else
-            stash -= amount;
-    }
-
-    public bool CanGetEnergyFromStash(int amount)
-    {
-        return stash > 0 && stash + energy >= amount;
+        OnEnergyChanged?.Invoke(energy);
     }
 
     public EnergyData GetEnergyData()

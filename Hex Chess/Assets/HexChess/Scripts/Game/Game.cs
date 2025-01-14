@@ -1,13 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Unity.Networking.Transport;
 using UnityEngine;
 
 public class ActionController
 {
+    public ILifecycleAction CurrentAction => pendingActions.Count > 0 ? pendingActions.Last() : null;
     protected Game game;
     protected Queue<ILifecycleAction> pendingActions;
+    private bool isWaiting;
+
+    public bool IsWaiting => isWaiting;
 
     public ActionController(Game game)
     {
@@ -17,8 +23,16 @@ public class ActionController
 
     public void Update()
     {
+        if (isWaiting) return;
+
         if (pendingActions.Count > 0)
-            pendingActions.Peek().Execute();
+        {
+            if (pendingActions.Peek().CanBeExecuted())
+                pendingActions.Peek().Execute();
+            else
+                pendingActions.Peek().Exit();
+        }
+       
     }
 
     public void AddActionToWork(ILifecycleAction action)
@@ -68,14 +82,56 @@ public class ActionController
             Action = netAction.SerializeAction()
         };
 
-        foreach (var player in game.players)
-        {
-            NetworkConnection connection = GameManager.Instance.GetNetworkConnection(player.clientId);
-            if (connection != null)
-                Sender.ServerSendData(connection, responess, Pipeline.Reliable);
-        }
+        game.SendMessageToPlayers(responess);
+    }
+
+    public void Wait()
+    {
+        isWaiting = true;
+    }
+
+    public void StopWaiting()
+    {
+        isWaiting = false;
     }
 }
+
+public class Dice
+{
+    public int NumberOfSides => numberOfSides;
+    private int numberOfSides;
+    private ActionController actionController;
+    private RandomGenerator randomGenerator;
+
+    public Dice(int numberOfSides, ActionController actionController, RandomGenerator randomGenerator)
+    {
+        this.numberOfSides = numberOfSides;
+        this.actionController = actionController;
+        this.randomGenerator = randomGenerator;
+    }
+    public async Task<int> RollAndGetNumber(float animationDuration = 2f)
+    {
+        actionController.Wait();
+
+        int rolledNumber = randomGenerator.NextInt(1, numberOfSides); 
+        await Task.Delay(TimeSpan.FromSeconds(animationDuration)); 
+
+        actionController.StopWaiting();
+        return rolledNumber;
+    }
+    public async Task<bool> RollAndCheck(int threshold, float animationDuration = 2f)
+    {
+        actionController.Wait();
+        Debug.Log("ROLL");
+        int rolledNumber = randomGenerator.NextInt(1, numberOfSides);
+        await Task.Delay(TimeSpan.FromSeconds(animationDuration));
+
+        Debug.Log("ROLL RESULT: " + rolledNumber);
+        actionController.StopWaiting();
+        return rolledNumber >= threshold;
+    }
+}
+
 public class Game
 {
     public string GUID;
@@ -84,7 +140,8 @@ public class Game
     public RandomGenerator randomGenerator;
     public RoundController roundController;
     public ActionController actionController;
-
+    public List<ExecutedAction> executedClientsActions;
+    public Dice dice;
     public Game()
     {
         GUID = Guid.NewGuid().ToString();
@@ -92,6 +149,8 @@ public class Game
         randomGenerator = new RandomGenerator();
         roundController = new RoundController(this);
         actionController = new ActionController(this);
+        executedClientsActions = new List<ExecutedAction>();
+        dice = new Dice(12, actionController, randomGenerator);
     }
 
     public Game(GameData gameData)
@@ -101,7 +160,9 @@ public class Game
         players = new List<Player>();
         randomGenerator = new RandomGenerator(gameData.RandomState);
         roundController = new RoundController(this, gameData.RoundData);
-        actionController = new ActionController(this);//TODO serialize and deserialize
+        actionController = new ActionController(this);
+        executedClientsActions = gameData.executedActions;
+        dice = new Dice(12, actionController, randomGenerator);
 
         foreach (var playerData in gameData.PlayersData)
             AddPlayer(new Player(playerData));
@@ -109,6 +170,9 @@ public class Game
         map = GameFactory.CreateMap(gameData.MapData);
 
         GameFactory.PlaceEntitiesOnTiles(gameData.MapData.entityPositions, this);
+
+        //REMOVE
+        UIManager.Instance.OnGameCreated?.Invoke(this);
     }
 
     public void AddPlayer(Player player)
@@ -122,7 +186,8 @@ public class Game
 
     public void Update()
     {
-        actionController.Update();
+        if (!actionController.IsWaiting)
+            actionController.Update();
     }
 
     public void End()
@@ -308,7 +373,11 @@ public static class GameFactory
             foreach (var player in game.players)
                 foreach (var entity in player.entities)
                     if (pair.Value.Contains(entity.guid))
-                        game.map.GetTile(pair.Key).AddEntity(entity);
+                    {
+                        Tile tile = game.map.GetTile(pair.Key);
+                        tile.AddEntity(entity);
+                        entity.OnPlaced?.Invoke(tile);
+                    }
         }
     }
 }

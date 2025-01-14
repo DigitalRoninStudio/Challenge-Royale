@@ -129,6 +129,9 @@ public class Client : INetworkService
             case OpCode.ON_SYNC_GAME:
                 msg = new NetSyncGame(reader);
                 break;
+            case OpCode.ON_DECREASE_ENERGY:
+                msg = new NetDecreaseEnergy(reader);
+                break;
             default:
                 break;
         }
@@ -145,6 +148,7 @@ public class Client : INetworkService
             C_ON_WELCOME_RESPONESS += OnWelcomeResponess;
             C_ON_ACTION_RESPONESS += OnActionResponess;
             C_ON_SYNC_GAME_RESPONESS += OnGameSyncResponess;
+            C_ON_DECREASE_ENERGY_RESPONESS += OnDecreaseEnergyResponess;
 
         }
 
@@ -154,6 +158,7 @@ public class Client : INetworkService
             C_ON_WELCOME_RESPONESS -= OnWelcomeResponess;
             C_ON_ACTION_RESPONESS -= OnActionResponess;
             C_ON_SYNC_GAME_RESPONESS -= OnGameSyncResponess;
+            C_ON_DECREASE_ENERGY_RESPONESS -= OnDecreaseEnergyResponess;
 
         }
 
@@ -161,7 +166,6 @@ public class Client : INetworkService
         {
             NetSyncGame responess = message as NetSyncGame;
             GameManager.Instance.CreateMatch(responess.gameData, true);
-
             NetworkLogger.Log("CLIENT RECEIVER GAME");
         }
 
@@ -178,6 +182,20 @@ public class Client : INetworkService
         private void OnKeepAliveResponess(NetMessage message)
         {
             Sender.ClientSendData(message, Pipeline.Reliable);
+        }
+
+        private void OnDecreaseEnergyResponess(NetMessage message)
+        {
+            NetDecreaseEnergy responess = message as NetDecreaseEnergy;
+            var match = GameManager.Instance.GetFirstMatch();
+            foreach (var player in match.players)
+            {
+                if(player.clientId == responess.ClientId)
+                {
+                    player.energyController.DecreaseEnergy(responess.Amount);
+                    break;
+                }
+            }
         }
 
         private void OnActionResponess(NetMessage message)
@@ -248,7 +266,7 @@ public class Client : INetworkService
                 return;
             }
 
-            RoundAction action = new RoundAction();
+            RoundAction action = new RoundAction(game);
             action.DeserializeAction(actionJson);
             game.actionController.AddActionToWork(action);
         }        
@@ -256,8 +274,9 @@ public class Client : INetworkService
         #region NetMessages Events
         public static Action<NetMessage> C_ON_KEEP_ALIVE_RESPONESS;
         public static Action<NetMessage> C_ON_WELCOME_RESPONESS;
-        public static Action<NetMessage> C_ON_ACTION_RESPONESS;
+        public static Action<NetMessage> C_ON_ACTION_RESPONESS; 
         public static Action<NetMessage> C_ON_SYNC_GAME_RESPONESS;
+        public static Action<NetMessage> C_ON_DECREASE_ENERGY_RESPONESS;
         #endregion
     }
 

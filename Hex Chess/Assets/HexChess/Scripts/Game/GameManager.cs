@@ -193,71 +193,67 @@ public class GameManager : Singleton<GameManager>
         {
             game.Value.Update();
         }
-       /* if(Input.GetKeyDown(KeyCode.Space))
-        {
-            g = new Game();
-            g.GUID = "GAME";
-            Player player1 = new Player()
-            {
-                clientId = "PLAYER_1",
-                team = Team.GOOD_BOYS,
-                playerState = PlayerState.IDLE
-            };
-            Player player2 = new Player()
-            {
-                clientId = "PLAYER_2",
-                team = Team.BAD_BOYS,
-                playerState = PlayerState.IDLE
-            };
-            g.AddPlayer(player1);
-            g.AddPlayer(player2);
+        /* if(Input.GetKeyDown(KeyCode.Space))
+         {
+             g = new Game();
+             g.GUID = "GAME";
+             Player player1 = new Player()
+             {
+                 clientId = "PLAYER_1",
+                 team = Team.GOOD_BOYS,
+                 playerState = PlayerState.IDLE
+             };
+             Player player2 = new Player()
+             {
+                 clientId = "PLAYER_2",
+                 team = Team.BAD_BOYS,
+                 playerState = PlayerState.IDLE
+             };
+             g.AddPlayer(player1);
+             g.AddPlayer(player2);
 
-            g.roundController.SetFirstRound();
+             g.roundController.SetFirstRound();
 
-            MapEditor.Instance.LoadMap();
-            g.map = MapEditor.Instance.Map;
+             MapEditor.Instance.LoadMap();
+             g.map = MapEditor.Instance.Map;
 
-            foreach(var spawnPosition in g.map.SpawnPositions)
-            {                
-                Entity entity = GameManager.Instance.GlobalData.FractionBlueprints
-                   .SelectMany(f => f.EntityBlueprints)
-                   .FirstOrDefault(e => e is FigureBlueprint figure && figure.FigureType == spawnPosition.FigureType && 
-                   ((figure.FractionType == FractionType.LIGHT && spawnPosition.Team == Team.GOOD_BOYS) || 
-                   (figure.FractionType == FractionType.DARK && spawnPosition.Team == Team.BAD_BOYS)))
-                   ?.CreateEntity();
+             foreach(var spawnPosition in g.map.SpawnPositions)
+             {                
+                 Entity entity = GameManager.Instance.GlobalData.FractionBlueprints
+                    .SelectMany(f => f.EntityBlueprints)
+                    .FirstOrDefault(e => e is FigureBlueprint figure && figure.FigureType == spawnPosition.FigureType && 
+                    ((figure.FractionType == FractionType.LIGHT && spawnPosition.Team == Team.GOOD_BOYS) || 
+                    (figure.FractionType == FractionType.DARK && spawnPosition.Team == Team.BAD_BOYS)))
+                    ?.CreateEntity();
 
-                if(spawnPosition.Team == Team.GOOD_BOYS)
-                    player1.AddEntity(entity);
-                else
-                    player2.AddEntity(entity);
+                 if(spawnPosition.Team == Team.GOOD_BOYS)
+                     player1.AddEntity(entity);
+                 else
+                     player2.AddEntity(entity);
 
-                g.map.GetTile(spawnPosition.Coordinate).AddEntity(entity);
-            }
-            string json = GameManager.Instance.GetGameJson(g);
-            string path = "C:/Users/jovan/Desktop/gamejson.txt";
-            System.IO.File.WriteAllText(path, json);
+                 Tile tile = g.map.GetTile(spawnPosition.Coordinate);
+                 tile.AddEntity(entity);
+                 entity.OnPlaced?.Invoke(tile);
+             }
+             string json = GameManager.Instance.GetGameJson(g);
+             string path = "C:/Users/jovan/Desktop/gamejson.txt";
+             System.IO.File.WriteAllText(path, json);
 
-            //Debug.Log(json);
-            GameData gameData = GameStateConverter.Deserialize<GameData>(json);
-            //GameData gameData = GameStateConverter.Deserialize<GameData>(json);
-        }*/
+             //Debug.Log(json);
+             GameData gameData = GameStateConverter.Deserialize<GameData>(json);
+             //GameData gameData = GameStateConverter.Deserialize<GameData>(json);
+         }*/
 
-        if (Input.GetKeyDown(KeyCode.R) && LocalPlayer.Instance.CanLocalPlayerDoAction())
-        {
-            LocalPlayer.Instance.EndRound();
-        }
-        if (Input.GetKeyDown(KeyCode.S) && LocalPlayer.Instance.CanLocalPlayerDoAction())
-        {
-            LocalPlayer.Instance.HandOverTheInitiative();
-        }
+     
         if (Input.GetKeyDown(KeyCode.T))
         {
             Game game = GetFirstMatch();
 
-            Entity entity = game.map.GetTile(0, -2).GetEntities().First();
-
-            game.actionController.AddActionToWork(entity.GetBehaviour<SwordsmanSpecial>());
-           // game.Update();
+            Entity entity1 = game.map.GetTile(0, -2).GetEntities().First();
+            game.actionController.AddActionToWork(entity1.GetBehaviour<SwordsmanSpecial>());
+            Entity entity2 = game.map.GetTile(2, -3).GetEntities().First();
+            game.actionController.AddActionToWork(entity2.GetBehaviour<SwordsmanSpecial>());
+            // game.Update();
 
             string json = GameManager.Instance.GetGameJson(GetFirstMatch());
             string path = "C:/Users/jovan/Desktop/gamejson.txt";

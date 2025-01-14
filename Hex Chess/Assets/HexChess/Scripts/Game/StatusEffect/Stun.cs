@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
+using UnityEngine;
 
 public class Stun : StatusEffect
 {
@@ -202,4 +205,58 @@ public class Shield : StatusEffect
     }
 
     public bool IsShieldActive() => ShieldPoints > 0;
+}
+public class DodgeCastAttack : StatusEffect
+{
+    public int DodgeChance;
+    #region Builder
+    public class Builder : Builder<DodgeCastAttack, DodgeCastAttackBlueprint, DodgeCastAttackData>
+    {
+        public Builder(Behaviour owner, Entity target) : base(owner, target) { }
+        public new Builder WithBlueprint(DodgeCastAttackBlueprint blueprint)
+        {
+            base.WithBlueprint(blueprint);
+            _statusEffect.DodgeChance = blueprint.DodgeChance;
+            return this;
+        }
+    }
+    #endregion
+    public override StatusEffectData GetStatusEffectData() => new DodgeCastAttackData(this);
+    public async Task<bool> TryToDodge(Game game)
+    {
+        if(DodgeChance == 1) return true;
+
+        ExecutedAction executedAction = game.executedClientsActions.LastOrDefault();
+        if(executedAction != null && executedAction.actionData != null && executedAction.actionData is AttackActionData attackAction)
+        {
+            if (owner.Owner.TryGetBehaviour<DamageableBehaviour>(out var damageableBehaviour))
+            {
+                if (attackAction.DamageableGUID == damageableBehaviour.guid)
+                    return await game.dice.RollAndCheck(DodgeChance);
+            }
+        }
+
+        return false;
+    }
+}
+public class DodgeCastSpell : StatusEffect
+{
+    public int DodgeChance;
+     #region Builder
+     public class Builder : Builder<DodgeCastSpell, DodgeCastSpellBlueprint, DodgeCastSpellData>
+     {
+         public Builder(Behaviour owner, Entity target) : base(owner, target) { }
+         public new Builder WithBlueprint(DodgeCastSpellBlueprint blueprint)
+         {
+             base.WithBlueprint(blueprint);
+             _statusEffect.DodgeChance = blueprint.DodgeChance;
+             return this;
+         }
+     }
+     #endregion
+    public override StatusEffectData GetStatusEffectData() => new DodgeCastSpellData(this);
+    public async Task<bool> TryToDodge(Game game)
+    {
+        return false;
+    }
 }

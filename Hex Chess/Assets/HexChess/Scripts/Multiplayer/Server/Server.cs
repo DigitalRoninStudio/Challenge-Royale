@@ -241,7 +241,7 @@ public class Server : INetworkService
                 return;
             }
 
-            RoundAction roundAction = new RoundAction()
+            RoundAction roundAction = new RoundAction(game)
             {
                 EndRound = false,
                 SwitchInitiation = true,
@@ -282,7 +282,7 @@ public class Server : INetworkService
                 return;
             }
 
-            RoundAction roundAction = new RoundAction() 
+            RoundAction roundAction = new RoundAction(game) 
             {
                 EndRound = true,
                 SwitchInitiation = game.roundController.endTurnCalled ? false : true,
@@ -356,6 +356,23 @@ public class Server : INetworkService
 
             if (attackBehaviour.CanAttack(damagableEntity))
             {
+                int energyCost = attackBehaviour.GetEnergyCost(damagableEntity);
+                if (!player.energyController.HasEnoughEnergy(energyCost))
+                {
+                    NetworkLogger.Log("Player hasnt enought ENERGY to cast ATTACK");
+                    return;
+                }
+
+                player.energyController.DecreaseEnergy(energyCost);
+
+                NetDecreaseEnergy responess = new NetDecreaseEnergy()
+                {
+                    ClientId = player.clientId,
+                    Amount = energyCost
+                };
+
+                game.SendMessageToPlayers(responess);
+
                 attackBehaviour.SetAttack(damagableBehaviour);
                 game.actionController.AddActionToWork(attackBehaviour);
             }
@@ -415,6 +432,23 @@ public class Server : INetworkService
             }
             if (movementBehaviour.CanMove(tile))
             {
+                int energyCost = movementBehaviour.GetEnergyCost(tile);
+                if (!player.energyController.HasEnoughEnergy(energyCost))
+                {
+                    NetworkLogger.Log("Player hasnt enought ENERGY to cast MOVE");
+                    return;
+                }
+
+                player.energyController.DecreaseEnergy(energyCost);
+
+                NetDecreaseEnergy responess = new NetDecreaseEnergy()
+                {
+                    ClientId = player.clientId,
+                    Amount = energyCost
+                };
+
+                game.SendMessageToPlayers(responess);
+
                 movementBehaviour.SetPath(tile);
                 game.actionController.AddActionToWork(movementBehaviour);
             }

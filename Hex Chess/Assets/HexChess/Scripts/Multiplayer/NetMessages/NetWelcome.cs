@@ -214,7 +214,6 @@ public class NetAction : NetMessage
 {
     public ActionType ActionType;
     public string Action;
-    public bool Interupt;
     public NetAction()
     {
         Code = OpCode.ON_ACTION;
@@ -237,6 +236,35 @@ public class NetAction : NetMessage
     public override void ReceivedOnClient()
     {
         Client.Receiver.C_ON_ACTION_RESPONESS?.Invoke(this);
+    }
+}
+
+public class NetDecreaseEnergy : NetMessage
+{
+    public string ClientId;
+    public int Amount;
+    public NetDecreaseEnergy()
+    {
+        Code = OpCode.ON_DECREASE_ENERGY;
+    }
+    public NetDecreaseEnergy(DataStreamReader reader) : base()
+    {
+        Code = OpCode.ON_DECREASE_ENERGY;
+        Deserialize(reader);
+    }
+    public override void Serialize(ref DataStreamWriter writer)
+    {
+        WriteString(ref writer, ClientId);
+        writer.WriteInt(Amount);
+    }
+    public override void Deserialize(DataStreamReader reader)
+    {
+        ClientId = ReadString(ref reader);
+        Amount = reader.ReadInt();
+    }
+    public override void ReceivedOnClient()
+    {
+        Client.Receiver.C_ON_DECREASE_ENERGY_RESPONESS?.Invoke(this);
     }
 }
 

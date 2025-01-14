@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using static UnityEngine.InputSystem.OnScreen.OnScreenStick;
 
 public class StatusEffectController
 {
@@ -87,6 +88,11 @@ public class StatusEffectController
     public List<T> GetStatusEffectsOfType<T>() where T : StatusEffect
     {
         return statusEffects.OfType<T>().ToList();
+    }
+    public bool TryGetStatusEffect<T>(out T statusEffect) where T : StatusEffect
+    {
+        statusEffect = statusEffects.OfType<T>().FirstOrDefault();
+        return statusEffect != null;
     }
 
     public void RemoveAllStatusEffects()

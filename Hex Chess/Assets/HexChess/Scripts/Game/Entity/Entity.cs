@@ -14,6 +14,7 @@ public abstract class Entity : IDisposable
     public Team Team => Owner.team;
 
     public bool isBlockingMovement;
+    public Action<Tile> OnPlaced;
 
 
     public List<Behaviour> Behaviours => behaviours;

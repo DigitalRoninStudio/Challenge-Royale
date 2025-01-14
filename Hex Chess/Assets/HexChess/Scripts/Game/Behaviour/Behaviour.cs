@@ -11,6 +11,8 @@ public abstract class Behaviour
     protected float time;
     protected Map Map => Owner.Owner.match.map;
     public BehaviourBlueprint BehaviourBlueprint { get; private set; }
+    protected int energyCost = 0;
+    public int EnergyCost => energyCost;
     protected Behaviour() { }
     #region Builder
     public class Builder<T, TB, TD>
@@ -29,6 +31,7 @@ public abstract class Behaviour
         {
             _behaviour.BehaviourBlueprint = blueprint;
             _behaviour.name = blueprint.name;
+            _behaviour.energyCost = blueprint.EnergyCost;
 
             return this;
         }
@@ -79,12 +82,19 @@ public interface ILifecycleAction
     void Enter();
     void Execute();
     void Exit();
+    bool CanBeExecuted();
+    
 
     Action OnActionStart { get; set; }
     Action OnActionExecuted { get; set; }
     Action OnActionEnd { get; set; }
 }
-
+public class ExecutedAction
+{
+    public string playerGuid;
+    public BehaviourActionData actionData;
+    public RoundActionData roundActionData;
+}
 public interface INetAction
 {
     ActionType ActionType { get; }
@@ -107,7 +117,7 @@ public class BehaviourActionData
 
 public class MovementActionData : BehaviourActionData
 {
-    public Vector2Int TileCoordinate;
+    public Vector2Data TileCoordinate;
 }
 
 public class AttackActionData : BehaviourActionData
@@ -119,6 +129,20 @@ public class AttackActionData : BehaviourActionData
 public class SwordsmanSpecialActionData : BehaviourActionData
 {
 }
+
+public class Vector2Data
+{
+    public int X;
+    public int Y;
+
+    public Vector2Data() { }
+    public Vector2Data(Vector2Int vector2Int)
+    {
+        X = vector2Int.x;
+        Y = vector2Int.y;
+    }
+}
+
 
 
 

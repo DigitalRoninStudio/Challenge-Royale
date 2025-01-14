@@ -78,3 +78,6 @@ MonoBehaviour:
     - {fileID: 11400000, guid: 69f4502088f7e0b4aa3166403ce7b9cc, type: 2}
     DamageModifierBlueprints:
     - {fileID: 11400000, guid: ac99b00bdb377e04d96020d70b9f7940, type: 2}
+    DodgeCastAttackBlueprints:
+    - {fileID: 11400000, guid: 656cd79b2642d704794efbde1731249e, type: 2}
+    DodgeCastSpellBlueprints: []
