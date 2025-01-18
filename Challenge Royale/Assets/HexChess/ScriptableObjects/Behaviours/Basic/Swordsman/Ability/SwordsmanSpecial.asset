@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6acd9dacd7df2e5438dc25c8e08d91de, type: 3}
+  m_Name: SwordsmanSpecial
+  m_EditorClassIdentifier: 
+  Id: SWORDSMAN_SPECIAL
+  Name: Swordsman Special
+  Visual: {fileID: 0}
+  MaxTargets: 0
+  Radius: 0
+  MaxCooldown: 0
+  DamageBlueprint: {fileID: 11400000, guid: ac99b00bdb377e04d96020d70b9f7940, type: 2}
+  HealthBlueprint: {fileID: 11400000, guid: 69f4502088f7e0b4aa3166403ce7b9cc, type: 2}
+  DodgeCastAttackBlueprint: {fileID: 11400000, guid: 656cd79b2642d704794efbde1731249e, type: 2}

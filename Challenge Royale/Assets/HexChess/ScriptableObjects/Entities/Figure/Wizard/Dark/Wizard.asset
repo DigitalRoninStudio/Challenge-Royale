@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55b9372f38827374a9ded3be3205afde, type: 3}
+  m_Name: Wizard
+  m_EditorClassIdentifier: 
+  Id: DARK_WIZARD
+  Name: Wizard
+  IsBlockingMovement: 1
+  GameObject: {fileID: 8012052148540306272, guid: b9cede1f69eeae544be3eaca8a6eb0e5, type: 3}
+  BehaviourDatas:
+  - {fileID: 11400000, guid: a38e068f2a1c92642a83c1e0550be834, type: 2}
+  - {fileID: 11400000, guid: a011b5b0cbdf1e041a70f656bcc4bfae, type: 2}
+  FractionType: 2
+  FigureType: 5
+  Color: {r: 0.8156863, g: 0.3882353, b: 0.4862745, a: 1}

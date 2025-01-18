@@ -1,0 +1,79 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 085da0ff0ccc56d4589bea438d9ea048, type: 3}
+  m_Name: GlobalBlueprint
+  m_EditorClassIdentifier: 
+  MapBlueprints:
+  - {fileID: 11400000, guid: 776535b9f070cf940843f56ccdd53565, type: 2}
+  FractionBlueprints:
+  - FractionType: 1
+    EntityBlueprints:
+    - {fileID: 11400000, guid: 6779898e2bd4d474383b348da9cabaa2, type: 2}
+    - {fileID: 11400000, guid: 181caba338470a34988c3a81cf6343b8, type: 2}
+    - {fileID: 11400000, guid: 564b58c5a0db1214aa39ac1e6d2836f4, type: 2}
+    - {fileID: 11400000, guid: fcff96b7c1fc402489d35948c5d460c1, type: 2}
+    - {fileID: 11400000, guid: f79a464f63668bd4f9f3496781fec335, type: 2}
+    - {fileID: 11400000, guid: ea5de8061a1f4074eae21e3ff213a82c, type: 2}
+    - {fileID: 11400000, guid: d825de6f9bd9e2f41bc29e74368edf18, type: 2}
+    - {fileID: 11400000, guid: 1cb4afc448c6b6146916e45bd29b6db8, type: 2}
+  - FractionType: 2
+    EntityBlueprints:
+    - {fileID: 11400000, guid: 344a14b52cfa4cd47ae7a24a54a2388c, type: 2}
+    - {fileID: 11400000, guid: 427fc1822b2f6f3469bd8d3ef6c93b2e, type: 2}
+    - {fileID: 11400000, guid: 488be017a0561a844a4b2412fb656c6d, type: 2}
+    - {fileID: 11400000, guid: 3d629a4a4a704814da590ee6c5116483, type: 2}
+    - {fileID: 11400000, guid: d5f027bef35c8104686fb78bdb281f87, type: 2}
+    - {fileID: 11400000, guid: ebdf7374f01a277429890b61c6fa1070, type: 2}
+    - {fileID: 11400000, guid: ab990a0ee88de7f4fa667354c1b6b265, type: 2}
+    - {fileID: 11400000, guid: d3e38fd5665989b4f9b3e5e9b3d5d157, type: 2}
+  BehaviourDatasContainer:
+    MovementBehaviourBlueprints:
+    - {fileID: 11400000, guid: 6339200c87a3a444e8f7c2c1c88c35aa, type: 2}
+    - {fileID: 11400000, guid: 8c18f94bcfe51104aaa163601ac1579d, type: 2}
+    - {fileID: 11400000, guid: 2052d843e18e7c849bb3bbbaf8f7af68, type: 2}
+    - {fileID: 11400000, guid: d947a3a7c2a0e71419890569a33f7ed8, type: 2}
+    - {fileID: 11400000, guid: 88de6707a587d1e4fb34fb3c6c1cf8a8, type: 2}
+    - {fileID: 11400000, guid: 75349853f3075d84fa231a580aff38d4, type: 2}
+    - {fileID: 11400000, guid: 76a4f7c982a0f144487253c4f7a1bd8a, type: 2}
+    - {fileID: 11400000, guid: a011b5b0cbdf1e041a70f656bcc4bfae, type: 2}
+    AttackBehaviourBlueprints:
+    - {fileID: 11400000, guid: 5d82cbbdc640a024f964614e7c4c201b, type: 2}
+    - {fileID: 11400000, guid: ab256a048650b4a41b0da5cf92ec25fb, type: 2}
+    - {fileID: 11400000, guid: 37339b1293e90214abf3fa11675b2f65, type: 2}
+    - {fileID: 11400000, guid: ca546c62a5eef6a459cb45bd3dbab42e, type: 2}
+    - {fileID: 11400000, guid: 90c9eabd620a5394bbf80ef17a399b0b, type: 2}
+    - {fileID: 11400000, guid: 3760f1a6f7b105f4b8960c6086ce8feb, type: 2}
+    DamageableBehaviourBlueprints:
+    - {fileID: 11400000, guid: 8d4851e3c7225dd4386de26f139a898d, type: 2}
+    - {fileID: 11400000, guid: da470810fee7cf4478af99bc5ad5dc6c, type: 2}
+    - {fileID: 11400000, guid: f9f77b5887e37bf498b5ddb84876c226, type: 2}
+    - {fileID: 11400000, guid: b81fdee20a36bc44cb41487e803a3379, type: 2}
+    - {fileID: 11400000, guid: 45820521c507a764c8fb1d4e0317046b, type: 2}
+    - {fileID: 11400000, guid: 8467ea45ec2f7224bacc1106bde9d42a, type: 2}
+    - {fileID: 11400000, guid: 24b9cd5836382df49a11efa200e8399f, type: 2}
+    - {fileID: 11400000, guid: a38e068f2a1c92642a83c1e0550be834, type: 2}
+    AbilityBehaviourBlueprints:
+    - {fileID: 11400000, guid: c892b1c81614e6f468284820ba02456d, type: 2}
+  StatusEffectBlueprintsContainer:
+    StunBlueprints:
+    - {fileID: 11400000, guid: 6428ded00715ffb49847a04a09bbff2b, type: 2}
+    DisarmBlueprints: []
+    RootBlueprints: []
+    DamageImmuneBlueprints: []
+    ShieldBlueprints: []
+    HealthModifierBlueprints:
+    - {fileID: 11400000, guid: 69f4502088f7e0b4aa3166403ce7b9cc, type: 2}
+    DamageModifierBlueprints:
+    - {fileID: 11400000, guid: ac99b00bdb377e04d96020d70b9f7940, type: 2}
+    DodgeCastAttackBlueprints:
+    - {fileID: 11400000, guid: 656cd79b2642d704794efbde1731249e, type: 2}
+    DodgeCastSpellBlueprints: []

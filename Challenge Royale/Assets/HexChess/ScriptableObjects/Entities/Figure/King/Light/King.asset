@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55b9372f38827374a9ded3be3205afde, type: 3}
+  m_Name: King
+  m_EditorClassIdentifier: 
+  Id: LIGHT_KING
+  Name: King
+  IsBlockingMovement: 1
+  GameObject: {fileID: 8012052148540306272, guid: b229c773a7e0d4745b921bedbdde90d9, type: 3}
+  BehaviourDatas:
+  - {fileID: 11400000, guid: f9f77b5887e37bf498b5ddb84876c226, type: 2}
+  - {fileID: 11400000, guid: 2052d843e18e7c849bb3bbbaf8f7af68, type: 2}
+  FractionType: 1
+  FigureType: 8
+  Color: {r: 1, g: 0.9529412, b: 0.5803922, a: 1}

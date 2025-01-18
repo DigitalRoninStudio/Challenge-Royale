@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55b9372f38827374a9ded3be3205afde, type: 3}
+  m_Name: Jester
+  m_EditorClassIdentifier: 
+  Id: DARK_JESTER
+  Name: Jester
+  IsBlockingMovement: 1
+  GameObject: {fileID: 8012052148540306272, guid: b4c2b4f7ac6c84646a185271d9377ea4, type: 3}
+  BehaviourDatas:
+  - {fileID: 11400000, guid: da470810fee7cf4478af99bc5ad5dc6c, type: 2}
+  - {fileID: 11400000, guid: 8c18f94bcfe51104aaa163601ac1579d, type: 2}
+  - {fileID: 11400000, guid: ab256a048650b4a41b0da5cf92ec25fb, type: 2}
+  FractionType: 2
+  FigureType: 6
+  Color: {r: 0.4745098, g: 0.3372549, b: 0.58431375, a: 1}

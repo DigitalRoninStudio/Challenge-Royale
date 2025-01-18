@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55b9372f38827374a9ded3be3205afde, type: 3}
+  m_Name: Tank
+  m_EditorClassIdentifier: 
+  Id: DARK_TANK
+  Name: Tank
+  IsBlockingMovement: 1
+  GameObject: {fileID: 8012052148540306272, guid: 4441359bd6ddc4b47891b7851ff81561, type: 3}
+  BehaviourDatas:
+  - {fileID: 11400000, guid: 24b9cd5836382df49a11efa200e8399f, type: 2}
+  - {fileID: 11400000, guid: 76a4f7c982a0f144487253c4f7a1bd8a, type: 2}
+  - {fileID: 11400000, guid: 3760f1a6f7b105f4b8960c6086ce8feb, type: 2}
+  FractionType: 2
+  FigureType: 3
+  Color: {r: 0.24313726, g: 0.21176471, b: 0.21176471, a: 1}

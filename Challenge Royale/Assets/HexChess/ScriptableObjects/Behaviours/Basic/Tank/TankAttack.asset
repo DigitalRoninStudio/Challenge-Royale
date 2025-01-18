@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 032fa75da4db9634eab9ce2c4b290651, type: 3}
+  m_Name: TankAttack
+  m_EditorClassIdentifier: 
+  Id: TANK_ATTACK
+  Name: Melee
+  Visual: {fileID: 3011632534882510310, guid: 3dff9ca3a63d38e4aa69609ee84fbb1a, type: 3}
+  BaseDamage: 1
+  AttackRange: 1
+  DamageType: 0
+  TimeToPerformAttack: 0.25
+  HitImpact: {fileID: 2133010041417862964, guid: 950e73fdc42815f4fbc3e16c5fd7c4ea, type: 3}
