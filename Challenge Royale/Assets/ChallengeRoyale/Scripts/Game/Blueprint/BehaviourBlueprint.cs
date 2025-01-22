@@ -7,6 +7,7 @@ public abstract class BehaviourBlueprint : ScriptableObject
     public string Id;
     public string Name;
     public int EnergyCost = 1;
+    public int MaxCast = 1;
 
     public BehaviourVisual Visual;
     public abstract Behaviour CreateBehaviour(Entity owner);

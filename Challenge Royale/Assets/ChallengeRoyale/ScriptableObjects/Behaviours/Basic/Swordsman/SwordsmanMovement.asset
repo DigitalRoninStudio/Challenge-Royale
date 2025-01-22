@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Id: SWORDSMAN_MOVEMENT
   Name: Normal
-  CastCost: 1
-  Visual: {fileID: 3832235051052953613, guid: 24d6c2f93f880b24b97502350f54357c, type: 3}
+  EnergyCost: 1
+  MaxCast: 10
+  Visual: {fileID: -1610198704805418156, guid: 398fbb0d6d1950a4ca4636f26241e7a7, type: 3}
   Speed: 0.25
   Range: 1

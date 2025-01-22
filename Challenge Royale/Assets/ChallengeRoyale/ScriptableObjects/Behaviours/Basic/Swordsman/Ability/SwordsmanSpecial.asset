@@ -14,7 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Id: SWORDSMAN_SPECIAL
   Name: Swordsman Special
-  Visual: {fileID: 0}
+  EnergyCost: 1
+  MaxCast: 1
+  Visual: {fileID: -3812445919243680292, guid: b540c84821869e044a95d9524839a516, type: 3}
   MaxTargets: 0
   Radius: 0
   MaxCooldown: 0

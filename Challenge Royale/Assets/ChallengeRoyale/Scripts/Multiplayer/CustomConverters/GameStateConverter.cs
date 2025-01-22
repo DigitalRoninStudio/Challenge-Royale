@@ -3,7 +3,6 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using static UnityEngine.Rendering.DebugUI;
 
 
 public static class GameStateConverter
@@ -302,12 +301,14 @@ public class PlayerData
     public Team Team;
     public PlayerState PlayerState;
     public EnergyData EnergyData;
-    public List<EntityData> EntityData;
+    public List<EntityData> EntityData; 
+    public Dictionary<string, int> actionCastCounter;
 
     public PlayerData()
     {
         EnergyData = new EnergyData();
         EntityData = new List<EntityData>();
+        actionCastCounter = new Dictionary<string, int>();
     }
 
     public PlayerData(Player player)
@@ -319,7 +320,9 @@ public class PlayerData
         EntityData = new List<EntityData>();
 
         foreach (var entity in player.entities)
-            EntityData.Add(entity.GetEntityData());        
+            EntityData.Add(entity.GetEntityData());
+
+        actionCastCounter = player.actionCastCounter;
     }
 }
 

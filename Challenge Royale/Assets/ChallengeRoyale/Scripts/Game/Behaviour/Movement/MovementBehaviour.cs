@@ -327,6 +327,7 @@ public class SwordsmanSpecial : ActiveAbility, IToggleable
     public HealthModifierBlueprint healthModifierBlueprint;
     public string healthModifierInstanceId = "";
     public DodgeCastAttackBlueprint dodgeCastAttackBlueprint;
+    public Action<bool> OnToggle;
 
     private HashSet<Tile> subscribedTiles = new HashSet<Tile>();
 
@@ -462,6 +463,8 @@ public class SwordsmanSpecial : ActiveAbility, IToggleable
             Deactivated();
         else
             Activated();
+
+        OnToggle?.Invoke(toggle);
     }
 
     public void Activated()

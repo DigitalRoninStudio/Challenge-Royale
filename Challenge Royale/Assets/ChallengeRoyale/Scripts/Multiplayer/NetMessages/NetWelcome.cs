@@ -1,4 +1,5 @@
-﻿using Unity.Collections;
+﻿
+using Unity.Collections;
 using Unity.Networking.Transport;
 using UnityEngine;
 
@@ -239,32 +240,35 @@ public class NetAction : NetMessage
     }
 }
 
-public class NetDecreaseEnergy : NetMessage
+public class NetCastAction : NetMessage
 {
     public string ClientId;
+    public string BehaviourGUID;
     public int Amount;
-    public NetDecreaseEnergy()
+    public NetCastAction()
     {
-        Code = OpCode.ON_DECREASE_ENERGY;
+        Code = OpCode.ON_CAST_ACTION;
     }
-    public NetDecreaseEnergy(DataStreamReader reader) : base()
+    public NetCastAction(DataStreamReader reader) : base()
     {
-        Code = OpCode.ON_DECREASE_ENERGY;
+        Code = OpCode.ON_CAST_ACTION;
         Deserialize(reader);
     }
     public override void Serialize(ref DataStreamWriter writer)
     {
         WriteString(ref writer, ClientId);
+        WriteString(ref writer, BehaviourGUID);
         writer.WriteInt(Amount);
     }
     public override void Deserialize(DataStreamReader reader)
     {
         ClientId = ReadString(ref reader);
+        BehaviourGUID = ReadString(ref reader);
         Amount = reader.ReadInt();
     }
     public override void ReceivedOnClient()
     {
-        Client.Receiver.C_ON_DECREASE_ENERGY_RESPONESS?.Invoke(this);
+        Client.Receiver.C_ON_CAST_ACTION_RESPONESS?.Invoke(this);
     }
 }
 

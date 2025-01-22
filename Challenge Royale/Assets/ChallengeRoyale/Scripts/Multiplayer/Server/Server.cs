@@ -354,6 +354,12 @@ public class Server : INetworkService
                 return;
             }
 
+            if(!player.CanCastAction(attackBehaviour))
+            {
+                NetworkLogger.Log("Player cannot attack CAST ACTION !!!");
+                return;
+            }
+
             if (attackBehaviour.CanAttack(damagableEntity))
             {
                 int energyCost = attackBehaviour.GetEnergyCost(damagableEntity);
@@ -363,11 +369,13 @@ public class Server : INetworkService
                     return;
                 }
 
+                player.AddCastAction(attackBehaviour.guid);
                 player.energyController.DecreaseEnergy(energyCost);
 
-                NetDecreaseEnergy responess = new NetDecreaseEnergy()
+                NetCastAction responess = new NetCastAction()
                 {
                     ClientId = player.clientId,
+                    BehaviourGUID = attackBehaviour.guid,
                     Amount = energyCost
                 };
 
@@ -430,6 +438,13 @@ public class Server : INetworkService
                 NetworkLogger.Log("Entity tried to move but TILE is null");
                 return;
             }
+
+            if (!player.CanCastAction(movementBehaviour))
+            {
+                NetworkLogger.Log("Player cannot movement CAST ACTION !!!");
+                return;
+            }
+
             if (movementBehaviour.CanMove(tile))
             {
                 int energyCost = movementBehaviour.GetEnergyCost(tile);
@@ -439,11 +454,13 @@ public class Server : INetworkService
                     return;
                 }
 
+                player.AddCastAction(movementBehaviour.guid);
                 player.energyController.DecreaseEnergy(energyCost);
 
-                NetDecreaseEnergy responess = new NetDecreaseEnergy()
+                NetCastAction responess = new NetCastAction()
                 {
                     ClientId = player.clientId,
+                    BehaviourGUID = movementBehaviour.guid,
                     Amount = energyCost
                 };
 

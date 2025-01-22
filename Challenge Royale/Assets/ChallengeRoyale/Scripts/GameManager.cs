@@ -7,44 +7,51 @@ using UnityEngine;
 public class LocalPlayer : Singleton<LocalPlayer>
 {
     public string LocalClientID;
-
+    static Color Green = Color.green;
+    static Color DarkGreen = new Color(0, 0.5f, 0f);
+    static Color Red = Color.red;
+    static Color DarkRed = new Color(0.5f, 0f, 0f);
     public void PaintTilesOnSelectEntity(Entity selectedEntity)
     {
         Game game = GameManager.Instance.GetFirstMatch();
+        Player player = game.GetPlayer(LocalClientID);
         MovementBehaviour movementBehaviour = selectedEntity.GetBehaviour<MovementBehaviour>();
         AttackBehaviour attackBehaviour = selectedEntity.GetBehaviour<AttackBehaviour>();
         Tile tile = game.map.GetTile(selectedEntity);
 
         if (tile == null) return;
 
-        if(IsLocalClientOwner(selectedEntity) && CanLocalPlayerDoAction())
+        if (IsLocalClientOwner(selectedEntity) && CanLocalPlayerDoAction())
         {
-            if (movementBehaviour != null && movementBehaviour is ITileSelection movementTiles)
+            if(movementBehaviour != null && movementBehaviour is ITileSelection movementTiles)
             {
-                foreach (var availableTile in movementTiles.GetAvailableTiles())
-                    availableTile.SetColor(Color.green);
-
-                Color DarkGreen = new Color(0, 0.5f, 0f);
-                foreach (var unAvailableTile in movementTiles.GetUnAvailableTilesInRange())
-                    unAvailableTile.SetColor(DarkGreen);
+                if(!player.CanCastAction(movementBehaviour))
+                {
+                    foreach (var allTiles in movementTiles.GetTiles())
+                        allTiles.SetColor(DarkGreen);
+                }else
+                {
+                    foreach (var availableTile in movementTiles.GetAvailableTiles())
+                        availableTile.SetColor(Green);
+                    foreach (var unAvailableTile in movementTiles.GetUnAvailableTilesInRange())
+                        unAvailableTile.SetColor(DarkGreen);
+                }
             }
 
-            if (attackBehaviour != null && attackBehaviour is ITileSelection attackTiles)
-                foreach (var availableTile in attackTiles.GetAvailableTiles())
-                    availableTile.SetColor(Color.red);
+            if(attackBehaviour != null && attackBehaviour is ITileSelection attackTiles)
+            {
+                if(player.CanCastAction(attackBehaviour))
+                {
+                    foreach (var availableTile in attackTiles.GetAvailableTiles())
+                        availableTile.SetColor(Red);
+                }
+            }
         }
         else
         {
-
-            Color DarkGreen = new Color(0, 0.5f, 0f);
             if (movementBehaviour != null && movementBehaviour is ITileSelection movementTiles)
                 foreach (var tiles in movementTiles.GetTiles())
                     tiles.SetColor(DarkGreen);
-
-            Color DarkRed = new Color(0.5f, 0f, 0f);
-            if (attackBehaviour != null && attackBehaviour is ITileSelection attackTiles)
-                foreach (var availableTile in attackTiles.GetAvailableTiles())
-                    availableTile.SetColor(DarkRed);
         }
     }
 
@@ -88,7 +95,8 @@ public class LocalPlayer : Singleton<LocalPlayer>
         Player player = game.GetPlayer(LocalClientID);
         if(player == null) return false;
 
-        return player.team == game.roundController.teamWithInitiation && player.playerState == PlayerState.PLAYING;
+        return player.team == game.roundController.teamWithInitiation 
+            && player.playerState == PlayerState.PLAYING;
     }
 }
 
@@ -307,10 +315,8 @@ public class GameManager : Singleton<GameManager>
         {
             Game game = GetFirstMatch();
 
-            Entity entity1 = game.map.GetTile(0, -2).GetEntities().First();
+            Entity entity1 = game.map.GetTile(0, -3).GetEntities().First();
             game.actionController.AddActionToWork(entity1.GetBehaviour<SwordsmanSpecial>());
-            Entity entity2 = game.map.GetTile(2, -3).GetEntities().First();
-            game.actionController.AddActionToWork(entity2.GetBehaviour<SwordsmanSpecial>());
             // game.Update();
 
             string json = GameManager.Instance.GetGameJson(GetFirstMatch());

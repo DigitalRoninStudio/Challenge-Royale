@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
 using UnityEngine;
 
 public class Player
@@ -10,11 +12,13 @@ public class Player
     public Game match;
     public List<Entity> entities;
     public EnergyController energyController;
+    public Dictionary<string, int> actionCastCounter;
 
     public Player()
     {
         entities = new List<Entity>();
         energyController = new EnergyController();
+        actionCastCounter = new Dictionary<string, int>();
     }
     public Player(PlayerData playerData)
     {
@@ -60,23 +64,37 @@ public class Player
                 }
             }
         }
+
+        actionCastCounter = playerData.actionCastCounter;
     }
+    public void SetMatch(Game game)
+    {
+        match = game;
+        match.roundController.OnChangeInitiation += OnChangeInitiation;
+    }
+
+    private void OnChangeInitiation(Team teamWithInitiation)
+    {
+        if (teamWithInitiation == team)
+        {
+            playerState = PlayerState.PLAYING;
+            actionCastCounter.Clear();
+        }
+        else
+            playerState = PlayerState.IDLE;
+    }
+
     public void AddEntity(Entity entity)
     {
         entity.SetOwner(this);
         entities.Add(entity);
     }
+    public void AddCastAction(string guid) => actionCastCounter[guid] = actionCastCounter.GetValueOrDefault(guid, 0) + 1;
+    public bool CanCastAction(Behaviour behaviour) => !HasCastAction(behaviour.guid) || GetActionCastCount(behaviour.guid) < behaviour.MaxCast;
+    public bool HasCastAction(string guid) => actionCastCounter.ContainsKey(guid);
+    public int GetActionCastCount(string guid) => actionCastCounter.GetValueOrDefault(guid, 0);
 
     public PlayerData GetPlayerData() => new PlayerData(this);
-
-    public void SetPlayerStateDependOnInitiation(Team teamWithInitiation)
-    {
-        if (teamWithInitiation == team)
-            playerState = PlayerState.PLAYING;
-        else
-            playerState = PlayerState.IDLE;
-
-    }
   
 }
 

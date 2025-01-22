@@ -12,7 +12,9 @@ public abstract class Behaviour
     protected Map Map => Owner.Owner.match.map;
     public BehaviourBlueprint BehaviourBlueprint { get; private set; }
     protected int energyCost = 0;
+    protected int maxCast = 1;
     public int EnergyCost => energyCost;
+    public int MaxCast => maxCast;
     protected Behaviour() { }
     #region Builder
     public class Builder<T, TB, TD>
@@ -32,6 +34,7 @@ public abstract class Behaviour
             _behaviour.BehaviourBlueprint = blueprint;
             _behaviour.name = blueprint.name;
             _behaviour.energyCost = blueprint.EnergyCost;
+            _behaviour.maxCast = blueprint.MaxCast;
 
             return this;
         }

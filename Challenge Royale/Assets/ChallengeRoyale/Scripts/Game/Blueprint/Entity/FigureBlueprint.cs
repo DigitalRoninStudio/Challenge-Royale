@@ -6,7 +6,6 @@ public class FigureBlueprint : EntityBlueprint
 {
     public FractionType FractionType;
     public FigureType FigureType;
-    public Color Color = Color.white;
 
     public override Entity CreateEntity()
     {

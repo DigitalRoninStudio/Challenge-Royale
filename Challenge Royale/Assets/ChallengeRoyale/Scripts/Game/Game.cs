@@ -178,8 +178,8 @@ public class Game
 
     public void AddPlayer(Player player)
     {
-        player.match = this;
         players.Add(player);
+        player.SetMatch(this);
     }
 
     public void AddEntity(FractionType fractionType, FigureType figureType, int column, int row, Player player, Map map)

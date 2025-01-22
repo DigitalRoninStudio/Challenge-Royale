@@ -28,7 +28,7 @@ public class RoundUI : MonoBehaviour
         }
 
         game.roundController.OnChangeRound += (round) => RoundCounter.text = $"ROUND\n{round}";
-        game.roundController.OnChangeInititation += (team) =>
+        game.roundController.OnChangeInitiation += (team) =>
         {
             if (team == Team.GOOD_BOYS)
             {

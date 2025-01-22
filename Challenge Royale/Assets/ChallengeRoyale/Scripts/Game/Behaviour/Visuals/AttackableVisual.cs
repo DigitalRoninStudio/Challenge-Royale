@@ -3,7 +3,19 @@ using UnityEngine;
 
 public class AttackableVisual : GenericBehaviourVisual<AttackBehaviour>
 {
-    [SerializeField] private TextMeshPro Damage;
+    protected override void InitializeVisual()
+    {
+        Animator animator = ((Figure)behaviour.Owner).GameObject.GetComponent<FigureVisual>().animator;
+
+        if (animator == null) return;
+        behaviour.OnActionStart += () =>
+        {
+            animator?.SetTrigger("Attack");
+        };
+    }
+
+
+    /*[SerializeField] private TextMeshPro Damage;
 
     [SerializeField] private GameObject HitImpact; 
     private ParticleSystem[] hitPartycleSystem;
@@ -35,5 +47,5 @@ public class AttackableVisual : GenericBehaviourVisual<AttackBehaviour>
     {
         foreach (ParticleSystem particle in hitPartycleSystem)
             particle.Stop();
-    }
+    }*/
 }

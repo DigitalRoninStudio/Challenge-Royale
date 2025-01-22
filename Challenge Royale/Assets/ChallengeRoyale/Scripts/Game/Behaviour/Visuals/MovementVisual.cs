@@ -2,7 +2,22 @@
 
 public class MovementVisual : GenericBehaviourVisual<MovementBehaviour>
 {
-    [SerializeField] private GameObject Trail;
+    protected override void InitializeVisual()
+    {
+        Animator animator = ((Figure)behaviour.Owner).GameObject.GetComponent<FigureVisual>().animator;
+
+        if (animator == null) return;
+
+        behaviour.OnActionStart += () =>
+        {
+            animator?.SetBool("Move", true);
+        };
+        behaviour.OnActionEnd += () =>
+        {
+            animator?.SetBool("Move", false);
+        };
+    }
+   /* [SerializeField] private GameObject Trail;
     private ParticleSystem[] trailPartycleSystem;
     protected override void InitializeVisual()
     {
@@ -31,5 +46,5 @@ public class MovementVisual : GenericBehaviourVisual<MovementBehaviour>
     {
         foreach (ParticleSystem particle in trailPartycleSystem)
             particle.Stop();
-    }
+    }*/
 }

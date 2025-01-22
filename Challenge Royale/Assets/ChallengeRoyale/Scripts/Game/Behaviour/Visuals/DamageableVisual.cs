@@ -3,23 +3,15 @@ using TMPro;
 using UnityEngine;
 
 public class DamageableVisual : GenericBehaviourVisual<DamageableBehaviour>
-{
-    [SerializeField] private TextMeshPro Health;   
+{  
     protected override void InitializeVisual()
     {
-        Health.text = behaviour.CurrentHealth.ToString();
+        Animator animator = ((Figure)behaviour.Owner).GameObject.GetComponent<FigureVisual>().animator;
 
-        behaviour.OnDamageReceived += OnDamageReceiverd;
-        behaviour.OnDeath += OnDeath;
-    }
-    private void OnDeath()
-    {
-        behaviour.OnDamageReceived -= OnDamageReceiverd;
-        behaviour.OnDeath -= OnDeath;
-    }
-
-    private void OnDamageReceiverd(int currentHealth, int finalDamage)
-    {
-        Health.text = currentHealth.ToString();
+        if (animator == null) return;
+        behaviour.OnDamageReceived += (currentHealth, damageAmount) =>
+        {
+            animator?.SetTrigger("Dmg");
+        };
     }
 }

@@ -1,6 +1,7 @@
 ﻿
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class RoundController
@@ -9,10 +10,15 @@ public class RoundController
     public Team startRoundTeam;
     public Team teamWithInitiation;
     public bool endTurnCalled;
+
     private Game game;
     public Action<int> OnChangeRound;
-    public Action<Team> OnChangeInititation;
-    public RoundController(Game game) { round = 0; this.game = game; }
+    public Action<Team> OnChangeInitiation;
+    public RoundController(Game game) 
+    { 
+        round = 0; 
+        this.game = game;
+    }
     public RoundController(Game game, RoundData roundData)
     {
         round = roundData.Round;
@@ -66,10 +72,7 @@ public class RoundController
                 teamWithInitiation = startRoundTeam;
                 round++;
 
-                foreach (var player in game.players)
-                    player.SetPlayerStateDependOnInitiation(teamWithInitiation);
-
-                OnChangeInititation?.Invoke(teamWithInitiation);
+                OnChangeInitiation?.Invoke(teamWithInitiation);
                 return;
             }
         }
@@ -81,10 +84,7 @@ public class RoundController
         teamWithInitiation = startRoundTeam;
         round++;
 
-        foreach (var player in game.players)
-            player.SetPlayerStateDependOnInitiation(teamWithInitiation);
-
-        OnChangeInititation?.Invoke(teamWithInitiation);
+        OnChangeInitiation?.Invoke(teamWithInitiation);
     }
     public void StartNewRound()
     {
@@ -92,10 +92,7 @@ public class RoundController
         teamWithInitiation = startRoundTeam;
         round++;
 
-        foreach (var player in game.players)
-            player.SetPlayerStateDependOnInitiation(teamWithInitiation);
-
-        OnChangeInititation?.Invoke(teamWithInitiation);
+        OnChangeInitiation?.Invoke(teamWithInitiation);
         OnChangeRound?.Invoke(round);
     }
 
@@ -104,11 +101,7 @@ public class RoundController
         Debug.Log("Switch Initiation");
         teamWithInitiation = teamWithInitiation == Team.GOOD_BOYS ? Team.BAD_BOYS : Team.GOOD_BOYS;
 
-        foreach (var player in game.players)
-            player.SetPlayerStateDependOnInitiation(teamWithInitiation);
-
-        OnChangeInititation?.Invoke(teamWithInitiation);
-
+        OnChangeInitiation?.Invoke(teamWithInitiation);
     }
 
     public void EndRoundAndSwitchInitiation()

@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Id: KNIGHT_MOVEMENT
   Name: Jump
-  CastCost: 1
-  Visual: {fileID: 3832235051052953613, guid: 24d6c2f93f880b24b97502350f54357c, type: 3}
+  EnergyCost: 1
+  MaxCast: 2
+  Visual: {fileID: 0}
   Speed: 0.25
   Range: 1

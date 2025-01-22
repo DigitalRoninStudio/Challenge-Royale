@@ -1,5 +1,6 @@
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Unity.Collections;
 using Unity.Networking.Transport;
@@ -129,8 +130,8 @@ public class Client : INetworkService
             case OpCode.ON_SYNC_GAME:
                 msg = new NetSyncGame(reader);
                 break;
-            case OpCode.ON_DECREASE_ENERGY:
-                msg = new NetDecreaseEnergy(reader);
+            case OpCode.ON_CAST_ACTION:
+                msg = new NetCastAction(reader);
                 break;
             default:
                 break;
@@ -148,7 +149,7 @@ public class Client : INetworkService
             C_ON_WELCOME_RESPONESS += OnWelcomeResponess;
             C_ON_ACTION_RESPONESS += OnActionResponess;
             C_ON_SYNC_GAME_RESPONESS += OnGameSyncResponess;
-            C_ON_DECREASE_ENERGY_RESPONESS += OnDecreaseEnergyResponess;
+            C_ON_CAST_ACTION_RESPONESS += OnCastActionResponess;
 
         }
 
@@ -158,7 +159,7 @@ public class Client : INetworkService
             C_ON_WELCOME_RESPONESS -= OnWelcomeResponess;
             C_ON_ACTION_RESPONESS -= OnActionResponess;
             C_ON_SYNC_GAME_RESPONESS -= OnGameSyncResponess;
-            C_ON_DECREASE_ENERGY_RESPONESS -= OnDecreaseEnergyResponess;
+            C_ON_CAST_ACTION_RESPONESS -= OnCastActionResponess;
 
         }
 
@@ -184,16 +185,18 @@ public class Client : INetworkService
             Sender.ClientSendData(message, Pipeline.Reliable);
         }
 
-        private void OnDecreaseEnergyResponess(NetMessage message)
+        private void OnCastActionResponess(NetMessage message)
         {
-            NetDecreaseEnergy responess = message as NetDecreaseEnergy;
+            NetCastAction responess = message as NetCastAction;
             var match = GameManager.Instance.GetFirstMatch();
             foreach (var player in match.players)
             {
                 if(player.clientId == responess.ClientId)
                 {
+                    player.AddCastAction(responess.BehaviourGUID);
                     player.energyController.DecreaseEnergy(responess.Amount);
                     break;
+
                 }
             }
         }
@@ -276,7 +279,7 @@ public class Client : INetworkService
         public static Action<NetMessage> C_ON_WELCOME_RESPONESS;
         public static Action<NetMessage> C_ON_ACTION_RESPONESS; 
         public static Action<NetMessage> C_ON_SYNC_GAME_RESPONESS;
-        public static Action<NetMessage> C_ON_DECREASE_ENERGY_RESPONESS;
+        public static Action<NetMessage> C_ON_CAST_ACTION_RESPONESS;
         #endregion
     }
 

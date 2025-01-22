@@ -14,8 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Id: SWORDSMAN_ATTACK
   Name: Melee
-  CastCost: 2
-  Visual: {fileID: 3011632534882510310, guid: 3dff9ca3a63d38e4aa69609ee84fbb1a, type: 3}
+  EnergyCost: 1
+  MaxCast: 10
+  Visual: {fileID: 1532065038799677509, guid: 098960eb330c5e94cb4ff775b9eb4388, type: 3}
   BaseDamage: 1
   AttackRange: 1
   DamageType: 0
